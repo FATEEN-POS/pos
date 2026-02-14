@@ -3,15 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fateen POS - Login</title>
+    <title>Fateen POS - Professional</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700&display=swap" rel="stylesheet">
+    
     <style>
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; background-color: #0b0b0b;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        /* توحيد الخط في السيستم بالكامل */
+        * {
+            font-family: 'Cairo', sans-serif;
+            box-sizing: border-box;
         }
 
-        /* شاشة الترحيب المعدلة (3 ثوانٍ) */
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background-color: #0b0b0b; color: #fff;
+        }
+
+        /* شاشة الترحيب */
         #splash-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000 url('باك جراوند لوجو اسود.jpg') no-repeat center center;
@@ -30,7 +37,7 @@
             box-shadow: 0 0 8px #fff; transition: width 0.1s linear;
         }
 
-        /* تصميم صفحة الـ Login */
+        /* صفحة الـ Login */
         #login-container {
             display: none; height: 100vh; width: 100%;
             display: flex; justify-content: center; align-items: center;
@@ -39,37 +46,43 @@
 
         .login-box {
             background: rgba(255, 255, 255, 0.05);
-            padding: 40px; border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1);
             width: 90%; max-width: 400px; text-align: center;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(15px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
 
-        .login-box h2 { color: #fff; margin-bottom: 30px; font-weight: 300; }
+        .login-box h2 { 
+            font-weight: 700; margin-bottom: 30px; letter-spacing: 1px;
+        }
 
         .input-group { margin-bottom: 20px; text-align: right; }
 
-        .input-group label { color: #bbb; display: block; margin-bottom: 8px; font-size: 14px; }
+        .input-group label { color: #aaa; display: block; margin-bottom: 8px; font-size: 14px; }
 
         .input-group input {
-            width: 100%; padding: 12px; background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px;
+            width: 100%; padding: 14px; background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px;
             color: #fff; font-size: 16px; outline: none; transition: 0.3s;
-            box-sizing: border-box;
         }
 
-        .input-group input:focus { border-color: #fff; background: rgba(255, 255, 255, 0.15); }
+        .input-group input:focus { 
+            border-color: #fff; background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 0 10px rgba(255,255,255,0.1);
+        }
 
         .login-btn {
-            width: 100%; padding: 12px; background: #fff; color: #000;
-            border: none; border-radius: 8px; font-weight: bold; font-size: 16px;
-            cursor: pointer; transition: 0.3s; margin-top: 10px;
+            width: 100%; padding: 14px; background: #fff; color: #000;
+            border: none; border-radius: 10px; font-weight: 700; font-size: 17px;
+            cursor: pointer; transition: 0.3s; margin-top: 15px;
         }
 
-        .login-btn:hover { background: #ccc; transform: translateY(-2px); }
+        .login-btn:hover { background: #ddd; transform: translateY(-3px); }
 
         #skip-btn {
             position: absolute; bottom: 20px; left: 20px;
-            background: transparent; color: #555; border: none; cursor: pointer;
+            background: transparent; color: #444; border: none; cursor: pointer;
+            font-size: 12px;
         }
     </style>
 </head>
@@ -77,28 +90,28 @@
 
     <div id="splash-screen">
         <div class="loader-container"><div id="progress" class="loader-bar"></div></div>
-        <button id="skip-btn" onclick="showLogin()">Skip</button>
+        <button id="skip-btn" onclick="showLogin()">تخطي</button>
     </div>
 
     <div id="login-container" style="display: none;">
         <div class="login-box">
-            <h2>دخول نظام فطين</h2>
+            <h2>دخول النظام</h2>
             <div class="input-group">
                 <label>اسم المستخدم</label>
-                <input type="text" id="username" placeholder="أدخل الاسم">
+                <input type="text" id="username" placeholder="اسمك هنا">
             </div>
             <div class="input-group">
                 <label>كلمة المرور</label>
                 <input type="password" id="password" placeholder="••••••••">
             </div>
-            <button class="login-btn" onclick="handleLogin()">دخول</button>
-            <p style="color: #555; font-size: 12px; margin-top: 20px;">FATEEN POS - ASWAN V1.0</p>
+            <button class="login-btn" onclick="handleLogin()">تسجيل الدخول</button>
+            <p style="color: #444; font-size: 11px; margin-top: 25px; font-weight: 300;">FATEEN AI SYSTEM • ASWAN 2026</p>
         </div>
     </div>
 
     <script>
         let progress = 0;
-        const duration = 3000; // تم تقليل الوقت لـ 3 ثواني
+        const duration = 3000; // 3 ثواني
         const interval = 100;
         const step = (interval / duration) * 100;
 
@@ -122,12 +135,10 @@
         function handleLogin() {
             const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
-            
-            // تست بسيط للدخول
             if(user === "admin" && pass === "123") {
-                alert("أهلاً بك يا مدير! جاري فتح لوحة التحكم...");
+                alert("تم التحقق بنجاح.. جاري فتح عالم فطين!");
             } else {
-                alert("خطأ في البيانات، حاول مرة ثانية.");
+                alert("خطأ في البيانات.. السيستم محمي!");
             }
         }
     </script>
