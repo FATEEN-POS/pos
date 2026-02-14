@@ -3,145 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fateen POS - Loading</title>
+    <title>Fateen POS - Login</title>
     <style>
-        /* إعدادات الجسم لضمان ملء الشاشة */
         body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #000;
-        }
-
-        /* شاشة الترحيب - تغطية كاملة احترافية */
-        #splash-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000 url('باك جراوند لوجو اسود.jpg') no-repeat center center;
-            background-size: cover; /* دي اللي بتخلي الصورة تظبط على أي مقاس شاشة */
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            transition: opacity 1s ease-out;
-        }
-
-        /* تأثير النبض للصورة */
-        #splash-screen::before {
-            content: "";
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: inherit;
-            animation: pulse-animation 3s infinite ease-in-out;
-            z-index: -1;
-        }
-
-        @keyframes pulse-animation {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.05); opacity: 0.8; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        /* حاوية شريط التحميل */
-        .loader-container {
-            position: absolute;
-            bottom: 100px;
-            width: 80%;
-            max-width: 400px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        /* شريط التحميل المتحرك */
-        .loader-bar {
-            width: 0%;
-            height: 100%;
-            background: #fff; /* لون الشريط */
-            box-shadow: 0 0 10px #fff;
-            transition: width 0.1s linear;
-        }
-
-        /* محتوى السيستم الأساسي */
-        #main-system {
-            display: none;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background-color: #0b0b0b;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #1a1a1a;
         }
+
+        /* شاشة الترحيب المعدلة (3 ثوانٍ) */
+        #splash-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000 url('باك جراوند لوجو اسود.jpg') no-repeat center center;
+            background-size: cover; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 9999;
+            transition: opacity 0.8s ease-out;
+        }
+
+        .loader-container {
+            position: absolute; bottom: 80px; width: 60%; max-width: 300px;
+            height: 3px; background: rgba(255, 255, 255, 0.1); border-radius: 5px;
+        }
+
+        .loader-bar {
+            width: 0%; height: 100%; background: #fff;
+            box-shadow: 0 0 8px #fff; transition: width 0.1s linear;
+        }
+
+        /* تصميم صفحة الـ Login */
+        #login-container {
+            display: none; height: 100vh; width: 100%;
+            display: flex; justify-content: center; align-items: center;
+            background: radial-gradient(circle, #1a1a1a 0%, #000 100%);
+        }
+
+        .login-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px; border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 90%; max-width: 400px; text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .login-box h2 { color: #fff; margin-bottom: 30px; font-weight: 300; }
+
+        .input-group { margin-bottom: 20px; text-align: right; }
+
+        .input-group label { color: #bbb; display: block; margin-bottom: 8px; font-size: 14px; }
+
+        .input-group input {
+            width: 100%; padding: 12px; background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px;
+            color: #fff; font-size: 16px; outline: none; transition: 0.3s;
+            box-sizing: border-box;
+        }
+
+        .input-group input:focus { border-color: #fff; background: rgba(255, 255, 255, 0.15); }
+
+        .login-btn {
+            width: 100%; padding: 12px; background: #fff; color: #000;
+            border: none; border-radius: 8px; font-weight: bold; font-size: 16px;
+            cursor: pointer; transition: 0.3s; margin-top: 10px;
+        }
+
+        .login-btn:hover { background: #ccc; transform: translateY(-2px); }
 
         #skip-btn {
-            position: absolute;
-            bottom: 30px;
-            left: 30px; /* مكان الزرار */
-            padding: 8px 15px;
-            background: rgba(255, 255, 255, 0.1);
-            color: #ccc;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            cursor: pointer;
-            border-radius: 5px;
-            font-size: 12px;
-            z-index: 10000;
+            position: absolute; bottom: 20px; left: 20px;
+            background: transparent; color: #555; border: none; cursor: pointer;
         }
-
-        #skip-btn:hover { background: rgba(255, 255, 255, 0.2); color: #fff; }
     </style>
 </head>
 <body>
 
     <div id="splash-screen">
-        <div class="loader-container">
-            <div id="progress" class="loader-bar"></div>
-        </div>
-        <button id="skip-btn" onclick="showSystem()">تخطي (Skip)</button>
+        <div class="loader-container"><div id="progress" class="loader-bar"></div></div>
+        <button id="skip-btn" onclick="showLogin()">Skip</button>
     </div>
 
-    <div id="main-system" style="display: none;">
-        <h1>مرحباً بك في نظام FATEEN POS</h1>
-        <p>السيستم جاهز للعمل في أسوان</p>
+    <div id="login-container" style="display: none;">
+        <div class="login-box">
+            <h2>دخول نظام فطين</h2>
+            <div class="input-group">
+                <label>اسم المستخدم</label>
+                <input type="text" id="username" placeholder="أدخل الاسم">
+            </div>
+            <div class="input-group">
+                <label>كلمة المرور</label>
+                <input type="password" id="password" placeholder="••••••••">
+            </div>
+            <button class="login-btn" onclick="handleLogin()">دخول</button>
+            <p style="color: #555; font-size: 12px; margin-top: 20px;">FATEEN POS - ASWAN V1.0</p>
+        </div>
     </div>
 
     <script>
         let progress = 0;
-        const progressBar = document.getElementById('progress');
-        const duration = 10000; // 10 ثواني
-        const intervalTime = 100; // تحديث كل 100 مللي ثانية
-        const increment = (intervalTime / duration) * 100;
+        const duration = 3000; // تم تقليل الوقت لـ 3 ثواني
+        const interval = 100;
+        const step = (interval / duration) * 100;
 
-        // تحريك شريط التحميل
         const timer = setInterval(() => {
-            progress += increment;
-            progressBar.style.width = progress + '%';
+            progress += step;
+            document.getElementById('progress').style.width = progress + '%';
+            if (progress >= 100) { clearInterval(timer); showLogin(); }
+        }, interval);
 
-            if (progress >= 100) {
-                clearInterval(timer);
-                showSystem();
-            }
-        }, intervalTime);
-
-        function showSystem() {
+        function showLogin() {
             clearInterval(timer);
             const splash = document.getElementById('splash-screen');
-            const system = document.getElementById('main-system');
-            
-            splash.style.opacity = '0'; 
+            const login = document.getElementById('login-container');
+            splash.style.opacity = '0';
             setTimeout(() => {
                 splash.style.display = 'none';
-                system.style.display = 'flex';
-            }, 1000);
+                login.style.display = 'flex';
+            }, 800);
+        }
+
+        function handleLogin() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            
+            // تست بسيط للدخول
+            if(user === "admin" && pass === "123") {
+                alert("أهلاً بك يا مدير! جاري فتح لوحة التحكم...");
+            } else {
+                alert("خطأ في البيانات، حاول مرة ثانية.");
+            }
         }
     </script>
 </body>
