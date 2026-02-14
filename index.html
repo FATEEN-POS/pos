@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fateen POS - Login</title>
+    <title>نظام فطين - تسجيل الدخول</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         * { font-family: 'Cairo', sans-serif; box-sizing: border-box; }
         body { margin: 0; background: #0b0b0b; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; }
@@ -14,18 +16,19 @@
             border: 1px solid rgba(255, 255, 255, 0.1); width: 90%; max-width: 400px;
             backdrop-filter: blur(15px); text-align: center;
         }
-        h2 { margin-bottom: 30px; font-weight: 700; }
+        h2 { margin-bottom: 30px; font-weight: 700; color: #fff; }
         .input-group { margin-bottom: 20px; text-align: right; }
         label { display: block; color: #aaa; margin-bottom: 8px; font-size: 14px; }
         input {
             width: 100%; padding: 14px; background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; color: #fff; outline: none;
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; color: #fff; outline: none; transition: 0.3s;
         }
+        input:focus { border-color: #fff; }
         .login-btn {
             width: 100%; padding: 15px; background: #fff; color: #000;
-            border: none; border-radius: 12px; font-weight: 700; cursor: pointer;
+            border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px;
         }
-        .login-btn:disabled { background: #555; }
+        .login-btn:disabled { background: #555; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -34,24 +37,25 @@
         <h2>دخول نظام فطين</h2>
         <div class="input-group">
             <label>كود المتجر (Store Key)</label>
-            <input type="text" id="storeKey" placeholder="ASW01">
+            <input type="text" id="storeKey" placeholder="مثلاً: ASW01" value="ASW01">
         </div>
         <div class="input-group">
             <label>اسم المستخدم</label>
-            <input type="text" id="username" placeholder="admin">
+            <input type="text" id="username" placeholder="اسم المستخدم" value="admin">
         </div>
         <div class="input-group">
             <label>كلمة المرور</label>
-            <input type="password" id="password" placeholder="•••">
+            <input type="password" id="password" placeholder="••••••••" value="123">
         </div>
         <button class="login-btn" id="loginBtn">تسجيل الدخول</button>
     </div>
 
     <script>
-        // البيانات الخاصة بمشروعك من الصور
+        // البيانات المستخرجة من صورك (ممنوع تغييرها)
         const SUPABASE_URL = 'https://xyvxowlbvuqbggkslwqr.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_nqIk7-m-V1uCV97HK0dQIA_ohU3B6D_R67-V91H63Uf65r3q';
-        
+
+        // إنشاء العميل
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         document.getElementById('loginBtn').addEventListener('click', async () => {
@@ -60,49 +64,34 @@
             const pWord = document.getElementById('password').value.trim();
             const btn = document.getElementById('loginBtn');
 
-            if (!sKey || !uName || !pWord) { alert("أكمل البيانات يا بطل!"); return; }
-
             btn.disabled = true;
             btn.innerText = "جاري الفحص...";
 
             try {
-                // 1. فحص المتجر
-                const { data: store, error: sErr } = await _supabase
-                    .from('stores')
-                    .select('*')
-                    .eq('store_key', sKey);
-
-                if (sErr || !store || store.length === 0) {
-                    alert("❌ كود المتجر ده مش عندنا في السيستم!");
-                    resetBtn(); return;
-                }
-
-                // 2. فحص الموظف
-                const { data: user, error: uErr } = await _supabase
+                // الفحص المباشر للمتجر والموظف في خطوة واحدة لسرعة الأداء
+                const { data, error } = await _supabase
                     .from('users')
-                    .select('*')
+                    .select('*, stores!inner(*)') // ربط جدول الموظفين بجدول المتاجر
+                    .eq('store_key', sKey)
                     .eq('username', uName)
-                    .eq('password', pWord)
-                    .eq('store_key', sKey);
+                    .eq('password', pWord);
 
-                if (uErr || !user || user.length === 0) {
-                    alert("❌ اسم المستخدم أو الباسورد غلط للمتجر ده!");
-                    resetBtn();
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    alert("✅ تم الدخول بنجاح! متجر: " + sKey);
+                    // هنا نفتح الصفحة الجاية
                 } else {
-                    alert("✅ مبروك! دخلت على متجر: " + store[0].store_name);
-                    // هنا هننطلق للداشبورد في الخطوة الجاية
+                    alert("❌ بيانات الدخول أو كود المتجر غير صحيحة");
                 }
-            } catch (e) {
-                alert("مشكلة في الاتصال بالسيرفر");
-                resetBtn();
+            } catch (err) {
+                console.error(err);
+                alert("حدث خطأ في الاتصال: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "تسجيل الدخول";
             }
         });
-
-        function resetBtn() {
-            const btn = document.getElementById('loginBtn');
-            btn.disabled = false;
-            btn.innerText = "تسجيل الدخول";
-        }
     </script>
 </body>
 </html>
