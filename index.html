@@ -1,71 +1,148 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Fateen POS - Loading</title>
     <style>
-        /* ستايل شاشة الترحيب */
+        /* إعدادات الجسم لضمان ملء الشاشة */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+        }
+
+        /* شاشة الترحيب - تغطية كاملة احترافية */
         #splash-screen {
             position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            height: 100vh;
+            height: 100%;
             background: #000 url('باك جراوند لوجو اسود.jpg') no-repeat center center;
-            background-size: cover; /* لضمان تغطية الصورة للشاشة بالكامل */
+            background-size: cover; /* دي اللي بتخلي الصورة تظبط على أي مقاس شاشة */
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 9999;
             transition: opacity 1s ease-out;
         }
 
-        /* ستايل محتوى السيستم (مخفي في البداية) */
-        #main-system {
-            display: none;
-            padding: 20px;
-            font-family: Arial, sans-serif;
-            text-align: center;
+        /* تأثير النبض للصورة */
+        #splash-screen::before {
+            content: "";
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: inherit;
+            animation: pulse-animation 3s infinite ease-in-out;
+            z-index: -1;
         }
 
-        /* زر التخطي */
+        @keyframes pulse-animation {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* حاوية شريط التحميل */
+        .loader-container {
+            position: absolute;
+            bottom: 100px;
+            width: 80%;
+            max-width: 400px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        /* شريط التحميل المتحرك */
+        .loader-bar {
+            width: 0%;
+            height: 100%;
+            background: #fff; /* لون الشريط */
+            box-shadow: 0 0 10px #fff;
+            transition: width 0.1s linear;
+        }
+
+        /* محتوى السيستم الأساسي */
+        #main-system {
+            display: none;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+        }
+
         #skip-btn {
             position: absolute;
             bottom: 30px;
-            right: 30px;
-            padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 1px solid white;
+            left: 30px; /* مكان الزرار */
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ccc;
+            border: 1px solid rgba(255, 255, 255, 0.3);
             cursor: pointer;
             border-radius: 5px;
+            font-size: 12px;
+            z-index: 10000;
         }
+
+        #skip-btn:hover { background: rgba(255, 255, 255, 0.2); color: #fff; }
     </style>
 </head>
 <body>
 
     <div id="splash-screen">
-        <button id="skip-btn" onclick="showSystem()">تخطي الانتظار (Skip)</button>
+        <div class="loader-container">
+            <div id="progress" class="loader-bar"></div>
+        </div>
+        <button id="skip-btn" onclick="showSystem()">تخطي (Skip)</button>
     </div>
 
-    <div id="main-system">
+    <div id="main-system" style="display: none;">
         <h1>مرحباً بك في نظام FATEEN POS</h1>
-        <p>جاري تشغيل لوحة التحكم الخاصة بمحلك في أسوان...</p>
+        <p>السيستم جاهز للعمل في أسوان</p>
     </div>
 
     <script>
+        let progress = 0;
+        const progressBar = document.getElementById('progress');
+        const duration = 10000; // 10 ثواني
+        const intervalTime = 100; // تحديث كل 100 مللي ثانية
+        const increment = (intervalTime / duration) * 100;
+
+        // تحريك شريط التحميل
+        const timer = setInterval(() => {
+            progress += increment;
+            progressBar.style.width = progress + '%';
+
+            if (progress >= 100) {
+                clearInterval(timer);
+                showSystem();
+            }
+        }, intervalTime);
+
         function showSystem() {
+            clearInterval(timer);
             const splash = document.getElementById('splash-screen');
             const system = document.getElementById('main-system');
             
-            splash.style.opacity = '0'; // تأثير الاختفاء التدريجي
+            splash.style.opacity = '0'; 
             setTimeout(() => {
                 splash.style.display = 'none';
-                system.style.display = 'block';
-            }, 1000); // إخفاء بعد ثانية من بداية الـ Fade
+                system.style.display = 'flex';
+            }, 1000);
         }
-
-        // ضبط المؤقت لـ 10 ثوانٍ (10000 مللي ثانية)
-        setTimeout(showSystem, 10000);
     </script>
 </body>
 </html>
