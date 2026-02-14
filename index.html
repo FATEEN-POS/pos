@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام فطين - تسجيل الدخول</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <style>
         * { font-family: 'Cairo', sans-serif; box-sizing: border-box; }
         body { margin: 0; background: #0b0b0b; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; }
@@ -16,19 +14,18 @@
             border: 1px solid rgba(255, 255, 255, 0.1); width: 90%; max-width: 400px;
             backdrop-filter: blur(15px); text-align: center;
         }
-        h2 { margin-bottom: 30px; font-weight: 700; color: #fff; }
+        h2 { margin-bottom: 30px; font-weight: 700; }
         .input-group { margin-bottom: 20px; text-align: right; }
         label { display: block; color: #aaa; margin-bottom: 8px; font-size: 14px; }
         input {
             width: 100%; padding: 14px; background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; color: #fff; outline: none; transition: 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; color: #fff; outline: none;
         }
-        input:focus { border-color: #fff; }
         .login-btn {
             width: 100%; padding: 15px; background: #fff; color: #000;
-            border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px;
+            border: none; border-radius: 12px; font-weight: 700; cursor: pointer;
         }
-        .login-btn:disabled { background: #555; cursor: not-allowed; }
+        .login-btn:disabled { background: #555; }
     </style>
 </head>
 <body>
@@ -37,23 +34,23 @@
         <h2>دخول نظام فطين</h2>
         <div class="input-group">
             <label>كود المتجر (Store Key)</label>
-            <input type="text" id="storeKey" placeholder="مثلاً: ASW01" value="ASW01">
+            <input type="text" id="storeKey" placeholder="مثلاً: ASW01">
         </div>
         <div class="input-group">
             <label>اسم المستخدم</label>
-            <input type="text" id="username" placeholder="اسم المستخدم" value="admin">
+            <input type="text" id="username" placeholder="admin">
         </div>
         <div class="input-group">
             <label>كلمة المرور</label>
-            <input type="password" id="password" placeholder="••••••••" value="123">
+            <input type="password" id="password" placeholder="•••">
         </div>
         <button class="login-btn" id="loginBtn">تسجيل الدخول</button>
     </div>
 
     <script>
-        // البيانات المستخرجة من صورك (ممنوع تغييرها)
-        const SUPABASE_URL = 'https://xyvxowlbvuqbggkslwqr.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_nqIk7-m-V1uCV97HK0dQIA_ohU3B6D_R67-V91H63Uf65r3q';
+        // البيانات المستخرجة بدقة من صورك المرفقة
+        const SUPABASE_URL = 'https://xyvxowlbvuqbggkslwqr.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo';
 
         // إنشاء العميل
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -64,14 +61,16 @@
             const pWord = document.getElementById('password').value.trim();
             const btn = document.getElementById('loginBtn');
 
+            if (!sKey || !uName || !pWord) { alert("أكمل البيانات!"); return; }
+
             btn.disabled = true;
-            btn.innerText = "جاري الفحص...";
+            btn.innerText = "جاري التحقق...";
 
             try {
-                // الفحص المباشر للمتجر والموظف في خطوة واحدة لسرعة الأداء
+                // البحث في جدول الموظفين
                 const { data, error } = await _supabase
                     .from('users')
-                    .select('*, stores!inner(*)') // ربط جدول الموظفين بجدول المتاجر
+                    .select('*')
                     .eq('store_key', sKey)
                     .eq('username', uName)
                     .eq('password', pWord);
@@ -80,9 +79,9 @@
 
                 if (data && data.length > 0) {
                     alert("✅ تم الدخول بنجاح! متجر: " + sKey);
-                    // هنا نفتح الصفحة الجاية
+                    // هنا نفتح الداشبورد
                 } else {
-                    alert("❌ بيانات الدخول أو كود المتجر غير صحيحة");
+                    alert("❌ بيانات الدخول غلط للمتجر ده!");
                 }
             } catch (err) {
                 console.error(err);
