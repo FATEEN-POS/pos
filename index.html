@@ -3,71 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام فطين - تسجيل الدخول</title>
+    <title>نظام فطين POS - نسخة المطور</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { font-family: 'Cairo', sans-serif; box-sizing: border-box; }
-        body { margin: 0; background: #0b0b0b; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        body { margin: 0; background: #000; color: #fff; overflow: hidden; }
+
+        /* --- 1. Splash Screen الفخمة --- */
+        #splash-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, #1a1a1a 0%, #000 100%);
+            display: flex; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 9999; transition: all 0.8s ease-in-out;
+        }
+        .logo-text { font-size: 3rem; font-weight: 700; letter-spacing: 8px; margin-bottom: 10px; animation: pulse 2s infinite; }
+        .loader-bar { width: 200px; height: 3px; background: #333; border-radius: 5px; overflow: hidden; }
+        .loader-progress { width: 0%; height: 100%; background: #fff; animation: load 2.5s forwards; }
+        
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.95); } }
+        @keyframes load { 0% { width: 0%; } 100% { width: 100%; } }
+
+        /* --- 2. واجهة الدخول --- */
+        .login-container {
+            display: none; height: 100vh; justify-content: center; align-items: center;
+            background: #0b0b0b; opacity: 0; transition: opacity 0.8s ease;
+        }
         .login-box {
-            background: rgba(255, 255, 255, 0.05); padding: 40px; border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1); width: 90%; max-width: 400px;
-            backdrop-filter: blur(15px); text-align: center;
+            background: rgba(255, 255, 255, 0.03); padding: 40px; border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1); width: 100%; max-width: 420px;
+            backdrop-filter: blur(20px); box-shadow: 0 25px 50px rgba(0,0,0,0.5);
         }
-        h2 { margin-bottom: 30px; font-weight: 700; }
-        .input-group { margin-bottom: 20px; text-align: right; }
-        label { display: block; color: #aaa; margin-bottom: 8px; font-size: 14px; }
+        h2 { font-weight: 700; margin-bottom: 30px; text-align: center; }
+        .input-group { margin-bottom: 20px; position: relative; }
         input {
-            width: 100%; padding: 14px; background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; color: #fff; outline: none;
+            width: 100%; padding: 16px; background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
+            color: #fff; outline: none; font-size: 16px; transition: 0.3s;
         }
+        input:focus { border-color: #fff; background: rgba(255, 255, 255, 0.1); }
+        
         .login-btn {
-            width: 100%; padding: 15px; background: #fff; color: #000;
-            border: none; border-radius: 12px; font-weight: 700; cursor: pointer;
+            width: 100%; padding: 16px; background: #fff; color: #000;
+            border: none; border-radius: 12px; font-weight: 700; font-size: 18px;
+            cursor: pointer; transition: 0.3s; margin-top: 10px;
         }
-        .login-btn:disabled { background: #555; }
+        .login-btn:hover { background: #ccc; transform: translateY(-2px); }
+        .login-btn:disabled { background: #444; cursor: not-allowed; }
+
+        /* تأثير تحميل الزر */
+        .loading-spinner {
+            display: none; width: 20px; height: 20px; border: 3px solid #000;
+            border-top: 3px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <div class="login-box">
-        <h2>دخول نظام فطين</h2>
-        <div class="input-group">
-            <label>كود المتجر (Store Key)</label>
-            <input type="text" id="storeKey" placeholder="مثلاً: ASW01">
+    <div id="splash-screen">
+        <div class="logo-text">FATEEN</div>
+        <div class="loader-bar"><div class="loader-progress"></div></div>
+        <p style="margin-top: 15px; color: #888; font-size: 14px;">PREPARING SYSTEM...</p>
+    </div>
+
+    <div class="login-container" id="loginUI">
+        <div class="login-box">
+            <h2>تسجيل الدخول</h2>
+            
+            <div class="input-group">
+                <input type="text" id="storeKey" placeholder="كود المتجر (مثلاً: ASW01)">
+            </div>
+            
+            <div class="input-group">
+                <input type="text" id="username" placeholder="اسم المستخدم">
+            </div>
+
+            <div class="input-group">
+                <input type="password" id="password" placeholder="كلمة المرور">
+            </div>
+
+            <button class="login-btn" id="loginBtn">
+                <span id="btnText">دخول النظام</span>
+                <div class="loading-spinner" id="btnSpinner"></div>
+            </button>
         </div>
-        <div class="input-group">
-            <label>اسم المستخدم</label>
-            <input type="text" id="username" placeholder="admin">
-        </div>
-        <div class="input-group">
-            <label>كلمة المرور</label>
-            <input type="password" id="password" placeholder="•••">
-        </div>
-        <button class="login-btn" id="loginBtn">تسجيل الدخول</button>
     </div>
 
     <script>
-        // البيانات المستخرجة بدقة من صورك المرفقة
-        const SUPABASE_URL = 'https://xyvxowlbvuqbggkslwqr.supabase.co'; 
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo';
+        // بيانات الربط الخاصة بك
+        const SUPABASE_URL = 'https://xyvxowlbvuqbggkslwqr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAl (truncated for security)'; // استخدم المفتاح الكامل لديك
+        
+        const _supabase = supabase.createClient(SUPABASE_URL, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo');
 
-        // إنشاء العميل
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // إدارة شاشة الـ Splash
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                const ui = document.getElementById('loginUI');
+                
+                splash.style.opacity = '0';
+                setTimeout(() => {
+                    splash.style.display = 'none';
+                    ui.style.display = 'flex';
+                    setTimeout(() => ui.style.opacity = '1', 50);
+                }, 800);
+            }, 3000); // عرض الـ Splash لمدة 3 ثوانٍ
+        });
 
+        // منطق تسجيل الدخول وتحديد الصلاحيات
         document.getElementById('loginBtn').addEventListener('click', async () => {
             const sKey = document.getElementById('storeKey').value.trim();
             const uName = document.getElementById('username').value.trim();
             const pWord = document.getElementById('password').value.trim();
             const btn = document.getElementById('loginBtn');
+            const btnText = document.getElementById('btnText');
+            const spinner = document.getElementById('btnSpinner');
 
-            if (!sKey || !uName || !pWord) { alert("أكمل البيانات!"); return; }
+            if(!sKey || !uName || !pWord) return alert("برجاء إدخال كافة البيانات");
 
+            // تشغيل تأثير التحميل في الزر
             btn.disabled = true;
-            btn.innerText = "جاري التحقق...";
+            btnText.style.display = 'none';
+            spinner.style.display = 'inline-block';
 
             try {
-                // البحث في جدول الموظفين
                 const { data, error } = await _supabase
                     .from('users')
                     .select('*')
@@ -78,17 +139,28 @@
                 if (error) throw error;
 
                 if (data && data.length > 0) {
-                    alert("✅ تم الدخول بنجاح! متجر: " + sKey);
-                    // هنا نفتح الداشبورد
+                    const user = data[0];
+                    const role = user.role; // manager, developer, or employee
+
+                    if (role === 'developer') {
+                        alert("✅ أهلاً بك يا مطور النظام. جارِ فتح بيئة التطوير...");
+                        // window.location.href = "developer.html";
+                    } else if (role === 'manager') {
+                        alert("✅ مرحباً أيها المدير. تم الدخول للوحة التحكم.");
+                        // window.location.href = "manager.html";
+                    } else {
+                        alert("✅ تم دخول الموظف بنجاح.");
+                        // window.location.href = "pos.html";
+                    }
                 } else {
-                    alert("❌ بيانات الدخول غلط للمتجر ده!");
+                    alert("❌ بيانات الدخول غير صحيحة");
                 }
             } catch (err) {
-                console.error(err);
-                alert("حدث خطأ في الاتصال: " + err.message);
+                alert("خطأ في الاتصال: " + err.message);
             } finally {
                 btn.disabled = false;
-                btn.innerText = "تسجيل الدخول";
+                btnText.style.display = 'inline';
+                spinner.style.display = 'none';
             }
         });
     </script>
