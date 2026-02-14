@@ -9,17 +9,23 @@
     <style>
         * { font-family: 'Cairo', sans-serif; box-sizing: border-box; }
         body { margin: 0; background: #0b0b0b; color: #fff; padding: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; }
+        .container { max-width: 1100px; margin: 0 auto; }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
-        .card { background: #1a1a1a; padding: 25px; border-radius: 15px; border: 1px solid #333; margin-bottom: 20px; }
-        h2 { color: #fff; margin-top: 0; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: #1a1a1a; padding: 25px; border-radius: 15px; border: 1px solid #333; margin-bottom: 20px; }
+        h2 { color: #fff; margin-top: 0; font-size: 1.2rem; border-right: 4px solid #fff; padding-right: 10px; }
         .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 8px; color: #888; }
-        input, select { width: 100%; padding: 12px; background: #000; border: 1px solid #333; border-radius: 8px; color: #fff; outline: none; }
+        label { display: block; margin-bottom: 8px; color: #888; font-size: 14px; }
+        input, select, textarea { width: 100%; padding: 12px; background: #000; border: 1px solid #333; border-radius: 8px; color: #fff; outline: none; }
         button { width: 100%; padding: 12px; background: #fff; color: #000; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.3s; }
         button:hover { background: #ccc; }
-        .status-msg { margin-top: 10px; font-size: 14px; text-align: center; }
+        .btn-delete { background: #ff4444; color: #fff; margin-top: 10px; }
+        .btn-delete:hover { background: #cc0000; }
+        .logout-btn { width: auto; padding: 10px 25px; background: #ff4444; color: #fff; }
+        .status-msg { margin-top: 10px; font-size: 13px; text-align: center; }
+        
+        /* ستايل الملاحظات */
+        .notes-area { height: 150px; resize: none; margin-bottom: 10px; border-color: #444; }
     </style>
 </head>
 <body>
@@ -27,50 +33,62 @@
 <div class="container">
     <div class="header">
         <h1>لوحة تحكم المطور 🛠️</h1>
-        <button onclick="location.href='index.html'" style="width: auto; padding: 8px 20px; background: #ff4444; color: #fff;">تسجيل خروج</button>
+        <button class="logout-btn" onclick="window.location.href='index.html'">تسجيل خروج</button>
     </div>
 
     <div class="grid">
         <div class="card">
-            <h2>اضافة محل جديد</h2>
+            <h2>إدارة المتاجر</h2>
             <div class="form-group">
-                <label>كود المحل (Store Key)</label>
-                <input type="text" id="newStoreKey" placeholder="مثل: ASW02">
+                <label>كود المحل</label>
+                <input type="text" id="newStoreKey" placeholder="ASW02">
             </div>
             <div class="form-group">
                 <label>اسم المحل</label>
-                <input type="text" id="newStoreName" placeholder="مثل: فرع القاهرة">
+                <input type="text" id="newStoreName" placeholder="فرع جديد">
             </div>
-            <button onclick="addNewStore()">حفظ المحل الجديد</button>
+            <button onclick="addNewStore()">حفظ المحل</button>
+            <hr style="border: 0.5px solid #333; margin: 20px 0;">
+            <label>حذف محل موجود</label>
+            <select id="deleteStoreList"></select>
+            <button class="btn-delete" onclick="deleteStore()">حذف المحل المحدد</button>
             <div id="storeMsg" class="status-msg"></div>
         </div>
 
         <div class="card">
-            <h2>اضافة مستخدم جديد</h2>
+            <h2>إدارة المستخدمين</h2>
             <div class="form-group">
                 <label>اختر المحل</label>
-                <select id="userStoreKey">
-                    <option value="">-- اختر المحل --</option>
-                    </select>
+                <select id="userStoreKey"></select>
             </div>
             <div class="form-group">
                 <label>اسم المستخدم</label>
-                <input type="text" id="newUsername" placeholder="اسم المستخدم للولوج">
+                <input type="text" id="newUsername" placeholder="Username">
             </div>
             <div class="form-group">
                 <label>كلمة المرور</label>
-                <input type="password" id="newUserPass" placeholder="••••••••">
+                <input type="password" id="newUserPass" placeholder="Password">
             </div>
             <div class="form-group">
-                <label>الصلاحية (Role)</label>
+                <label>الصلاحية</label>
                 <select id="newUserRole">
-                    <option value="employee">موظف (Employee)</option>
-                    <option value="manager">مدير (Manager)</option>
-                    <option value="developer">مطور (Developer)</option>
+                    <option value="employee">موظف</option>
+                    <option value="manager">مدير</option>
+                    <option value="developer">مطور</option>
                 </select>
             </div>
-            <button onclick="addNewUser()">حفظ المستخدم</button>
+            <button onclick="addNewUser()">إضافة مستخدم</button>
+            <hr style="border: 0.5px solid #333; margin: 20px 0;">
+            <label>حذف موظف</label>
+            <select id="deleteUserList"></select>
+            <button class="btn-delete" onclick="deleteUser()">حذف المستخدم</button>
             <div id="userMsg" class="status-msg"></div>
+        </div>
+
+        <div class="card" style="grid-column: span 2;">
+            <h2>ملاحظات المطور 📝</h2>
+            <textarea id="devNotes" class="notes-area" placeholder="اكتب ملاحظاتك هنا (سيتم حفظها تلقائياً)..."></textarea>
+            <p style="font-size: 12px; color: #666;">* يتم حفظ الملاحظات في متصفحك الحالي فقط.</p>
         </div>
     </div>
 </div>
@@ -80,57 +98,74 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // 1. وظيفة إضافة محل
+    // --- وظائف الملاحظات ---
+    const notesArea = document.getElementById('devNotes');
+    notesArea.value = localStorage.getItem('fateen_notes') || '';
+    notesArea.addEventListener('input', () => {
+        localStorage.setItem('fateen_notes', notesArea.value);
+    });
+
+    // --- إدارة المحلات ---
     async function addNewStore() {
         const key = document.getElementById('newStoreKey').value.trim();
         const name = document.getElementById('newStoreName').value.trim();
-        if(!key || !name) return alert("اكمل بيانات المحل");
-
+        if(!key || !name) return alert("أكمل البيانات");
         const { error } = await _supabase.from('stores').insert([{ store_key: key, store_name: name }]);
-        
-        if(error) {
-            document.getElementById('storeMsg').innerHTML = "❌ خطأ: " + error.message;
-        } else {
-            document.getElementById('storeMsg').innerHTML = "✅ تم اضافة المحل بنجاح!";
-            loadStores(); // تحديث القائمة
+        if(error) alert(error.message); else { alert("تم الإضافة"); loadAllData(); }
+    }
+
+    async function deleteStore() {
+        const key = document.getElementById('deleteStoreList').value;
+        if(!key) return;
+        if(confirm(`هل أنت متأكد من حذف المحل ${key}؟ سيتم حذف الموظفين المرتبطين به أيضاً.`)) {
+            const { error } = await _supabase.from('stores').delete().eq('store_key', key);
+            if(error) alert(error.message); else { alert("تم الحذف"); loadAllData(); }
         }
     }
 
-    // 2. وظيفة إضافة مستخدم
+    // --- إدارة المستخدمين ---
     async function addNewUser() {
         const sKey = document.getElementById('userStoreKey').value;
         const uName = document.getElementById('newUsername').value.trim();
         const uPass = document.getElementById('newUserPass').value;
         const uRole = document.getElementById('newUserRole').value;
+        if(!sKey || !uName || !uPass) return alert("أكمل البيانات");
+        const { error } = await _supabase.from('users').insert([{ username: uName, password: uPass, store_key: sKey, role: uRole }]);
+        if(error) alert(error.message); else { alert("تم إضافة المستخدم"); loadAllData(); }
+    }
 
-        if(!sKey || !uName || !uPass) return alert("اكمل بيانات المستخدم");
-
-        const { error } = await _supabase.from('users').insert([
-            { username: uName, password: uPass, store_key: sKey, role: uRole }
-        ]);
-
-        if(error) {
-            document.getElementById('userMsg').innerHTML = "❌ خطأ: " + error.message;
-        } else {
-            document.getElementById('userMsg').innerHTML = "✅ تم اضافة المستخدم بنجاح!";
+    async function deleteUser() {
+        const id = document.getElementById('deleteUserList').value;
+        if(!id) return;
+        if(confirm("هل أنت متأكد من حذف هذا المستخدم؟")) {
+            const { error } = await _supabase.from('users').delete().eq('id', id);
+            if(error) alert(error.message); else { alert("تم الحذف"); loadAllData(); }
         }
     }
 
-    // 3. تحميل المحلات في القائمة المنسدلة
-    async function loadStores() {
-        const { data, error } = await _supabase.from('stores').select('store_key, store_name');
-        if(data) {
-            const select = document.getElementById('userStoreKey');
-            select.innerHTML = '<option value="">-- اختر المحل --</option>';
-            data.forEach(store => {
-                select.innerHTML += `<option value="${store.store_key}">${store.store_name} (${store.store_key})</option>`;
-            });
-        }
+    // --- تحميل البيانات ---
+    async function loadAllData() {
+        // تحميل المحلات للقوائم
+        const { data: stores } = await _supabase.from('stores').select('*');
+        const storeSelect = document.getElementById('userStoreKey');
+        const delStoreSelect = document.getElementById('deleteStoreList');
+        storeSelect.innerHTML = delStoreSelect.innerHTML = '';
+        stores?.forEach(s => {
+            let opt = `<option value="${s.store_key}">${s.store_name} (${s.store_key})</option>`;
+            storeSelect.innerHTML += opt;
+            delStoreSelect.innerHTML += opt;
+        });
+
+        // تحميل المستخدمين للحذف
+        const { data: users } = await _supabase.from('users').select('*');
+        const userDelSelect = document.getElementById('deleteUserList');
+        userDelSelect.innerHTML = '';
+        users?.forEach(u => {
+            userDelSelect.innerHTML += `<option value="${u.id}">${u.username} - [${u.store_key}]</option>`;
+        });
     }
 
-    // تشغيل عند الفتح
-    loadStores();
+    loadAllData();
 </script>
-
 </body>
 </html>
