@@ -3,230 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة المطور - نظام فطين 🛠️</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <title>Fateen OS | Developer Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * { font-family: 'Cairo', sans-serif; box-sizing: border-box; }
-        body { margin: 0; background: #0b0b0b; color: #fff; padding: 20px; }
-        .container { max-width: 1100px; margin: 0 auto; }
+        :root { --bg: #050505; --card: #121212; --accent: #ffffff; --red: #ff3b3b; --gray: #252525; }
+        * { font-family: 'Cairo', sans-serif; box-sizing: border-box; transition: 0.3s; }
+        body { margin: 0; background: var(--bg); color: #fff; padding: 20px; }
         
-        /* الهيدر */
-        .header { 
-            display: flex; justify-content: space-between; align-items: center; 
-            border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 30px; 
-        }
-        .logout-btn { 
-            background: #ff4444; color: #fff; border: none; padding: 10px 25px; 
-            border-radius: 8px; cursor: pointer; font-weight: 700; transition: 0.3s;
-        }
-        .logout-btn:hover { background: #cc0000; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding: 20px; border-bottom: 1px solid var(--gray); }
+        .stats-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid var(--gray); text-align: center; }
+        .stat-card h3 { margin: 0; font-size: 24px; color: var(--accent); }
+        .stat-card p { margin: 5px 0 0; color: #888; }
 
-        /* التصميم الشبكي */
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .card { 
-            background: #1a1a1a; padding: 25px; border-radius: 15px; 
-            border: 1px solid #333; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        .main-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .tool-card { 
+            background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--gray);
+            text-align: center; cursor: pointer; position: relative; overflow: hidden;
         }
-        h2 { font-size: 1.2rem; margin-top: 0; border-right: 4px solid #fff; padding-right: 10px; margin-bottom: 20px; }
+        .tool-card:hover { border-color: #fff; transform: translateY(-5px); background: #1a1a1a; }
+        .tool-card i { font-size: 40px; display: block; margin-bottom: 15px; }
 
-        /* الحقول */
-        .form-group { margin-bottom: 15px; text-align: right; }
-        label { display: block; margin-bottom: 8px; color: #888; font-size: 14px; }
+        /* Popups (Modals) */
+        .modal { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.9); display: none; justify-content: center; 
+            align-items: center; z-index: 1000; backdrop-filter: blur(10px);
+        }
+        .modal-content { 
+            background: var(--card); width: 90%; max-width: 500px; padding: 30px; 
+            border-radius: 25px; border: 1px solid var(--gray); position: relative;
+        }
+        .close-btn { position: absolute; top: 20px; left: 20px; cursor: pointer; font-size: 20px; }
+
         input, select, textarea { 
-            width: 100%; padding: 12px; background: #000; border: 1px solid #333; 
-            border-radius: 8px; color: #fff; outline: none; font-size: 15px;
+            width: 100%; padding: 12px; background: #000; border: 1px solid var(--gray); 
+            border-radius: 10px; color: #fff; margin-bottom: 15px; outline: none;
         }
-        input:focus { border-color: #fff; }
-
-        /* الأزرار */
-        .btn-main { 
-            width: 100%; padding: 12px; background: #fff; color: #000; 
-            border: none; border-radius: 8px; font-weight: 700; cursor: pointer; 
-            transition: 0.3s; margin-top: 10px;
+        button { 
+            width: 100%; padding: 12px; background: var(--accent); color: #000; 
+            border: none; border-radius: 10px; font-weight: 700; cursor: pointer; 
         }
-        .btn-main:hover { background: #ccc; }
-        .btn-delete { background: #ff4444; color: #fff; }
-        .btn-delete:hover { background: #cc0000; }
-
-        /* الملاحظات */
-        .notes-area { height: 150px; resize: none; border-color: #444; margin-top: 10px; }
+        .btn-del { background: var(--red); color: #fff; margin-top: 5px; }
         
-        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+        .logout-btn { background: var(--red); color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; width: auto; }
     </style>
 </head>
 <body>
 
-<div class="container">
     <div class="header">
-        <h1>لوحة تحكم المطور 🛠️</h1>
-        <button class="logout-btn" onclick="handleLogout()">تسجيل خروج</button>
+        <h1>لوحة المطور | FATEEN OS 🛠️</h1>
+        <button class="logout-btn" onclick="logout()">تسجيل خروج</button>
     </div>
 
-    <div class="grid">
-        <div class="card">
-            <h2>إدارة المتاجر (Stores)</h2>
-            <div class="form-group">
-                <label>كود المحل الجديد</label>
-                <input type="text" id="storeKeyInput" placeholder="مثل: ASW02">
-            </div>
-            <div class="form-group">
-                <label>اسم المحل</label>
-                <input type="text" id="storeNameInput" placeholder="مثل: فرع الجيزة">
-            </div>
-            <button class="btn-main" onclick="addStore()">+ حفظ المحل</button>
-            
-            <hr style="border: 0.1px solid #333; margin: 25px 0;">
-            
-            <div class="form-group">
-                <label>حذف محل موجود</label>
-                <select id="storeDeleteSelect"></select>
-            </div>
-            <button class="btn-main btn-delete" onclick="deleteStore()">حذف المحل المحدد</button>
-        </div>
+    <div class="stats-bar">
+        <div class="stat-card"><h3 id="count-stores">0</h3><p>المتاجر</p></div>
+        <div class="stat-card"><h3 id="count-users">0</h3><p>المستخدمين</p></div>
+        <div class="stat-card"><h3>Active</h3><p>حالة النظام</p></div>
+    </div>
 
-        <div class="card">
-            <h2>إدارة المستخدمين (Users)</h2>
-            <div class="form-group">
-                <label>المحل التابع له</label>
-                <select id="userStoreSelect"></select>
-            </div>
-            <div class="form-group">
-                <label>اسم المستخدم</label>
-                <input type="text" id="userNameInput" placeholder="Username">
-            </div>
-            <div class="form-group">
-                <label>كلمة المرور</label>
-                <input type="password" id="userPassInput" placeholder="Password">
-            </div>
-            <div class="form-group">
-                <label>الصلاحية (Role)</label>
-                <select id="userRoleSelect">
-                    <option value="employee">موظف (Employee)</option>
-                    <option value="manager">مدير (Manager)</option>
-                    <option value="developer">مطور (Developer)</option>
-                </select>
-            </div>
-            <button class="btn-main" onclick="addUser()">+ إضافة المستخدم</button>
+    <div class="main-grid">
+        <div class="tool-card" onclick="openModal('storeModal')"><i>🏪</i><h3>إدارة المتاجر</h3><p>إضافة، حذف، وتعديل الفروع</p></div>
+        <div class="tool-card" onclick="openModal('userModal')"><i>👥</i><h3>إدارة الموظفين</h3><p>التحكم في الحسابات والصلاحيات</p></div>
+        <div class="tool-card" onclick="openModal('keyModal')"><i>🔑</i><h3>أكواد التفعيل</h3><p>توليد مفاتيح تشغيل المحلات</p></div>
+        <div class="tool-card" onclick="openModal('notesModal')"><i>📝</i><h3>ملاحظاتي</h3><p>سجل أفكارك وتطويراتك</p></div>
+    </div>
 
-            <hr style="border: 0.1px solid #333; margin: 25px 0;">
-
-            <div class="form-group">
-                <label>حذف مستخدم</label>
-                <select id="userDeleteSelect"></select>
-            </div>
-            <button class="btn-main btn-delete" onclick="deleteUser()">حذف المستخدم المحدد</button>
-        </div>
-
-        <div class="card" style="grid-column: span 2;">
-            <h2>ملاحظات المطور الشخصية 📝</h2>
-            <textarea id="devNotes" class="notes-area" placeholder="اكتب أفكارك أو التحديثات القادمة هنا..."></textarea>
-            <p style="font-size: 12px; color: #555; margin-top: 5px;">* الملاحظات تُحفظ تلقائياً في متصفحك الحالي.</p>
+    <div id="storeModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('storeModal')">✕</span>
+            <h2>🏪 إدارة المتاجر</h2>
+            <input type="text" id="st-key" placeholder="كود المتجر (ASW01)">
+            <input type="text" id="st-name" placeholder="اسم المتجر">
+            <button onclick="addStore()">حفظ المتجر</button>
+            <hr style="border: 0.1px solid #333; margin: 20px 0;">
+            <select id="st-del-list"></select>
+            <button class="btn-del" onclick="deleteStore()">حذف المتجر نهائياً</button>
         </div>
     </div>
-</div>
 
-<script>
-    // 1. حارس الأمان (يمنع الدخول بدون لوجن مطور)
-    (function checkAuth() {
-        const isLoggedIn = sessionStorage.getItem('isLoggedIn');
-        const role = sessionStorage.getItem('userRole');
-        if (isLoggedIn !== 'true' || role !== 'developer') {
-            window.location.href = "index.html";
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('userModal')">✕</span>
+            <h2>👥 إدارة المستخدمين</h2>
+            <select id="us-store-list"></select>
+            <input type="text" id="us-name" placeholder="اسم المستخدم">
+            <input type="password" id="us-pass" placeholder="كلمة المرور">
+            <select id="us-role">
+                <option value="employee">موظف</option>
+                <option value="manager">مدير</option>
+                <option value="developer">مطور</option>
+            </select>
+            <button onclick="addUser()">إضافة حساب</button>
+            <hr style="border: 0.1px solid #333; margin: 20px 0;">
+            <select id="us-del-list"></select>
+            <button class="btn-del" onclick="deleteUser()">حذف الحساب</button>
+        </div>
+    </div>
+
+    <div id="keyModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('keyModal')">✕</span>
+            <h2>🔑 توليد كود تفعيل</h2>
+            <p style="font-size: 12px; color: #888;">اختر المحل لتوليد كود تشغيل فريد له:</p>
+            <select id="key-store-list"></select>
+            <div id="generated-key" style="background:#000; padding:15px; border-radius:10px; margin-bottom:15px; text-align:center; font-family:monospace; font-size:20px; color:#0f0;">---- ---- ----</div>
+            <button onclick="generateKey()">توليد كود جديد</button>
+        </div>
+    </div>
+
+    <div id="notesModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('notesModal')">✕</span>
+            <h2>📝 مفكرة المطور</h2>
+            <textarea id="dev-notes" style="height: 200px; resize: none;"></textarea>
+            <p style="font-size: 11px; color: #555;">تحفظ الملاحظات تلقائياً في هذا المتصفح.</p>
+        </div>
+    </div>
+
+    <script>
+        // --- الحماية ---
+        if(sessionStorage.getItem('userRole') !== 'developer') window.location.href='index.html';
+
+        // --- الربط مع Supabase ---
+        const SUPABASE_URL = 'https://xyvxowlbvuqbggkslwqr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // --- وظائف الـ UI ---
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function logout() { sessionStorage.clear(); window.location.href='index.html'; }
+
+        // --- توليد كود التفعيل (Logic مبدع) ---
+        function generateKey() {
+            const pattern = 'FTN-XXXX-XXXX-XXXX'.replace(/X/g, () => Math.floor(Math.random() * 10));
+            document.getElementById('generated-key').innerText = pattern;
+            alert("تم توليد الكود! يمكنك إرساله لصاحب المحل لتفعيل السيستم.");
         }
-    })();
 
-    // 2. إعداد Supabase
-    const SUPABASE_URL = 'https://xyvxowlbvuqbggkslwqr.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo';
-    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // --- الملاحظات ---
+        const notes = document.getElementById('dev-notes');
+        notes.value = localStorage.getItem('fateen_dev_notes') || '';
+        notes.addEventListener('input', () => localStorage.setItem('fateen_dev_notes', notes.value));
 
-    // 3. نظام الملاحظات (LocalStorage)
-    const notesInput = document.getElementById('devNotes');
-    notesInput.value = localStorage.getItem('fateen_dev_notes') || '';
-    notesInput.addEventListener('input', () => {
-        localStorage.setItem('fateen_dev_notes', notesInput.value);
-    });
+        // --- العمليات على البيانات ---
+        async function refreshAll() {
+            const { data: stores } = await _supabase.from('stores').select('*');
+            const { data: users } = await _supabase.from('users').select('*');
 
-    // 4. وظائف المتاجر
-    async function addStore() {
-        const key = document.getElementById('storeKeyInput').value.trim();
-        const name = document.getElementById('storeNameInput').value.trim();
-        if(!key || !name) return alert("أكمل البيانات");
+            // تحديث العدادات
+            document.getElementById('count-stores').innerText = stores?.length || 0;
+            document.getElementById('count-users').innerText = users?.length || 0;
 
-        const { error } = await _supabase.from('stores').insert([{ store_key: key, store_name: name }]);
-        if(error) alert("خطأ: " + error.message);
-        else { alert("✅ تم إضافة المحل"); refreshData(); }
-    }
+            // تحديث القوائم (Selects)
+            const stDel = document.getElementById('st-del-list');
+            const usSt = document.getElementById('us-store-list');
+            const keySt = document.getElementById('key-store-list');
+            const usDel = document.getElementById('us-del-list');
 
-    async function deleteStore() {
-        const key = document.getElementById('storeDeleteSelect').value;
-        if(!key) return;
-        if(confirm(`هل أنت متأكد من حذف محل (${key}) وكل الموظفين التابعين له؟`)) {
-            const { error } = await _supabase.from('stores').delete().eq('store_key', key);
-            if(error) alert(error.message);
-            else { alert("🗑️ تم الحذف"); refreshData(); }
+            stDel.innerHTML = usSt.innerHTML = keySt.innerHTML = '';
+            stores?.forEach(s => {
+                const opt = `<option value="${s.store_key}">${s.store_name}</option>`;
+                stDel.innerHTML += opt; usSt.innerHTML += opt; keySt.innerHTML += opt;
+            });
+
+            usDel.innerHTML = '';
+            users?.forEach(u => {
+                usDel.innerHTML += `<option value="${u.id}">${u.username} (${u.store_key})</option>`;
+            });
         }
-    }
 
-    // 5. وظائف المستخدمين
-    async function addUser() {
-        const sKey = document.getElementById('userStoreSelect').value;
-        const uName = document.getElementById('userNameInput').value.trim();
-        const uPass = document.getElementById('userPassInput').value.trim();
-        const uRole = document.getElementById('userRoleSelect').value;
-
-        if(!sKey || !uName || !uPass) return alert("أكمل البيانات");
-
-        const { error } = await _supabase.from('users').insert([{ 
-            username: uName, password: uPass, store_key: sKey, role: uRole 
-        }]);
-        
-        if(error) alert(error.message);
-        else { alert("✅ تم إضافة المستخدم"); refreshData(); }
-    }
-
-    async function deleteUser() {
-        const id = document.getElementById('userDeleteSelect').value;
-        if(!id) return;
-        if(confirm("هل تريد حذف هذا الحساب نهائياً؟")) {
-            const { error } = await _supabase.from('users').delete().eq('id', id);
-            if(error) alert(error.message);
-            else { alert("🗑️ تم الحذف"); refreshData(); }
+        async function addStore() {
+            const { error } = await _supabase.from('stores').insert([{ store_key: document.getElementById('st-key').value, store_name: document.getElementById('st-name').value }]);
+            if(!error) { alert("تم الحفظ"); refreshAll(); }
         }
-    }
 
-    // 6. تحميل وتحديث القوائم
-    async function refreshData() {
-        // تحميل المحلات
-        const { data: stores } = await _supabase.from('stores').select('*');
-        const storeSel = document.getElementById('userStoreSelect');
-        const storeDelSel = document.getElementById('storeDeleteSelect');
-        storeSel.innerHTML = storeDelSel.innerHTML = '';
-        stores?.forEach(s => {
-            const opt = `<option value="${s.store_key}">${s.store_name} (${s.store_key})</option>`;
-            storeSel.innerHTML += opt;
-            storeDelSel.innerHTML += opt;
-        });
+        async function deleteStore() {
+            if(confirm("سيتم حذف المحل وكل ما يتعلق به!")) {
+                await _supabase.from('stores').delete().eq('store_key', document.getElementById('st-del-list').value);
+                refreshAll();
+            }
+        }
 
-        // تحميل المستخدمين
-        const { data: users } = await _supabase.from('users').select('*');
-        const userDelSel = document.getElementById('userDeleteSelect');
-        userDelSel.innerHTML = '';
-        users?.forEach(u => {
-            userDelSel.innerHTML += `<option value="${u.id}">${u.username} - [${u.store_key}]</option>`;
-        });
-    }
+        async function addUser() {
+            const { error } = await _supabase.from('users').insert([{ 
+                username: document.getElementById('us-name').value, 
+                password: document.getElementById('us-pass').value, 
+                store_key: document.getElementById('us-store-list').value, 
+                role: document.getElementById('us-role').value 
+            }]);
+            if(!error) { alert("تمت إضافة المستخدم"); refreshAll(); }
+        }
 
-    // 7. تسجيل الخروج
-    function handleLogout() {
-        sessionStorage.clear();
-        window.location.href = 'index.html';
-    }
+        async function deleteUser() {
+            await _supabase.from('users').delete().eq('id', document.getElementById('us-del-list').value);
+            refreshAll();
+        }
 
-    // تشغيل التحميل الأولي
-    refreshData();
-
-</script>
+        refreshAll();
+    </script>
 </body>
 </html>
