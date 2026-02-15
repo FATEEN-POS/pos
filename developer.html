@@ -11,55 +11,45 @@
         * { font-family: 'Cairo', sans-serif; box-sizing: border-box; transition: 0.3s; }
         body { margin: 0; background: var(--bg); color: var(--white); padding: 20px; }
         
-        /* Header */
         .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: var(--card); border-radius: 20px; border: 1px solid var(--gray); margin-bottom: 25px; }
         
-        /* Stats Grid - 4 Boxes */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
-        .stat-item { background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid var(--gray); text-align: center; position: relative; overflow: hidden; }
-        .stat-item::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: var(--accent); opacity: 0.5; }
-        .stat-item h4 { margin: 0; color: #888; font-size: 14px; font-weight: 400; }
+        .stat-item { background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid var(--gray); text-align: center; position: relative; }
+        .stat-item h4 { margin: 0; color: #888; font-size: 14px; }
         .stat-item p { margin: 10px 0 0; font-size: 26px; font-weight: 700; color: var(--white); }
 
         .btn-add-store { width: auto; padding: 12px 30px; background: var(--white); color: #000; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-bottom: 25px; display: block; margin-right: auto; }
         
-        /* Stores Grid */
         .stores-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
         .store-card { background: var(--card); border: 1px solid var(--gray); border-radius: 22px; padding: 20px; cursor: pointer; position: relative; }
-        .store-card:hover { border-color: var(--accent); transform: translateY(-5px); }
-        .store-card h3 { margin: 0; font-size: 18px; }
-        .store-note { font-size: 12px; color: #666; margin-top: 10px; background: #000; padding: 5px 10px; border-radius: 8px; display: inline-block; }
+        .store-card:hover { border-color: var(--accent); }
         
         .expiry-badge { position: absolute; top: 15px; left: 15px; font-size: 10px; padding: 4px 10px; border-radius: 10px; font-weight: bold; }
         .active-badge { background: rgba(0, 242, 254, 0.1); color: var(--accent); }
         .expired-badge { background: rgba(255, 77, 77, 0.1); color: var(--red); }
 
-        /* Modal */
         .modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:none; justify-content:center; align-items:center; z-index:2000; backdrop-filter:blur(10px); }
         .modal-content { background:#111; width:90%; max-width:550px; padding:30px; border-radius:25px; border: 1px solid var(--gray); max-height: 90vh; overflow-y: auto; }
         
-        /* Input & Text Colors Fix */
-        input, select, textarea { width:100%; padding: 12px; background:#1a1a1a; border:1px solid var(--gray); border-radius:12px; color: #ffffff !important; margin-bottom: 12px; font-size: 14px; outline: none; }
-        input::placeholder { color: #555; }
+        input, select, textarea { width:100%; padding: 12px; background:#1a1a1a; border:1px solid var(--gray); border-radius:12px; color: #ffffff !important; margin-bottom: 12px; outline: none; }
         
         .btn-action { width: 100%; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; border: none; margin-top: 10px; }
         .btn-save { background: var(--accent); color: #000; }
         .btn-cancel { background: transparent; color: #888; border: 1px solid var(--gray); }
 
-        /* Employee List Styling */
-        .emp-list-item { background: #000; padding: 12px 15px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; color: #fff; }
-        .role-tag { font-size: 11px; color: var(--accent); background: rgba(0,242,254,0.1); padding: 2px 8px; border-radius: 5px; margin-right: 10px; }
+        .emp-list-item { background: #000; padding: 12px 15px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
+        .role-tag { font-size: 11px; color: var(--accent); background: rgba(0,242,254,0.1); padding: 2px 8px; border-radius: 5px; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1 style="font-size: 20px;">لوحة تحكم فطين <span style="color:var(--accent)">PRO</span></h1>
+        <h1>لوحة تحكم فطين <span style="color:var(--accent)">PRO</span></h1>
         <button onclick="logout()" style="background:none; border: 1px solid var(--red); color: var(--red); padding: 5px 15px; border-radius: 10px; cursor: pointer;">خروج</button>
     </div>
 
     <div class="stats-grid">
-        <div class="stat-item"><h4>إجمالي الأرباح</h4><p id="stat-revenue">0</p></div>
+        <div class="stat-item"><h4>الأرباح</h4><p id="stat-revenue">0</p></div>
         <div class="stat-item"><h4>المتاجر</h4><p id="stat-stores">0</p></div>
         <div class="stat-item"><h4>الموظفين</h4><p id="stat-emps">0</p></div>
         <div class="stat-item"><h4>المديرين</h4><p id="stat-mgrs">0</p></div>
@@ -71,13 +61,13 @@
 
     <div id="addStoreModal" class="modal">
         <div class="modal-content">
-            <h2>بيانات المتجر الجديد</h2>
+            <h2>إضافة متجر جديد</h2>
             <input type="text" id="new-st-key" placeholder="كود المتجر">
             <input type="text" id="new-st-name" placeholder="اسم المتجر">
             <input type="number" id="new-st-price" placeholder="سعر الاشتراك">
             <input type="date" id="new-st-expiry">
-            <textarea id="new-st-notes" placeholder="ملاحظات..." rows="3"></textarea>
-            <button class="btn-action btn-save" onclick="addNewStore()">حفظ المتجر</button>
+            <textarea id="new-st-notes" placeholder="ملاحظات..." rows="2"></textarea>
+            <button class="btn-action btn-save" onclick="addNewStore()">حفظ</button>
             <button class="btn-action btn-cancel" onclick="closeModal('addStoreModal')">إلغاء</button>
         </div>
     </div>
@@ -85,29 +75,23 @@
     <div id="storeDetailModal" class="modal">
         <div class="modal-content">
             <h2 id="view-st-name">اسم المحل</h2>
-            <div id="store-meta" style="margin-bottom: 20px; color: #666; font-size: 13px;"></div>
-            
+            <div id="store-meta" style="margin-bottom: 20px; color: #666;"></div>
             <div id="toggle-container"></div>
-
             <h4>الملاحظات:</h4>
             <textarea id="edit-st-notes"></textarea>
-            <button onclick="updateNotes()" class="btn-action btn-save" style="font-size:12px; padding:8px; width:auto;">تحديث الملاحظة</button>
-
+            <button onclick="updateNotes()" class="btn-action btn-save" style="width:auto; padding:5px 15px;">تحديث</button>
             <h4 style="margin-top:20px;">الفريق:</h4>
             <div id="employee-list"></div>
-            
             <div style="background:#000; padding:15px; border-radius:15px; margin-top:15px; border:1px solid #222;">
-                <h5 style="margin:0 0 10px 0">إضافة عضو جديد:</h5>
                 <input type="text" id="q-u-name" placeholder="اسم المستخدم">
                 <input type="password" id="q-u-pass" placeholder="كلمة المرور">
                 <select id="q-u-role">
-                    <option value="employee">موظف كاشير</option>
-                    <option value="manager">مدير فرع</option>
+                    <option value="employee">موظف</option>
+                    <option value="manager">مدير</option>
                 </select>
-                <button class="btn-action btn-save" onclick="quickAddUser()" style="padding:10px;">إضافة للعاملين</button>
+                <button class="btn-action btn-save" onclick="quickAddUser()">إضافة عضو</button>
             </div>
-            
-            <button class="btn-action" style="background:var(--red); color:#fff;" onclick="deleteCurrentStore()">حذف المتجر نهائياً</button>
+            <button class="btn-action" style="background:var(--red); color:#fff; margin-top:20px;" onclick="deleteCurrentStore()">حذف المتجر</button>
             <button class="btn-action btn-cancel" onclick="closeModal('storeDetailModal')">إغلاق</button>
         </div>
     </div>
@@ -116,7 +100,6 @@
         const SUPABASE_URL = 'https://xyvxowlbvuqbggkslwqr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
         let activeStoreKey = null;
 
         function openModal(id) { document.getElementById(id).style.display='flex'; }
@@ -126,31 +109,18 @@
         async function loadData() {
             const { data: stores } = await _supabase.from('stores').select('*');
             const { data: users } = await _supabase.from('users').select('*');
-
             const grid = document.getElementById('stores-display');
             grid.innerHTML = '';
             let totalRev = 0;
-            const now = new Date();
-
             stores?.forEach(st => {
-                const expiry = new Date(st.expiry_date);
-                const isTimeExpired = now > expiry;
-                if(isTimeExpired && st.is_active) updateStoreStatus(st.store_key, false);
                 if(st.is_active) totalRev += parseFloat(st.subscription_price || 0);
-
                 grid.innerHTML += `
                     <div class="store-card" onclick='showStoreDetails(${JSON.stringify(st)})'>
-                        <div class="expiry-badge ${st.is_active ? 'active-badge' : 'expired-badge'}">
-                            ${st.is_active ? 'نشط' : 'متوقف'}
-                        </div>
+                        <div class="expiry-badge ${st.is_active ? 'active-badge' : 'expired-badge'}">${st.is_active ? 'نشط' : 'متوقف'}</div>
                         <h3>${st.store_name}</h3>
-                        <div style="color:var(--accent); font-weight:700;">${st.subscription_price} ج.م</div>
-                        <div class="store-note">${st.notes || 'بدون ملاحظات'}</div>
-                    </div>
-                `;
+                        <div style="color:var(--accent); font-weight:bold;">${st.subscription_price} ج.م</div>
+                    </div>`;
             });
-
-            // تحديث بوكسات التحليل
             document.getElementById('stat-revenue').innerText = totalRev + " ج.م";
             document.getElementById('stat-stores').innerText = stores?.length || 0;
             document.getElementById('stat-emps').innerText = users?.filter(u => u.role === 'employee').length || 0;
@@ -161,14 +131,12 @@
             activeStoreKey = st.store_key;
             openModal('storeDetailModal');
             document.getElementById('view-st-name').innerText = st.store_name;
-            document.getElementById('store-meta').innerText = `كود: ${st.store_key} | ينتهي: ${st.expiry_date}`;
+            document.getElementById('store-meta').innerText = `كود: ${st.store_key} | انتهاء: ${st.expiry_date}`;
             document.getElementById('edit-st-notes').value = st.notes || '';
-            
             document.getElementById('toggle-container').innerHTML = `
-                <button class="btn-action" style="background:${st.is_active ? 'var(--red)' : 'var(--accent)'}; color:#000" onclick="handleToggle(${st.is_active})">
-                    ${st.is_active ? '⛔ إيقاف المتجر يدوياً' : '✅ تشغيل المتجر الآن'}
-                </button>
-            `;
+                <button class="btn-action" style="background:${st.is_active ? 'var(--red)' : 'var(--accent)'}" onclick="handleToggle(${st.is_active})">
+                    ${st.is_active ? 'إيقاف المتجر' : 'تشغيل المتجر'}
+                </button>`;
             loadStoreUsers();
         }
 
@@ -178,52 +146,56 @@
             list.innerHTML = '';
             emps?.forEach(e => {
                 if(e.role !== 'developer')
-                list.innerHTML += `
-                    <div class="emp-list-item">
-                        <span>${e.username} <span class="role-tag">${e.role === 'manager' ? 'مدير' : 'موظف'}</span></span>
-                        <button onclick="delU('${e.id}')" style="background:none; color:var(--red); border:none; cursor:pointer;">حذف</button>
-                    </div>`;
+                list.innerHTML += `<div class="emp-list-item">
+                    <span>${e.username} <span class="role-tag">${e.role}</span></span>
+                    <button onclick="delU('${e.id}')" style="background:none; color:var(--red); border:none; cursor:pointer;">حذف</button>
+                </div>`;
             });
         }
 
+        async function delU(id) {
+            if(confirm("حذف المستخدم؟")) {
+                await _supabase.from('users').delete().eq('id', id);
+                loadStoreUsers();
+                loadData();
+            }
+        }
+
         async function quickAddUser() {
-            const u = document.getElementById('q-u-name').value.trim();
-            const p = document.getElementById('q-u-pass').value.trim();
+            const u = document.getElementById('q-u-name').value;
+            const p = document.getElementById('q-u-pass').value;
             const r = document.getElementById('q-u-role').value;
-            if(!u || !p) return alert("ادخل البيانات");
             await _supabase.from('users').insert([{ username: u, password: p, store_key: activeStoreKey, role: r }]);
-            document.getElementById('q-u-name').value = '';
-            document.getElementById('q-u-pass').value = '';
-            loadStoreUsers();
-            loadData(); // لتحديث بوكسات التحليل
+            loadStoreUsers(); loadData();
         }
 
         async function addNewStore() {
-            const key = document.getElementById('new-st-key').value.trim();
-            const name = document.getElementById('new-st-name').value.trim();
-            const price = document.getElementById('new-st-price').value || 0;
+            const key = document.getElementById('new-st-key').value;
+            const name = document.getElementById('new-st-name').value;
+            const price = document.getElementById('new-st-price').value;
             const expiry = document.getElementById('new-st-expiry').value;
             const notes = document.getElementById('new-st-notes').value;
-            if (!key || !name || !expiry) return alert("أكمل البيانات!");
-            await _supabase.from('stores').insert([{ store_key: key, store_name: name, subscription_price: parseFloat(price), expiry_date: expiry, notes: notes, is_active: true }]);
-            closeModal('addStoreModal');
-            loadData();
+            await _supabase.from('stores').insert([{ store_key: key, store_name: name, subscription_price: price, expiry_date: expiry, notes: notes, is_active: true }]);
+            closeModal('addStoreModal'); loadData();
         }
 
         async function handleToggle(status) {
             await _supabase.from('stores').update({ is_active: !status }).eq('store_key', activeStoreKey);
-            closeModal('storeDetailModal');
-            loadData();
+            closeModal('storeDetailModal'); loadData();
         }
 
         async function updateNotes() {
             await _supabase.from('stores').update({ notes: document.getElementById('edit-st-notes').value }).eq('store_key', activeStoreKey);
-            alert("تم التحديث");
-            loadData();
+            alert("تم التحديث"); loadData();
         }
 
-        async function delU(id) { if(confirm("حذف؟")) { await _supabase.from('users').delete().eq('id', id); loadStoreUsers(); loadData(); } }
-        async function deleteCurrentStore() { if(confirm("حذف نهائي؟")) { await _supabase.from('users').delete().eq('store_key', activeStoreKey); await _supabase.from('stores').delete().eq('store_key', activeStoreKey); closeModal('storeDetailModal'); loadData(); } }
+        async function deleteCurrentStore() {
+            if(confirm("حذف المتجر؟")) {
+                await _supabase.from('users').delete().eq('store_key', activeStoreKey);
+                await _supabase.from('stores').delete().eq('store_key', activeStoreKey);
+                closeModal('storeDetailModal'); loadData();
+            }
+        }
 
         loadData();
     </script>
