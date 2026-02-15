@@ -10,24 +10,23 @@
         * { font-family: 'Cairo', sans-serif; box-sizing: border-box; }
         body { margin: 0; background: #000; color: #fff; overflow: hidden; }
 
-        /* --- 1. Splash Screen الفخمة --- */
+        /* Splash Screen */
         #splash-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(circle, #1a1a1a 0%, #000 100%);
             display: flex; flex-direction: column; justify-content: center;
-            align-items: center; z-index: 9999; transition: opacity 0.8s ease;
+            align-items: center; z-index: 9999; transition: 0.8s;
         }
-        .logo-text { font-size: 3rem; font-weight: 700; letter-spacing: 8px; margin-bottom: 15px; animation: pulse 2s infinite; }
-        .loader-bar { width: 200px; height: 3px; background: #333; border-radius: 5px; overflow: hidden; }
+        .logo-text { font-size: 3rem; font-weight: 700; letter-spacing: 8px; animation: pulse 2s infinite; }
+        .loader-bar { width: 200px; height: 3px; background: #333; border-radius: 5px; overflow: hidden; margin-top: 15px; }
         .loader-progress { width: 0%; height: 100%; background: #fff; animation: load 2.5s forwards; }
-        
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         @keyframes load { 0% { width: 0%; } 100% { width: 100%; } }
 
-        /* --- 2. واجهة الدخول --- */
+        /* Login UI */
         .login-container {
             display: none; height: 100vh; justify-content: center; align-items: center;
-            background: #0b0b0b; opacity: 0; transition: opacity 0.8s ease;
+            background: #0b0b0b; opacity: 0; transition: 0.8s;
         }
         .login-box {
             background: rgba(255, 255, 255, 0.03); padding: 40px; border-radius: 24px;
@@ -43,7 +42,6 @@
             width: 100%; padding: 15px; background: #fff; color: #000;
             border: none; border-radius: 12px; font-weight: 700; cursor: pointer;
         }
-        .login-btn:disabled { background: #555; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -55,11 +53,11 @@
 
     <div class="login-container" id="loginUI">
         <div class="login-box">
-            <h2>دخول النظام</h2>
+            <h2>دخول نظام فطين</h2>
             <input type="text" id="storeKey" placeholder="كود المتجر">
             <input type="text" id="username" placeholder="اسم المستخدم">
             <input type="password" id="password" placeholder="كلمة المرور">
-            <button class="login-btn" id="loginBtn">دخول</button>
+            <button class="login-btn" id="loginBtn">دخول النظام</button>
         </div>
     </div>
 
@@ -68,66 +66,68 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // 1. منطق الـ Splash Screen
         window.onload = () => {
             setTimeout(() => {
-                const splash = document.getElementById('splash-screen');
+                document.getElementById('splash-screen').style.display = 'none';
                 const ui = document.getElementById('loginUI');
-                splash.style.opacity = '0';
-                setTimeout(() => {
-                    splash.style.display = 'none';
-                    ui.style.display = 'flex';
-                    setTimeout(() => ui.style.opacity = '1', 50);
-                }, 800);
-            }, 3000); // تظهر لمدة 3 ثوانٍ
+                ui.style.display = 'flex';
+                setTimeout(() => ui.style.opacity = '1', 50);
+            }, 3000);
         };
 
-        // 2. منطق تسجيل الدخول
         document.getElementById('loginBtn').onclick = async function() {
             const sKey = document.getElementById('storeKey').value.trim();
             const uName = document.getElementById('username').value.trim();
             const pWord = document.getElementById('password').value.trim();
-            const btn = document.getElementById('loginBtn');
 
-            if(!sKey || !uName || !pWord) return alert("برجاء إدخال البيانات");
+            if(!sKey || !uName || !pWord) return alert("أكمل البيانات");
 
-            btn.disabled = true;
-            btn.innerText = "جاري التحقق...";
+            const { data, error } = await _supabase
+                .from('users')
+                .select('*')
+                .eq('store_key', sKey)
+                .eq('username', uName)
+                .eq('password', pWord);
 
-            sessionStorage.clear();
+            if (data && data.length > 0) {
+                const user = data[0];
 
-            try {
-                const { data, error } = await _supabase
-                    .from('users')
+                // --- حارس الاشتراك وحالة المتجر ---
+                const { data: storeData } = await _supabase
+                    .from('stores')
                     .select('*')
-                    .eq('store_key', sKey)
-                    .eq('username', uName)
-                    .eq('password', pWord);
+                    .eq('store_key', user.store_key)
+                    .single();
 
-                if (data && data.length > 0) {
-                    const user = data[0];
-                    sessionStorage.setItem('isLoggedIn', 'true');
-                    sessionStorage.setItem('userRole', user.role);
-                    sessionStorage.setItem('storeKey', user.store_key);
-
-                    // التوجيه الصارم
-                    const role = String(user.role).trim().toLowerCase();
-                    if (role === 'developer') {
-                        window.location.href = "developer.html";
-                    } else if (role === 'manager') {
-                        window.location.href = "manager.html";
-                    } else {
-                        window.location.href = "pos.html";
+                if (user.role !== 'developer') { 
+                    // 1. تشييك حالة المتجر (مفتوح/مقفول)
+                    if (storeData && storeData.is_active === false) {
+                        alert("❌ هذا المتجر موقوف مؤقتاً. تواصل مع الإدارة.");
+                        return;
                     }
-                } else {
-                    alert("بيانات الدخول غير صحيحة!");
-                    btn.disabled = false;
-                    btn.innerText = "دخول";
+
+                    // 2. تشييك تاريخ الانتهاء
+                    if (storeData && storeData.expiry_date) {
+                        const today = new Date();
+                        const expiry = new Date(storeData.expiry_date);
+                        if (today > expiry) {
+                            alert("⚠️ انتهت مدة اشتراك هذا المحل!");
+                            return;
+                        }
+                    }
                 }
-            } catch (err) {
-                alert("خطأ في الاتصال بالسيرفر");
-                btn.disabled = false;
-                btn.innerText = "دخول";
+
+                // لو تمام يتم الدخول
+                sessionStorage.setItem('isLoggedIn', 'true');
+                sessionStorage.setItem('userRole', user.role);
+                sessionStorage.setItem('storeKey', user.store_key);
+
+                if (user.role === 'developer') window.location.href = "developer.html";
+                else if (user.role === 'manager') window.location.href = "manager.html";
+                else window.location.href = "pos.html";
+
+            } else {
+                alert("بيانات الدخول غلط!");
             }
         };
     </script>
