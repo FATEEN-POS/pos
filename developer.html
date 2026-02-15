@@ -3,29 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة المطور - نظام فطين</title>
+    <title>لوحة المطور - نظام فطين 🛠️</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { font-family: 'Cairo', sans-serif; box-sizing: border-box; }
         body { margin: 0; background: #0b0b0b; color: #fff; padding: 20px; }
         .container { max-width: 1100px; margin: 0 auto; }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .card { background: #1a1a1a; padding: 25px; border-radius: 15px; border: 1px solid #333; margin-bottom: 20px; }
-        h2 { color: #fff; margin-top: 0; font-size: 1.2rem; border-right: 4px solid #fff; padding-right: 10px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 8px; color: #888; font-size: 14px; }
-        input, select, textarea { width: 100%; padding: 12px; background: #000; border: 1px solid #333; border-radius: 8px; color: #fff; outline: none; }
-        button { width: 100%; padding: 12px; background: #fff; color: #000; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.3s; }
-        button:hover { background: #ccc; }
-        .btn-delete { background: #ff4444; color: #fff; margin-top: 10px; }
-        .btn-delete:hover { background: #cc0000; }
-        .logout-btn { width: auto; padding: 10px 25px; background: #ff4444; color: #fff; }
-        .status-msg { margin-top: 10px; font-size: 13px; text-align: center; }
         
-        /* ستايل الملاحظات */
-        .notes-area { height: 150px; resize: none; margin-bottom: 10px; border-color: #444; }
+        /* الهيدر */
+        .header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 30px; 
+        }
+        .logout-btn { 
+            background: #ff4444; color: #fff; border: none; padding: 10px 25px; 
+            border-radius: 8px; cursor: pointer; font-weight: 700; transition: 0.3s;
+        }
+        .logout-btn:hover { background: #cc0000; }
+
+        /* التصميم الشبكي */
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { 
+            background: #1a1a1a; padding: 25px; border-radius: 15px; 
+            border: 1px solid #333; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+        h2 { font-size: 1.2rem; margin-top: 0; border-right: 4px solid #fff; padding-right: 10px; margin-bottom: 20px; }
+
+        /* الحقول */
+        .form-group { margin-bottom: 15px; text-align: right; }
+        label { display: block; margin-bottom: 8px; color: #888; font-size: 14px; }
+        input, select, textarea { 
+            width: 100%; padding: 12px; background: #000; border: 1px solid #333; 
+            border-radius: 8px; color: #fff; outline: none; font-size: 15px;
+        }
+        input:focus { border-color: #fff; }
+
+        /* الأزرار */
+        .btn-main { 
+            width: 100%; padding: 12px; background: #fff; color: #000; 
+            border: none; border-radius: 8px; font-weight: 700; cursor: pointer; 
+            transition: 0.3s; margin-top: 10px;
+        }
+        .btn-main:hover { background: #ccc; }
+        .btn-delete { background: #ff4444; color: #fff; }
+        .btn-delete:hover { background: #cc0000; }
+
+        /* الملاحظات */
+        .notes-area { height: 150px; resize: none; border-color: #444; margin-top: 10px; }
+        
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -33,139 +60,173 @@
 <div class="container">
     <div class="header">
         <h1>لوحة تحكم المطور 🛠️</h1>
-        <button class="logout-btn" onclick="window.location.href='index.html'">تسجيل خروج</button>
+        <button class="logout-btn" onclick="handleLogout()">تسجيل خروج</button>
     </div>
 
     <div class="grid">
         <div class="card">
-            <h2>إدارة المتاجر</h2>
+            <h2>إدارة المتاجر (Stores)</h2>
             <div class="form-group">
-                <label>كود المحل</label>
-                <input type="text" id="newStoreKey" placeholder="ASW02">
+                <label>كود المحل الجديد</label>
+                <input type="text" id="storeKeyInput" placeholder="مثل: ASW02">
             </div>
             <div class="form-group">
                 <label>اسم المحل</label>
-                <input type="text" id="newStoreName" placeholder="فرع جديد">
+                <input type="text" id="storeNameInput" placeholder="مثل: فرع الجيزة">
             </div>
-            <button onclick="addNewStore()">حفظ المحل</button>
-            <hr style="border: 0.5px solid #333; margin: 20px 0;">
-            <label>حذف محل موجود</label>
-            <select id="deleteStoreList"></select>
-            <button class="btn-delete" onclick="deleteStore()">حذف المحل المحدد</button>
-            <div id="storeMsg" class="status-msg"></div>
+            <button class="btn-main" onclick="addStore()">+ حفظ المحل</button>
+            
+            <hr style="border: 0.1px solid #333; margin: 25px 0;">
+            
+            <div class="form-group">
+                <label>حذف محل موجود</label>
+                <select id="storeDeleteSelect"></select>
+            </div>
+            <button class="btn-main btn-delete" onclick="deleteStore()">حذف المحل المحدد</button>
         </div>
 
         <div class="card">
-            <h2>إدارة المستخدمين</h2>
+            <h2>إدارة المستخدمين (Users)</h2>
             <div class="form-group">
-                <label>اختر المحل</label>
-                <select id="userStoreKey"></select>
+                <label>المحل التابع له</label>
+                <select id="userStoreSelect"></select>
             </div>
             <div class="form-group">
                 <label>اسم المستخدم</label>
-                <input type="text" id="newUsername" placeholder="Username">
+                <input type="text" id="userNameInput" placeholder="Username">
             </div>
             <div class="form-group">
                 <label>كلمة المرور</label>
-                <input type="password" id="newUserPass" placeholder="Password">
+                <input type="password" id="userPassInput" placeholder="Password">
             </div>
             <div class="form-group">
-                <label>الصلاحية</label>
-                <select id="newUserRole">
-                    <option value="employee">موظف</option>
-                    <option value="manager">مدير</option>
-                    <option value="developer">مطور</option>
+                <label>الصلاحية (Role)</label>
+                <select id="userRoleSelect">
+                    <option value="employee">موظف (Employee)</option>
+                    <option value="manager">مدير (Manager)</option>
+                    <option value="developer">مطور (Developer)</option>
                 </select>
             </div>
-            <button onclick="addNewUser()">إضافة مستخدم</button>
-            <hr style="border: 0.5px solid #333; margin: 20px 0;">
-            <label>حذف موظف</label>
-            <select id="deleteUserList"></select>
-            <button class="btn-delete" onclick="deleteUser()">حذف المستخدم</button>
-            <div id="userMsg" class="status-msg"></div>
+            <button class="btn-main" onclick="addUser()">+ إضافة المستخدم</button>
+
+            <hr style="border: 0.1px solid #333; margin: 25px 0;">
+
+            <div class="form-group">
+                <label>حذف مستخدم</label>
+                <select id="userDeleteSelect"></select>
+            </div>
+            <button class="btn-main btn-delete" onclick="deleteUser()">حذف المستخدم المحدد</button>
         </div>
 
         <div class="card" style="grid-column: span 2;">
-            <h2>ملاحظات المطور 📝</h2>
-            <textarea id="devNotes" class="notes-area" placeholder="اكتب ملاحظاتك هنا (سيتم حفظها تلقائياً)..."></textarea>
-            <p style="font-size: 12px; color: #666;">* يتم حفظ الملاحظات في متصفحك الحالي فقط.</p>
+            <h2>ملاحظات المطور الشخصية 📝</h2>
+            <textarea id="devNotes" class="notes-area" placeholder="اكتب أفكارك أو التحديثات القادمة هنا..."></textarea>
+            <p style="font-size: 12px; color: #555; margin-top: 5px;">* الملاحظات تُحفظ تلقائياً في متصفحك الحالي.</p>
         </div>
     </div>
 </div>
 
 <script>
+    // 1. حارس الأمان (يمنع الدخول بدون لوجن مطور)
+    (function checkAuth() {
+        const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+        const role = sessionStorage.getItem('userRole');
+        if (isLoggedIn !== 'true' || role !== 'developer') {
+            window.location.href = "index.html";
+        }
+    })();
+
+    // 2. إعداد Supabase
     const SUPABASE_URL = 'https://xyvxowlbvuqbggkslwqr.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // --- وظائف الملاحظات ---
-    const notesArea = document.getElementById('devNotes');
-    notesArea.value = localStorage.getItem('fateen_notes') || '';
-    notesArea.addEventListener('input', () => {
-        localStorage.setItem('fateen_notes', notesArea.value);
+    // 3. نظام الملاحظات (LocalStorage)
+    const notesInput = document.getElementById('devNotes');
+    notesInput.value = localStorage.getItem('fateen_dev_notes') || '';
+    notesInput.addEventListener('input', () => {
+        localStorage.setItem('fateen_dev_notes', notesInput.value);
     });
 
-    // --- إدارة المحلات ---
-    async function addNewStore() {
-        const key = document.getElementById('newStoreKey').value.trim();
-        const name = document.getElementById('newStoreName').value.trim();
+    // 4. وظائف المتاجر
+    async function addStore() {
+        const key = document.getElementById('storeKeyInput').value.trim();
+        const name = document.getElementById('storeNameInput').value.trim();
         if(!key || !name) return alert("أكمل البيانات");
+
         const { error } = await _supabase.from('stores').insert([{ store_key: key, store_name: name }]);
-        if(error) alert(error.message); else { alert("تم الإضافة"); loadAllData(); }
+        if(error) alert("خطأ: " + error.message);
+        else { alert("✅ تم إضافة المحل"); refreshData(); }
     }
 
     async function deleteStore() {
-        const key = document.getElementById('deleteStoreList').value;
+        const key = document.getElementById('storeDeleteSelect').value;
         if(!key) return;
-        if(confirm(`هل أنت متأكد من حذف المحل ${key}؟ سيتم حذف الموظفين المرتبطين به أيضاً.`)) {
+        if(confirm(`هل أنت متأكد من حذف محل (${key}) وكل الموظفين التابعين له؟`)) {
             const { error } = await _supabase.from('stores').delete().eq('store_key', key);
-            if(error) alert(error.message); else { alert("تم الحذف"); loadAllData(); }
+            if(error) alert(error.message);
+            else { alert("🗑️ تم الحذف"); refreshData(); }
         }
     }
 
-    // --- إدارة المستخدمين ---
-    async function addNewUser() {
-        const sKey = document.getElementById('userStoreKey').value;
-        const uName = document.getElementById('newUsername').value.trim();
-        const uPass = document.getElementById('newUserPass').value;
-        const uRole = document.getElementById('newUserRole').value;
+    // 5. وظائف المستخدمين
+    async function addUser() {
+        const sKey = document.getElementById('userStoreSelect').value;
+        const uName = document.getElementById('userNameInput').value.trim();
+        const uPass = document.getElementById('userPassInput').value.trim();
+        const uRole = document.getElementById('userRoleSelect').value;
+
         if(!sKey || !uName || !uPass) return alert("أكمل البيانات");
-        const { error } = await _supabase.from('users').insert([{ username: uName, password: uPass, store_key: sKey, role: uRole }]);
-        if(error) alert(error.message); else { alert("تم إضافة المستخدم"); loadAllData(); }
+
+        const { error } = await _supabase.from('users').insert([{ 
+            username: uName, password: uPass, store_key: sKey, role: uRole 
+        }]);
+        
+        if(error) alert(error.message);
+        else { alert("✅ تم إضافة المستخدم"); refreshData(); }
     }
 
     async function deleteUser() {
-        const id = document.getElementById('deleteUserList').value;
+        const id = document.getElementById('userDeleteSelect').value;
         if(!id) return;
-        if(confirm("هل أنت متأكد من حذف هذا المستخدم؟")) {
+        if(confirm("هل تريد حذف هذا الحساب نهائياً؟")) {
             const { error } = await _supabase.from('users').delete().eq('id', id);
-            if(error) alert(error.message); else { alert("تم الحذف"); loadAllData(); }
+            if(error) alert(error.message);
+            else { alert("🗑️ تم الحذف"); refreshData(); }
         }
     }
 
-    // --- تحميل البيانات ---
-    async function loadAllData() {
-        // تحميل المحلات للقوائم
+    // 6. تحميل وتحديث القوائم
+    async function refreshData() {
+        // تحميل المحلات
         const { data: stores } = await _supabase.from('stores').select('*');
-        const storeSelect = document.getElementById('userStoreKey');
-        const delStoreSelect = document.getElementById('deleteStoreList');
-        storeSelect.innerHTML = delStoreSelect.innerHTML = '';
+        const storeSel = document.getElementById('userStoreSelect');
+        const storeDelSel = document.getElementById('storeDeleteSelect');
+        storeSel.innerHTML = storeDelSel.innerHTML = '';
         stores?.forEach(s => {
-            let opt = `<option value="${s.store_key}">${s.store_name} (${s.store_key})</option>`;
-            storeSelect.innerHTML += opt;
-            delStoreSelect.innerHTML += opt;
+            const opt = `<option value="${s.store_key}">${s.store_name} (${s.store_key})</option>`;
+            storeSel.innerHTML += opt;
+            storeDelSel.innerHTML += opt;
         });
 
-        // تحميل المستخدمين للحذف
+        // تحميل المستخدمين
         const { data: users } = await _supabase.from('users').select('*');
-        const userDelSelect = document.getElementById('deleteUserList');
-        userDelSelect.innerHTML = '';
+        const userDelSel = document.getElementById('userDeleteSelect');
+        userDelSel.innerHTML = '';
         users?.forEach(u => {
-            userDelSelect.innerHTML += `<option value="${u.id}">${u.username} - [${u.store_key}]</option>`;
+            userDelSel.innerHTML += `<option value="${u.id}">${u.username} - [${u.store_key}]</option>`;
         });
     }
 
-    loadAllData();
+    // 7. تسجيل الخروج
+    function handleLogout() {
+        sessionStorage.clear();
+        window.location.href = 'index.html';
+    }
+
+    // تشغيل التحميل الأولي
+    refreshData();
+
 </script>
 </body>
 </html>
