@@ -11,22 +11,38 @@
         :root { --bg: #050505; --card: #111111; --accent: #00f2fe; --red: #ff4d4d; --white: #ffffff; --gray: #222; }
         * { font-family: 'Cairo', sans-serif; box-sizing: border-box; transition: 0.3s; }
         body { margin: 0; background: var(--bg); color: var(--white); padding: 20px; }
-        #expiry-alert-box { display: none; background: rgba(255, 77, 77, 0.15); border: 1px solid var(--red); color: var(--red); padding: 15px; border-radius: 15px; margin-bottom: 20px; font-weight: bold; }
+        
+        /* الهيدر والإحصائيات */
         .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: var(--card); border-radius: 20px; border: 1px solid var(--gray); margin-bottom: 25px; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .stat-item { background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid var(--gray); text-align: center; }
         .stat-item p { margin: 10px 0 0; font-size: 24px; font-weight: 700; color: var(--accent); }
-        .search-container { display: flex; gap: 10px; margin-bottom: 20px; }
-        .btn-add-store { padding: 12px 30px; background: var(--white); color: #000; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; }
+
+        /* البحث والتحكم */
+        .search-container { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
+        #storeSearch { 
+            flex: 1; 
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%23666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>');
+            background-repeat: no-repeat;
+            background-position: left 15px center;
+            padding-left: 45px;
+            margin-bottom: 0;
+        }
+        .btn-add-store { padding: 12px 30px; background: var(--white); color: #000; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+
+        /* جريد المتاجر */
         .stores-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
         .store-card { background: var(--card); border: 1px solid var(--gray); border-radius: 22px; padding: 20px; cursor: pointer; position: relative; }
-        .store-card:hover { border-color: var(--accent); }
+        .store-card:hover { border-color: var(--accent); transform: translateY(-5px); }
         .expiry-badge { position: absolute; top: 15px; left: 15px; font-size: 10px; padding: 4px 10px; border-radius: 10px; font-weight: bold; }
         .active-badge { background: rgba(0, 242, 254, 0.1); color: var(--accent); }
         .expired-badge { background: rgba(255, 77, 77, 0.1); color: var(--red); }
+
+        /* المودال (النوافذ) */
         .modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:none; justify-content:center; align-items:center; z-index:2000; backdrop-filter:blur(10px); }
         .modal-content { background:#111; width:90%; max-width:550px; padding:30px; border-radius:25px; border: 1px solid var(--gray); max-height: 90vh; overflow-y: auto; }
         input, select, textarea { width:100%; padding: 12px; background:#1a1a1a; border:1px solid var(--gray); border-radius:12px; color: #fff; margin-bottom: 12px; outline: none; }
+        input:focus { border-color: var(--accent); }
         .btn-action { width: 100%; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; border: none; margin-top: 10px; }
         .btn-save { background: var(--accent); color: #000; }
         .btn-cancel { background: transparent; color: #888; border: 1px solid var(--gray); }
@@ -34,8 +50,6 @@
     </style>
 </head>
 <body>
-
-    <div id="expiry-alert-box">⚠️ تنبيه: <span id="alert-msg"></span></div>
 
     <div class="header">
         <h1>لوحة تحكم فطين <span style="color:var(--accent)">PRO</span></h1>
@@ -61,14 +75,13 @@
 
     <div id="addStoreModal" class="modal">
         <div class="modal-content">
-            <h2>متجر جديد</h2>
-            <input type="text" id="new-st-key" placeholder="كود المتجر">
+            <h2>إضافة متجر جديد</h2>
+            <input type="text" id="new-st-key" placeholder="كود المتجر (فريد)">
             <input type="text" id="new-st-name" placeholder="اسم المتجر">
             <input type="text" id="new-st-phone" placeholder="رقم هاتف المتجر">
-            <input type="number" id="new-st-price" placeholder="السعر">
+            <input type="number" id="new-st-price" placeholder="سعر الاشتراك">
             <input type="date" id="new-st-expiry">
-            <textarea id="new-st-notes" placeholder="ملاحظات" rows="2"></textarea>
-            <button class="btn-action btn-save" onclick="addNewStore()">حفظ</button>
+            <button class="btn-action btn-save" onclick="addNewStore()">حفظ البيانات</button>
             <button class="btn-action btn-cancel" onclick="closeModal('addStoreModal')">إلغاء</button>
         </div>
     </div>
@@ -76,18 +89,24 @@
     <div id="storeDetailModal" class="modal">
         <div class="modal-content">
             <h2 id="view-st-name"></h2>
-            <div id="store-meta" style="margin-bottom: 20px; color: var(--accent);"></div>
-            <div id="toggle-container"></div>
-            <h4 style="margin-top:20px;">الفريق:</h4>
-            <div id="employee-list"></div>
-            <div style="background:#000; padding:15px; border-radius:15px; margin-top:15px; border:1px solid #222;">
-                <input type="text" id="q-u-name" placeholder="اسم الموظف">
-                <input type="text" id="q-u-phone" placeholder="رقم هاتف الموظف">
-                <input type="password" id="q-u-pass" placeholder="الباسورد">
-                <select id="q-u-role"><option value="employee">موظف كاشير</option><option value="manager">مدير فرع</option></select>
-                <button class="btn-action btn-save" onclick="quickAddUser()">إضافة للفريق</button>
+            <div id="store-meta" style="margin-bottom: 20px; color: var(--accent); font-size: 14px;"></div>
+            
+            <h4 style="border-top: 1px solid #222; pt-4 mt-4">إضافة عضو للفريق:</h4>
+            <div style="background:#000; padding:15px; border-radius:15px; border:1px solid #222;">
+                <input type="text" id="q-u-name" placeholder="الاسم بالكامل">
+                <input type="text" id="q-u-phone" placeholder="رقم التليفون">
+                <input type="password" id="q-u-pass" placeholder="كلمة المرور">
+                <select id="q-u-role">
+                    <option value="employee">موظف كاشير</option>
+                    <option value="manager">مدير فرع</option>
+                </select>
+                <button class="btn-action btn-save" onclick="quickAddUser()">تأكيد الإضافة</button>
             </div>
-            <button class="btn-action btn-cancel" onclick="closeModal('storeDetailModal')">إغلاق</button>
+
+            <h4 style="margin-top:20px;">أعضاء الفريق الحاليين:</h4>
+            <div id="employee-list"></div>
+            
+            <button class="btn-action btn-cancel" onclick="closeModal('storeDetailModal')">إغلاق النافذة</button>
         </div>
     </div>
 
@@ -97,18 +116,20 @@
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let activeStoreKey = null;
         let allStores = [];
+        let allUsers = [];
 
         async function loadData() {
             const { data: stores } = await _supabase.from('stores').select('*');
             const { data: users } = await _supabase.from('users').select('*');
             allStores = stores || [];
+            allUsers = users || [];
             renderStores(allStores);
 
-            let totalRev = stores?.filter(s => s.is_active).reduce((acc, curr) => acc + parseFloat(curr.subscription_price || 0), 0);
+            let totalRev = allStores.filter(s => s.is_active).reduce((acc, curr) => acc + parseFloat(curr.subscription_price || 0), 0);
             document.getElementById('stat-revenue').innerText = totalRev + " ج.م";
-            document.getElementById('stat-stores').innerText = stores?.length || 0;
-            document.getElementById('stat-emps').innerText = users?.filter(u => u.role === 'employee').length || 0;
-            document.getElementById('stat-mgrs').innerText = users?.filter(u => u.role === 'manager').length || 0;
+            document.getElementById('stat-stores').innerText = allStores.length;
+            document.getElementById('stat-emps').innerText = allUsers.filter(u => u.role === 'employee').length;
+            document.getElementById('stat-mgrs').innerText = allUsers.filter(u => u.role === 'manager').length;
         }
 
         function renderStores(data) {
@@ -130,30 +151,29 @@
             renderStores(filtered);
         }
 
-        async function exportData() {
-            const worksheet = XLSX.utils.json_to_sheet(allStores);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Stores");
-            XLSX.writeFile(workbook, "Fateen_Stores_Data.xlsx");
-        }
-
-        async function quickAddUser() {
-            const u = document.getElementById('q-u-name').value;
-            const ph = document.getElementById('q-u-phone').value;
-            const p = document.getElementById('q-u-pass').value;
-            const r = document.getElementById('q-u-role').value;
-            await _supabase.from('users').insert([{ username: u, phone: ph, password: p, store_key: activeStoreKey, role: r }]);
-            loadStoreUsers(); loadData();
-        }
-
         async function addNewStore() {
             const key = document.getElementById('new-st-key').value;
             const name = document.getElementById('new-st-name').value;
             const phone = document.getElementById('new-st-phone').value;
             const price = document.getElementById('new-st-price').value;
             const expiry = document.getElementById('new-st-expiry').value;
-            await _supabase.from('stores').insert([{ store_key: key, store_name: name, phone: phone, subscription_price: price, expiry_date: expiry, is_active: true }]);
-            closeModal('addStoreModal'); loadData();
+
+            if (!key || !name || !phone || !price || !expiry) {
+                alert("برجاء إكمال كافة البيانات المطلوبة"); return;
+            }
+
+            if (allStores.some(s => s.phone === phone)) {
+                alert("عذراً، رقم الهاتف هذا مسجل لمتجر آخر"); return;
+            }
+
+            const { error } = await _supabase.from('stores').insert([{ store_key: key, store_name: name, phone: phone, subscription_price: price, expiry_date: expiry, is_active: true }]);
+            
+            if (error) alert("خطأ في السيرفر: " + error.message);
+            else {
+                alert("تمت الإضافة بنجاح");
+                closeModal('addStoreModal');
+                loadData();
+            }
         }
 
         async function showStoreDetails(st) {
@@ -170,18 +190,49 @@
             list.innerHTML = '';
             emps?.filter(e => e.role !== 'developer').forEach(e => {
                 list.innerHTML += `<div class="emp-list-item">
-                    <div style="display:flex; justify-content:space-between;">
-                        <span><b>${e.username}</b> (${e.role === 'manager' ? 'مدير' : 'كاشير'})</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span><b>${e.username}</b> <small style="color:var(--accent)">(${e.role === 'manager' ? 'مدير' : 'كاشير'})</small></span>
                         <button onclick="delU('${e.username}')" style="color:var(--red); background:none; border:none; cursor:pointer;">حذف</button>
                     </div>
-                    <span style="font-size:12px; color:#666;">📞 هاتف: ${e.phone || 'لا يوجد'}</span>
+                    <span style="font-size:12px; color:#666; margin-top:5px;">📞 هاتف: ${e.phone || 'لا يوجد'}</span>
                 </div>`;
             });
+        }
+
+        async function quickAddUser() {
+            const u = document.getElementById('q-u-name').value;
+            const ph = document.getElementById('q-u-phone').value;
+            const p = document.getElementById('q-u-pass').value;
+            const r = document.getElementById('q-u-role').value;
+
+            if (!u || !ph || !p) { alert("بيانات العضو ناقصة!"); return; }
+            
+            const { data: check } = await _supabase.from('users').select('phone').eq('phone', ph);
+            if (check && check.length > 0) { alert("هذا الهاتف مسجل لموظف آخر"); return; }
+
+            await _supabase.from('users').insert([{ username: u, phone: ph, password: p, store_key: activeStoreKey, role: r }]);
+            loadStoreUsers(); loadData();
+            document.querySelectorAll('#storeDetailModal input').forEach(i => i.value = '');
+        }
+
+        async function delU(uname) {
+            if(confirm("حذف الموظف نهائياً؟")) {
+                await _supabase.from('users').delete().eq('username', uname);
+                loadStoreUsers(); loadData();
+            }
+        }
+
+        async function exportData() {
+            const ws = XLSX.utils.json_to_sheet(allStores);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "المتاجر");
+            XLSX.writeFile(wb, "Fateen_System_Report.xlsx");
         }
 
         function openModal(id) { document.getElementById(id).style.display='flex'; }
         function closeModal(id) { document.getElementById(id).style.display='none'; }
         function logout() { sessionStorage.clear(); window.location.href='index.html'; }
+
         loadData();
     </script>
 </body>
