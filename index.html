@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { font-family: 'Cairo', sans-serif; box-sizing: border-box; }
-        body { margin: 0; background: #000; color: #fff; overflow: hidden; }
+        body { margin: 0; background: #000; color: #fff; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
 
         /* Splash Screen */
         #splash-screen {
@@ -18,46 +18,50 @@
             align-items: center; z-index: 9999; transition: 0.8s;
         }
         .logo-text { font-size: 3rem; font-weight: 700; letter-spacing: 8px; animation: pulse 2s infinite; }
-        .loader-bar { width: 200px; height: 3px; background: #333; border-radius: 5px; overflow: hidden; margin-top: 15px; }
-        .loader-progress { width: 0%; height: 100%; background: #fff; animation: load 2.5s forwards; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        @keyframes load { 0% { width: 0%; } 100% { width: 100%; } }
-
-        /* Login UI */
-        .login-container {
-            display: none; height: 100vh; justify-content: center; align-items: center;
-            background: #0b0b0b; opacity: 0; transition: 0.8s;
-        }
+        
+        /* Login Box */
         .login-box {
             background: rgba(255, 255, 255, 0.03); padding: 40px; border-radius: 24px;
             border: 1px solid rgba(255, 255, 255, 0.1); width: 90%; max-width: 400px;
-            backdrop-filter: blur(20px); text-align: center;
+            backdrop-filter: blur(20px); text-align: center; display: none; opacity: 0; transition: 0.8s;
         }
+        
+        .store-header { margin-bottom: 20px; color: #00ff88; font-size: 20px; font-weight: bold; display: none; }
+        
         input {
             width: 100%; padding: 15px; background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
             color: #fff; outline: none; margin-bottom: 20px; text-align: right;
         }
-        .login-btn {
+        button {
             width: 100%; padding: 15px; background: #fff; color: #000;
             border: none; border-radius: 12px; font-weight: 700; cursor: pointer;
         }
+        .back-btn { background: transparent; color: #888; margin-top: 10px; font-size: 14px; text-decoration: underline; }
+
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     </style>
 </head>
 <body>
 
     <div id="splash-screen">
         <div class="logo-text">FATEEN</div>
-        <div class="loader-bar"><div class="loader-progress"></div></div>
     </div>
 
-    <div class="login-container" id="loginUI">
-        <div class="login-box">
-            <h2>دخول نظام فطين</h2>
-            <input type="text" id="storeKey" placeholder="كود المتجر">
-            <input type="text" id="username" placeholder="اسم المستخدم">
-            <input type="password" id="password" placeholder="كلمة المرور">
-            <button class="login-btn" id="loginBtn">دخول النظام</button>
+    <div class="login-box" id="loginUI">
+        <div id="step1">
+            <h2>مرحباً بك</h2>
+            <p style="color: #888; font-size: 14px;">أدخل كود المتجر للبدء</p>
+            <input type="text" id="storeKeyInput" placeholder="كود المتجر (مثلاً: ASW01)">
+            <button id="nextBtn">التحقق من المتجر</button>
+        </div>
+
+        <div id="step2" style="display: none;">
+            <div class="store-header" id="storeNameDisplay">اسم المتجر</div>
+            <input type="text" id="usernameInput" placeholder="اسم المستخدم">
+            <input type="password" id="passwordInput" placeholder="كلمة المرور">
+            <button id="loginBtn">تسجيل الدخول</button>
+            <button class="back-btn" onclick="goToStep1()">تغيير المتجر</button>
         </div>
     </div>
 
@@ -70,17 +74,40 @@
             setTimeout(() => {
                 document.getElementById('splash-screen').style.display = 'none';
                 const ui = document.getElementById('loginUI');
-                ui.style.display = 'flex';
+                ui.style.display = 'block';
                 setTimeout(() => ui.style.opacity = '1', 50);
-            }, 3000);
+            }, 2500);
         };
 
-        document.getElementById('loginBtn').onclick = async function() {
-            const sKey = document.getElementById('storeKey').value.trim();
-            const uName = document.getElementById('username').value.trim();
-            const pWord = document.getElementById('password').value.trim();
+        // التحقق من كود المتجر (الخطوة 1)
+        document.getElementById('nextBtn').onclick = async function() {
+            const sKey = document.getElementById('storeKeyInput').value.trim();
+            if(!sKey) return alert("أدخل كود المتجر أولاً");
 
-            if(!sKey || !uName || !pWord) return alert("أكمل البيانات");
+            const { data: store, error } = await _supabase
+                .from('stores')
+                .select('*')
+                .eq('store_key', sKey)
+                .single();
+
+            if (store) {
+                if (!store.is_active) return alert("هذا المتجر موقوف!");
+                
+                document.getElementById('step1').style.display = 'none';
+                document.getElementById('step2').style.display = 'block';
+                document.getElementById('storeNameDisplay').innerText = "متجر: " + store.store_name;
+                document.getElementById('storeNameDisplay').style.display = 'block';
+                window.currentStore = store;
+            } else {
+                alert("كود المتجر غير موجود!");
+            }
+        };
+
+        // تسجيل الدخول (الخطوة 2)
+        document.getElementById('loginBtn').onclick = async function() {
+            const uName = document.getElementById('usernameInput').value.trim();
+            const pWord = document.getElementById('passwordInput').value.trim();
+            const sKey = window.currentStore.store_key;
 
             const { data, error } = await _supabase
                 .from('users')
@@ -91,45 +118,29 @@
 
             if (data && data.length > 0) {
                 const user = data[0];
-
-                // --- حارس الاشتراك وحالة المتجر ---
-                const { data: storeData } = await _supabase
-                    .from('stores')
-                    .select('*')
-                    .eq('store_key', user.store_key)
-                    .single();
-
-                if (user.role !== 'developer') { 
-                    // 1. تشييك حالة المتجر (مفتوح/مقفول)
-                    if (storeData && storeData.is_active === false) {
-                        alert("❌ هذا المتجر موقوف مؤقتاً. تواصل مع الإدارة.");
-                        return;
-                    }
-
-                    // 2. تشييك تاريخ الانتهاء
-                    if (storeData && storeData.expiry_date) {
-                        const today = new Date();
-                        const expiry = new Date(storeData.expiry_date);
-                        if (today > expiry) {
-                            alert("⚠️ انتهت مدة اشتراك هذا المحل!");
-                            return;
-                        }
-                    }
+                
+                // تشييك التاريخ (لغير المطور)
+                if(user.role !== 'developer') {
+                    const expiry = new Date(window.currentStore.expiry_date);
+                    if (new Date() > expiry) return alert("انتهى اشتراك المحل!");
                 }
 
-                // لو تمام يتم الدخول
                 sessionStorage.setItem('isLoggedIn', 'true');
                 sessionStorage.setItem('userRole', user.role);
-                sessionStorage.setItem('storeKey', user.store_key);
+                sessionStorage.setItem('storeKey', sKey);
 
                 if (user.role === 'developer') window.location.href = "developer.html";
                 else if (user.role === 'manager') window.location.href = "manager.html";
                 else window.location.href = "pos.html";
-
             } else {
-                alert("بيانات الدخول غلط!");
+                alert("بيانات المستخدم غير صحيحة!");
             }
         };
+
+        function goToStep1() {
+            document.getElementById('step2').style.display = 'none';
+            document.getElementById('step1').style.display = 'block';
+        }
     </script>
 </body>
 </html>
