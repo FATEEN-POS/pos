@@ -3,39 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام فطين POS - تسجيل الدخول</title>
+    <title>نظام فطين - تسجيل الدخول</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { font-family: 'Cairo', sans-serif; box-sizing: border-box; }
-        body { margin: 0; background: #000; color: #fff; overflow: hidden; }
-
-        /* Splash Screen */
-        #splash-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, #1a1a1a 0%, #000 100%);
-            display: flex; flex-direction: column; justify-content: center;
-            align-items: center; z-index: 9999; transition: 0.8s;
-        }
-        .logo-text { font-size: 3rem; font-weight: 700; letter-spacing: 8px; animation: pulse 2s infinite; }
-        .loader-bar { width: 200px; height: 3px; background: #333; border-radius: 5px; overflow: hidden; margin-top: 15px; }
-        .loader-progress { width: 0%; height: 100%; background: #fff; animation: load 2.5s forwards; }
-        
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        @keyframes load { 0% { width: 0%; } 100% { width: 100%; } }
-
-        /* Login UI */
-        .login-container {
-            display: none; height: 100vh; justify-content: center; align-items: center;
-            background: #0b0b0b; opacity: 0; transition: 0.8s;
-        }
+        body { margin: 0; background: #000; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
         .login-box {
-            background: rgba(255, 255, 255, 0.03); padding: 40px; border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.1); width: 100%; max-width: 400px;
-            backdrop-filter: blur(20px); text-align: center;
+            background: rgba(255, 255, 255, 0.05); padding: 40px; border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1); width: 90%; max-width: 400px;
+            backdrop-filter: blur(15px); text-align: center;
         }
+        h2 { margin-bottom: 30px; font-weight: 700; }
         input {
-            width: 100%; padding: 15px; background: rgba(255, 255, 255, 0.05);
+            width: 100%; padding: 15px; background: rgba(255, 255, 255, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
             color: #fff; outline: none; margin-bottom: 20px; text-align: right;
         }
@@ -47,73 +28,58 @@
 </head>
 <body>
 
-    <div id="splash-screen">
-        <div class="logo-text">FATEEN</div>
-        <div class="loader-bar"><div class="loader-progress"></div></div>
-    </div>
-
-    <div class="login-container" id="loginUI">
-        <div class="login-box">
-            <h2>دخول النظام</h2>
-            <input type="text" id="storeKey" placeholder="كود المتجر">
-            <input type="text" id="username" placeholder="اسم المستخدم">
-            <input type="password" id="password" placeholder="كلمة المرور">
-            <button class="login-btn" id="loginBtn">دخول</button>
-        </div>
+    <div class="login-box">
+        <h2>دخول نظام فطين</h2>
+        <input type="text" id="storeKey" placeholder="كود المتجر (مثل: ASW01)">
+        <input type="text" id="username" placeholder="اسم المستخدم">
+        <input type="password" id="password" placeholder="كلمة المرور">
+        <button class="login-btn" id="loginBtn">دخول</button>
     </div>
 
     <script>
-        // بيانات الربط (نفس بياناتك الشغالة)
+        // بيانات الربط الخاصة بقاعدة بياناتك
         const SUPABASE_URL = 'https://xyvxowlbvuqbggkslwqr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo';
+        
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Splash Logic
-        window.onload = () => {
-            setTimeout(() => {
-                document.getElementById('splash-screen').style.display = 'none';
-                const ui = document.getElementById('loginUI');
-                ui.style.display = 'flex';
-                setTimeout(() => ui.style.opacity = '1', 50);
-            }, 3000);
-        };
-
-        // Login Logic
-        document.getElementById('loginBtn').addEventListener('click', async () => {
+        document.getElementById('loginBtn').onclick = async function() {
             const sKey = document.getElementById('storeKey').value.trim();
             const uName = document.getElementById('username').value.trim();
             const pWord = document.getElementById('password').value.trim();
 
-            try {
-                const { data, error } = await _supabase
-                    .from('users')
-                    .select('*')
-                    .eq('store_key', sKey)
-                    .eq('username', uName)
-                    .eq('password', pWord);
+            // 1. مسح أي بيانات دخول قديمة
+            sessionStorage.clear();
 
-                if (data && data.length > 0) {
-                    const user = data[0];
-                    // حفظ الجلسة (مهم جداً للحماية)
-                    sessionStorage.setItem('isLoggedIn', 'true');
-                    sessionStorage.setItem('userRole', user.role);
-                    sessionStorage.setItem('storeKey', user.store_key);
+            // 2. طلب التأكد من البيانات من السيرفر
+            const { data, error } = await _supabase
+                .from('users')
+                .select('*')
+                .eq('store_key', sKey)
+                .eq('username', uName)
+                .eq('password', pWord);
 
-                    // التوجيه بناءً على الرول
-                    if (user.role === 'developer') {
-                        window.location.href = "developer.html";
-                    } else if (user.role === 'manager') {
-                        window.location.href = "manager.html";
-                    } else {
-                        window.location.href = "pos.html";
-                    }
+            if (data && data.length > 0) {
+                const user = data[0];
+                
+                // 3. حفظ "الجلسة" عشان الصفحة التانية تعرف إننا سجلنا دخول
+                sessionStorage.setItem('isLoggedIn', 'true');
+                sessionStorage.setItem('userRole', user.role);
+
+                // 4. التوجيه الدقيق جداً حسب الـ Role
+                const myRole = String(user.role).trim().toLowerCase();
+
+                if (myRole === 'developer') {
+                    window.location.href = "developer.html";
+                } else if (myRole === 'manager') {
+                    window.location.href = "manager.html";
                 } else {
-                    alert("❌ بيانات غير صحيحة");
+                    window.location.href = "pos.html";
                 }
-            } catch (err) {
-                alert("خطأ في الاتصال");
+            } else {
+                alert("بيانات الدخول غلط يا بطل!");
             }
-        });
+        };
     </script>
 </body>
 </html>
