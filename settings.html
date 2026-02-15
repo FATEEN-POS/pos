@@ -1,1 +1,148 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فطين - إعدادات النظام الذكي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            background: radial-gradient(circle at top right, #0f172a, #1e293b);
+            min-height: 100vh;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+        }
+        .tab-btn {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .tab-btn.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+        input, select {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+        }
+        input:focus {
+            border-color: #3b82f6 !important;
+            outline: none;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
 
+    <div class="max-w-5xl mx-auto">
+        <div class="mb-8 flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold flex items-center gap-3">
+                    <i data-lucide="settings" class="text-blue-400"></i>
+                    إعدادات النظام
+                </h1>
+                <p class="text-gray-400">تخصيص الهوية، الضرائب، والطابعات</p>
+            </div>
+            <button class="bg-green-600 hover:bg-green-500 px-8 py-2 rounded-xl font-bold transition flex items-center gap-2">
+                <i data-lucide="save"></i> حفظ التغييرات
+            </button>
+        </div>
+
+        <div class="glass-panel overflow-hidden">
+            <div class="flex border-b border-white/10 overflow-x-auto">
+                <button onclick="showTab('general')" id="btn-general" class="tab-btn active px-6 py-4 flex items-center gap-2 flex-shrink-0">
+                    <i data-lucide="store" class="w-5 h-5"></i> الهوية التجارية
+                </button>
+                <button onclick="showTab('tax')" id="btn-tax" class="tab-btn px-6 py-4 flex items-center gap-2 flex-shrink-0">
+                    <i data-lucide="file-text" class="w-5 h-5"></i> الضرائب والفاتورة
+                </button>
+                <button onclick="showTab('hardware')" id="btn-hardware" class="tab-btn px-6 py-4 flex items-center gap-2 flex-shrink-0">
+                    <i data-lucide="printer" class="w-5 h-5"></i> الطابعة والملحقات
+                </button>
+            </div>
+
+            <div id="general" class="tab-content p-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">اسم النشاط (بالعربي)</label>
+                        <input type="text" class="w-full p-3 rounded-lg" placeholder="مثلاً: سوبر ماركت النيل">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">رقم التواصل</label>
+                        <input type="text" class="w-full p-3 rounded-lg" placeholder="01xxxxxxxxx">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm text-gray-400 mb-2">العنوان بالتفصيل (يظهر في الريسيت)</label>
+                        <input type="text" class="w-full p-3 rounded-lg" placeholder="أسوان - شارع كورنيش النيل">
+                    </div>
+                </div>
+            </div>
+
+            <div id="tax" class="tab-content p-8 hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-right">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">رقم التسجيل الضريبي الموحد</label>
+                        <input type="text" class="w-full p-3 rounded-lg" placeholder="123-456-789">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">ضريبة القيمة المضافة (%)</label>
+                        <input type="number" class="w-full p-3 rounded-lg" value="14">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">نوع الفاتورة الإلكترونية</label>
+                        <select class="w-full p-3 rounded-lg">
+                            <option>B2C - إيصال إلكتروني</option>
+                            <option>B2B - فاتورة ضريبية</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="hardware" class="tab-content p-8 hidden">
+                <div class="max-w-md space-y-6">
+                    <div class="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="bluetooth" class="text-blue-400"></i>
+                            <span>طابعة البلوتوث</span>
+                        </div>
+                        <input type="checkbox" class="w-5 h-5 accent-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">مقاس ورق الطباعة</label>
+                        <select class="w-full p-3 rounded-lg">
+                            <option>80mm (Standard)</option>
+                            <option>58mm (Small)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">رسالة تذييل الفاتورة</label>
+                        <textarea class="w-full p-3 rounded-lg bg-transparent border border-white/10 h-24" placeholder="شكراً لزيارتكم لفرع أسوان.."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        function showTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById('btn-' + tabId).classList.add('active');
+        }
+    </script>
+</body>
+</html>
