@@ -3,124 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>فطين - لوحة تحكم المطور</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <title>Fateen OS | Developer PRO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body {
-            background: radial-gradient(circle at top left, #1e293b, #0f172a);
-            min-height: 100vh;
-            color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        /* تأثير الزجاج - Glassmorphism */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 1rem;
-            transition: all 0.3s ease;
-        }
-        .glass-card:hover {
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transform: translateY(-5px);
-        }
-        .search-bar {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .search-bar:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
-        }
+        :root { --bg: #050505; --card: #111111; --accent: #00f2fe; --red: #ff4d4d; --white: #ffffff; --gray: #222; --warn: #ff9800; }
+        :root { --bg: #050505; --card: #111111; --accent: #00f2fe; --red: #ff4d4d; --white: #ffffff; --gray: #222; }
+        * { font-family: 'Cairo', sans-serif; box-sizing: border-box; transition: 0.3s; }
+        body { margin: 0; background: var(--bg); color: var(--white); padding: 20px; }
+        
+        /* التحذير العلوي */
+        #expiry-alert-box { display: none; background: rgba(255, 77, 77, 0.15); border: 1px solid var(--red); color: var(--red); padding: 15px; border-radius: 15px; margin-bottom: 20px; font-weight: bold; align-items: center; gap: 10px; }
+
+        #expiry-alert-box { display: none; background: rgba(255, 77, 77, 0.15); border: 1px solid var(--red); color: var(--red); padding: 15px; border-radius: 15px; margin-bottom: 20px; font-weight: bold; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: var(--card); border-radius: 20px; border: 1px solid var(--gray); margin-bottom: 25px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .stat-item { background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid var(--gray); text-align: center; }
+        .stat-item p { margin: 10px 0 0; font-size: 24px; font-weight: 700; color: var(--accent); }
+
+        .btn-add-store { width: auto; padding: 12px 30px; background: var(--white); color: #000; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-bottom: 25px; display: block; margin-right: auto; }
+        
+        .stores-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .store-card { background: var(--card); border: 1px solid var(--gray); border-radius: 22px; padding: 20px; cursor: pointer; position: relative; }
+        .store-card:hover { border-color: var(--accent); }
+        
+        .expiry-badge { position: absolute; top: 15px; left: 15px; font-size: 10px; padding: 4px 10px; border-radius: 10px; font-weight: bold; }
+        .active-badge { background: rgba(0, 242, 254, 0.1); color: var(--accent); }
+        .expired-badge { background: rgba(255, 77, 77, 0.1); color: var(--red); }
+
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:none; justify-content:center; align-items:center; z-index:2000; backdrop-filter:blur(10px); }
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:none; justify-content:center; align-items:center; z-index:2000; backdrop-filter:blur:10px; }
+        .modal-content { background:#111; width:90%; max-width:550px; padding:30px; border-radius:25px; border: 1px solid var(--gray); max-height: 90vh; overflow-y: auto; }
+        
+        input, select, textarea { width:100%; padding: 12px; background:#1a1a1a; border:1px solid var(--gray); border-radius:12px; color: #ffffff !important; margin-bottom: 12px; outline: none; }
+        
+        input, select, textarea { width:100%; padding: 12px; background:#1a1a1a; border:1px solid var(--gray); border-radius:12px; color: #fff; margin-bottom: 12px; outline: none; }
+        .btn-action { width: 100%; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; border: none; margin-top: 10px; }
+        .btn-save { background: var(--accent); color: #000; }
+        .btn-cancel { background: transparent; color: #888; border: 1px solid var(--gray); }
+
+        .emp-list-item { background: #000; padding: 12px 15px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
+        .role-tag { font-size: 11px; color: var(--accent); background: rgba(0,242,254,0.1); padding: 2px 8px; border-radius: 5px; }
     </style>
 </head>
-<body class="p-6">
+<body>
 
-    <div class="max-w-7xl mx-auto">
-        <header class="flex justify-between items-center mb-10">
-            <div>
-                <h1 class="text-3xl font-bold flex items-center gap-2">
-                    <i data-lucide="layout-dashboard" class="text-blue-400"></i>
-                    لوحة تحكم فطين (المطور)
-                </h1>
-                <p class="text-gray-400 mt-2">إدارة المتاجر والتحليلات لأسوان ومصر</p>
-            </div>
-            <button class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-lg font-bold flex items-center gap-2 transition">
-                <i data-lucide="plus-circle" class="w-5 h-5"></i> إضافة متجر جديد
-            </button>
-        </header>
+    <div id="expiry-alert-box">
+        <span>⚠️ تنبيه إداري:</span>
+        <span id="alert-msg"></span>
+    </div>
+    <div id="expiry-alert-box">⚠️ تنبيه: <span id="alert-msg"></span></div>
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-            <div class="glass-card p-6">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-gray-400 text-sm">إجمالي المبيعات</p>
-                        <h3 class="text-2xl font-bold">150,450 ج.م</h3>
-                    </div>
-                    <i data-lucide="trending-up" class="text-green-400"></i>
-                </div>
-                <div class="mt-4 h-1 bg-gray-700 rounded-full overflow-hidden">
-                    <div class="bg-green-400 h-full w-2/3"></div>
-                </div>
-            </div>
-            </div>
-
-        <div class="glass-card p-4 mb-8 flex flex-wrap gap-4 items-center justify-between">
-            <div class="relative flex-1 min-w-[300px]">
-                <i data-lucide="search" class="absolute right-3 top-2.5 text-gray-400 w-5 h-5"></i>
-                <input type="text" id="storeSearch" placeholder="بحث باسم المتجر..." 
-                       class="search-bar w-full pr-10 pl-4 py-2 rounded-lg text-white">
-            </div>
-            <div class="flex gap-2">
-                <button onclick="filterStores('all')" class="px-4 py-2 rounded-md bg-gray-700 hover:bg-gray-600 transition">الكل</button>
-                <button onclick="filterStores('active')" class="px-4 py-2 rounded-md bg-green-900/40 text-green-400 border border-green-800 hover:bg-green-800 transition">نشط</button>
-                <button onclick="filterStores('expired')" class="px-4 py-2 rounded-md bg-red-900/40 text-red-400 border border-red-800 hover:bg-red-800 transition">منتهي</button>
-            </div>
-        </div>
-
-        <div id="storesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div class="glass-card p-6 store-card" data-name="سوبر ماركت الصعايدة" data-status="active">
-                <div class="flex justify-between items-center mb-4">
-                    <span class="bg-green-900/50 text-green-400 text-xs px-2 py-1 rounded border border-green-800">نشط</span>
-                    <i data-lucide="more-vertical" class="text-gray-400 cursor-pointer"></i>
-                </div>
-                <h4 class="text-xl font-semibold mb-2">سوبر ماركت الصعايدة</h4>
-                <div class="space-y-2 text-sm text-gray-400">
-                    <p class="flex items-center gap-2"><i data-lucide="map-pin" class="w-4 h-4"></i> أسوان - طريق السادات</p>
-                    <p class="flex items-center gap-2"><i data-lucide="calendar" class="w-4 h-4"></i> ينتهي في: 2024-12-30</p>
-                </div>
-                <button class="w-full mt-6 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition">دخول للإدارة</button>
-            </div>
-        </div>
+    <div class="header">
+        <h1>لوحة تحكم فطين <span style="color:var(--accent)">PRO</span></h1>
+@@ -57,21 +44,21 @@
+    <div class="stats-grid">
+        <div class="stat-item"><h4>الأرباح</h4><p id="stat-revenue">0</p></div>
+        <div class="stat-item"><h4>المتاجر</h4><p id="stat-stores">0</p></div>
+        <div class="stat-item"><h4>موظفين كاشير</h4><p id="stat-emps">0</p></div>
+        <div class="stat-item"><h4>مديرين فروع</h4><p id="stat-mgrs">0</p></div>
+        <div class="stat-item"><h4>موظفين</h4><p id="stat-emps">0</p></div>
+        <div class="stat-item"><h4>مديرين</h4><p id="stat-mgrs">0</p></div>
     </div>
 
-    <script>
-        // تفعيل الأيقونات
-        lucide.createIcons();
+    <button class="btn-add-store" onclick="openModal('addStoreModal')">+ إضافة متجر جديد</button>
+    <div class="stores-grid" id="stores-display"></div>
 
-        // منطق البحث والفلترة
-        const searchInput = document.getElementById('storeSearch');
-        const storeCards = document.querySelectorAll('.store-card');
+    <div id="addStoreModal" class="modal">
+        <div class="modal-content">
+            <h2>إضافة متجر جديد</h2>
+            <h2>متجر جديد</h2>
+            <input type="text" id="new-st-key" placeholder="كود المتجر">
+            <input type="text" id="new-st-name" placeholder="اسم المتجر">
+            <input type="number" id="new-st-price" placeholder="سعر الاشتراك">
+            <input type="number" id="new-st-price" placeholder="السعر">
+            <input type="date" id="new-st-expiry">
+            <textarea id="new-st-notes" placeholder="ملاحظات..." rows="2"></textarea>
+            <textarea id="new-st-notes" placeholder="ملاحظات" rows="2"></textarea>
+            <button class="btn-action btn-save" onclick="addNewStore()">حفظ</button>
+            <button class="btn-action btn-cancel" onclick="closeModal('addStoreModal')">إلغاء</button>
+        </div>
+@@ -85,17 +72,12 @@
+            <h4>الملاحظات:</h4>
+            <textarea id="edit-st-notes"></textarea>
+            <button onclick="updateNotes()" class="btn-action btn-save" style="width:auto; padding:5px 15px;">تحديث</button>
+            
+            <h4 style="margin-top:20px;">الفريق (عربي):</h4>
+            <h4 style="margin-top:20px;">الفريق:</h4>
+            <div id="employee-list"></div>
+            
+            <div style="background:#000; padding:15px; border-radius:15px; margin-top:15px; border:1px solid #222;">
+                <input type="text" id="q-u-name" placeholder="اسم المستخدم">
+                <input type="password" id="q-u-pass" placeholder="كلمة المرور">
+                <select id="q-u-role">
+                    <option value="employee">موظف كاشير</option>
+                    <option value="manager">مدير فرع</option>
+                </select>
+                <input type="password" id="q-u-pass" placeholder="الباسورد">
+                <select id="q-u-role"><option value="employee">موظف كاشير</option><option value="manager">مدير فرع</option></select>
+                <button class="btn-action btn-save" onclick="quickAddUser()">إضافة للفريق</button>
+            </div>
+            <button class="btn-action" style="background:var(--red); color:#fff; margin-top:20px;" onclick="deleteCurrentStore()">حذف المتجر</button>
+@@ -117,42 +99,26 @@
+            const { data: stores } = await _supabase.from('stores').select('*');
+            const { data: users } = await _supabase.from('users').select('*');
+            const grid = document.getElementById('stores-display');
+            const alertBox = document.getElementById('expiry-alert-box');
+            const alertMsg = document.getElementById('alert-msg');
+            
+            grid.innerHTML = '';
+            let totalRev = 0;
+            let expiringSoon = [];
+            const now = new Date();
 
-        searchInput.addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            storeCards.forEach(card => {
-                const name = card.getAttribute('data-name').toLowerCase();
-                card.style.display = name.includes(term) ? 'block' : 'none';
+            stores?.forEach(st => {
+                const expDate = new Date(st.expiry_date);
+                const diffTime = expDate - now;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                // فحص انتهاء الاشتراك (3 أيام أو أقل)
+                if (st.is_active && diffDays <= 3 && diffDays >= 0) {
+                    expiringSoon.push(`${st.store_name} (باقي ${diffDays} يوم)`);
+                }
+
+                const diffDays = Math.ceil((new Date(st.expiry_date) - now) / (1000 * 60 * 60 * 24));
+                if (st.is_active && diffDays <= 3 && diffDays >= 0) expiringSoon.push(st.store_name);
+                if(st.is_active) totalRev += parseFloat(st.subscription_price || 0);
+                
+                grid.innerHTML += `
+                    <div class="store-card" onclick='showStoreDetails(${JSON.stringify(st)})'>
+                        <div class="expiry-badge ${st.is_active ? 'active-badge' : 'expired-badge'}">
+                            ${st.is_active ? 'نشط' : 'متوقف'}
+                        </div>
+                        <h3>${st.store_name}</h3>
+                        <div style="color:var(--accent); font-weight:bold;">${st.subscription_price} ج.م</div>
+                        <div style="font-size:11px; color:#555;">ينتهي: ${st.expiry_date}</div>
+                    </div>`;
+                grid.innerHTML += `<div class="store-card" onclick='showStoreDetails(${JSON.stringify(st)})'>
+                    <div class="expiry-badge ${st.is_active ? 'active-badge' : 'expired-badge'}">${st.is_active ? 'نشط' : 'متوقف'}</div>
+                    <h3>${st.store_name}</h3>
+                    <div style="color:var(--accent); font-weight:bold;">${st.subscription_price} ج.م</div>
+                </div>`;
             });
-        });
 
-        function filterStores(status) {
-            storeCards.forEach(card => {
-                if (status === 'all') card.style.display = 'block';
-                else {
-                    card.style.display = card.getAttribute('data-status') === status ? 'block' : 'none';
+            // عرض بوكس التحذير لو فيه متاجر قربت تخلص
+            if (expiringSoon.length > 0) {
+                alertBox.style.display = 'flex';
+                alertMsg.innerText = expiringSoon.join(' | ');
+            } else { alertBox.style.display = 'none'; }
+                document.getElementById('expiry-alert-box').style.display = 'block';
+                document.getElementById('alert-msg').innerText = "متاجر تقترب من الانتهاء: " + expiringSoon.join(', ');
+            }
+
+            document.getElementById('stat-revenue').innerText = totalRev + " ج.م";
+            document.getElementById('stat-stores').innerText = stores?.length || 0;
+@@ -166,10 +132,7 @@
+            document.getElementById('view-st-name').innerText = st.store_name;
+            document.getElementById('store-meta').innerText = `كود: ${st.store_key} | انتهاء: ${st.expiry_date}`;
+            document.getElementById('edit-st-notes').value = st.notes || '';
+            document.getElementById('toggle-container').innerHTML = `
+                <button class="btn-action" style="background:${st.is_active ? 'var(--red)' : 'var(--accent)'}" onclick="handleToggle(${st.is_active})">
+                    ${st.is_active ? 'إيقاف المتجر' : 'تشغيل المتجر'}
+                </button>`;
+            document.getElementById('toggle-container').innerHTML = `<button class="btn-action" style="background:${st.is_active ? 'var(--red)' : 'var(--accent)'}" onclick="handleToggle(${st.is_active})">${st.is_active ? 'إيقاف المتجر' : 'تشغيل المتجر'}</button>`;
+            loadStoreUsers();
+        }
+
+@@ -179,32 +142,28 @@
+            list.innerHTML = '';
+            emps?.forEach(e => {
+                if(e.role !== 'developer') {
+                    // ترجمة المسمى الوظيفي
+                    const roleAr = e.role === 'manager' ? 'مدير فرع' : 'موظف كاشير';
+                    list.innerHTML += `<div class="emp-list-item">
+                        <span>${e.username} <span class="role-tag">${roleAr}</span></span>
+                        <button onclick="delU('${e.id}')" style="background:none; color:var(--red); border:none; cursor:pointer; font-weight:bold;">حذف 🗑️</button>
+                        <button onclick="delU('${e.username}')" style="background:none; color:var(--red); border:none; cursor:pointer;">حذف 🗑️</button>
+                    </div>`;
                 }
             });
         }
+
+        async function delU(userId) {
+            if(confirm("حذف هذا العضو نهائياً؟")) {
+                const { error } = await _supabase.from('users').delete().match({ id: userId });
+                if (error) alert("خطأ في الحذف: " + error.message);
+        async function delU(uname) {
+            if(confirm("حذف المستخدم؟")) {
+                const { error } = await _supabase.from('users').delete().eq('username', uname);
+                if (error) alert("فشل الحذف: " + error.message);
+                else { loadStoreUsers(); loadData(); }
+            }
+        }
+
+        async function quickAddUser() {
+            const u = document.getElementById('q-u-name').value.trim();
+            const p = document.getElementById('q-u-pass').value.trim();
+            const u = document.getElementById('q-u-name').value;
+            const p = document.getElementById('q-u-pass').value;
+            const r = document.getElementById('q-u-role').value;
+            if(!u || !p) return alert("ادخل الاسم والباسورد");
+            await _supabase.from('users').insert([{ username: u, password: p, store_key: activeStoreKey, role: r }]);
+            document.getElementById('q-u-name').value = '';
+            document.getElementById('q-u-pass').value = '';
+            loadStoreUsers(); loadData();
+        }
+
+@@ -225,18 +184,18 @@
+
+        async function updateNotes() {
+            await _supabase.from('stores').update({ notes: document.getElementById('edit-st-notes').value }).eq('store_key', activeStoreKey);
+            alert("تم تحديث الملاحظات"); loadData();
+            alert("تم التحديث"); loadData();
+        }
+
+        async function deleteCurrentStore() {
+            if(confirm("حذف المتجر وكل يوزراته؟")) {
+            if(confirm("حذف كامل؟")) {
+                await _supabase.from('users').delete().eq('store_key', activeStoreKey);
+                await _supabase.from('stores').delete().eq('store_key', activeStoreKey);
+                closeModal('storeDetailModal'); loadData();
+            }
+        }
+
+        loadData();
     </script>
 </body>
 </html>
