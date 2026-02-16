@@ -11,11 +11,10 @@
         body { margin: 0; background: #000; color: #fff; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
         #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, #1a1a1a 0%, #000 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: 0.8s; }
         .logo-text { font-size: 3rem; font-weight: 700; letter-spacing: 8px; animation: pulse 2s infinite; }
+        #sys-version-display { font-size: 14px; color: #444; margin-top: 10px; letter-spacing: 2px; }
         .login-box { background: rgba(255, 255, 255, 0.03); padding: 40px; border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.1); width: 90%; max-width: 400px; backdrop-filter: blur(20px); text-align: center; display: none; opacity: 0; transition: 0.8s; }
-        .store-header { margin-bottom: 20px; color: #00f2fe; font-size: 20px; font-weight: bold; }
-        input { width: 100%; padding: 15px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; color: #fff; outline: none; margin-bottom: 20px; text-align: right; }
+        input { width: 100%; padding: 15px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; color: #fff; margin-bottom: 20px; text-align: right; outline: none; }
         button { width: 100%; padding: 15px; background: #fff; color: #000; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; }
-        .back-btn { background: transparent; color: #888; margin-top: 10px; font-size: 14px; text-decoration: underline; border:none; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     </style>
 </head>
@@ -23,23 +22,21 @@
 
     <div id="splash-screen">
         <div class="logo-text">FATEEN</div>
+        <div id="sys-version-display">Loading...</div>
     </div>
 
     <div class="login-box" id="loginUI">
         <div id="step1">
             <h2>دخول النظام</h2>
-            <p style="color: #888; font-size: 14px;">أدخل كود المتجر للبدء</p>
             <input type="text" id="storeKeyInput" placeholder="كود المتجر">
             <button id="nextBtn">التحقق من المتجر</button>
-            <p style="font-size: 11px; color: #444; margin-top: 15px;">Fateen OS v2.0</p>
         </div>
 
         <div id="step2" style="display: none;">
-            <div class="store-header" id="storeNameDisplay">...</div>
+            <div id="storeNameDisplay" style="color:#00f2fe; margin-bottom:15px; font-weight:bold;"></div>
             <input type="text" id="usernameInput" placeholder="اسم المستخدم">
             <input type="password" id="passwordInput" placeholder="كلمة المرور">
             <button id="loginBtn">دخول</button>
-            <button class="back-btn" onclick="goToStep1()">تغيير المتجر</button>
         </div>
     </div>
 
@@ -48,81 +45,50 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        async function loadSystemVersion() {
+            const { data } = await _supabase.from('settings').select('version').eq('id', 1).single();
+            if (data) document.getElementById('sys-version-display').innerText = data.version;
+        }
+
         window.onload = () => {
+            loadSystemVersion();
             setTimeout(() => {
                 document.getElementById('splash-screen').style.opacity = '0';
                 setTimeout(() => {
                     document.getElementById('splash-screen').style.display = 'none';
-                    const ui = document.getElementById('loginUI');
-                    ui.style.display = 'block';
-                    setTimeout(() => ui.style.opacity = '1', 50);
+                    document.getElementById('loginUI').style.display = 'block';
+                    setTimeout(() => document.getElementById('loginUI').style.opacity = '1', 50);
                 }, 800);
             }, 2000);
         };
 
-        // التحقق من المتجر
         document.getElementById('nextBtn').onclick = async function() {
-            const sKey = document.getElementById('storeKeyInput').value.trim();
-            if(!sKey) return alert("يرجى إدخال الكود");
-
-            const { data: store, error } = await _supabase.from('stores').select('*').eq('store_key', sKey).single();
-
+            const sKey = document.getElementById('storeKeyInput').value;
+            const { data: store } = await _supabase.from('stores').select('*').eq('store_key', sKey).single();
             if (store) {
-                if (!store.is_active) return alert("عذراً، هذا المتجر موقوف حالياً");
+                window.currentStore = store;
                 document.getElementById('step1').style.display = 'none';
                 document.getElementById('step2').style.display = 'block';
                 document.getElementById('storeNameDisplay').innerText = store.store_name;
-                window.currentStore = store;
-            } else {
-                alert("كود المتجر غير صحيح");
-            }
+            } else alert("الكود خطأ");
         };
 
-        // تسجيل الدخول النهائي
         document.getElementById('loginBtn').onclick = async function() {
-            const uName = document.getElementById('usernameInput').value.trim();
-            const pWord = document.getElementById('passwordInput').value.trim();
-            const sKey = window.currentStore.store_key;
+            const u = document.getElementById('usernameInput').value;
+            const p = document.getElementById('passwordInput').value;
+            const { data } = await _supabase.from('users').select('*').eq('username', u).eq('password', p).eq('store_key', window.currentStore.store_key);
 
-            // البحث عن المستخدم في المتجر المحدد
-            const { data: users, error } = await _supabase.from('users')
-                .select('*')
-                .eq('username', uName)
-                .eq('password', pWord)
-                .eq('store_key', sKey);
-
-            if (users && users.length > 0) {
-                const user = users[0];
-
-                // فحص انتهاء الاشتراك (لغير المطور)
-                if (user.role !== 'developer') {
-                    const expiry = new Date(window.currentStore.expiry_date);
-                    if (new Date() > expiry) return alert("عذراً، انتهت صلاحية اشتراك هذا المتجر");
-                }
-
-                // تخزين البيانات بنفس مسميات صفحات المطور والمدير
-                sessionStorage.setItem('isLoggedIn', 'true');
+            if (data && data.length > 0) {
+                const user = data[0];
                 sessionStorage.setItem('username', user.username);
                 sessionStorage.setItem('userRole', user.role);
-                sessionStorage.setItem('store_key', sKey); 
+                sessionStorage.setItem('store_key', window.currentStore.store_key);
 
-                // التوجيه حسب الوظيفة
-                if (user.role === 'developer') {
-                    window.location.href = "developer (1).html"; // تأكد من مطابقة اسم الملف لديك
-                } else if (user.role === 'manager') {
-                    window.location.href = "manager.html";
-                } else {
-                    window.location.href = "pos.html";
-                }
-            } else {
-                alert("اسم المستخدم أو كلمة المرور غير صحيحة لهذا المتجر");
-            }
+                if (user.role === 'developer') window.location.href = "developer (1).html";
+                else if (user.role === 'manager') window.location.href = "manager.html";
+                else window.location.href = "pos.html";
+            } else alert("بيانات خطأ");
         };
-
-        function goToStep1() {
-            document.getElementById('step2').style.display = 'none';
-            document.getElementById('step1').style.display = 'block';
-        }
     </script>
 </body>
 </html>
