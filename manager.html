@@ -6,28 +6,133 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #050505; --card: #111111; --accent: #00f2fe; --white: #ffffff; --gray: #222; }
-        * { font-family: 'Cairo', sans-serif; box-sizing: border-box; }
+        :root { --bg: #050505; --card: #111111; --accent: #00f2fe; --white: #ffffff; --gray: #222; --red: #ff4d4d; }
+        * { font-family: 'Cairo', sans-serif; box-sizing: border-box; transition: 0.3s; }
         body { background: var(--bg); color: var(--white); margin: 0; padding: 20px; }
         .header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: var(--card); border-radius: 15px; border: 1px solid var(--gray); margin-bottom: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 25px; }
         .card { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid var(--gray); text-align: center; }
-        .card h3 { color: var(--accent); margin: 0; font-size: 28px; }
-        .btn { background: var(--accent); color: #000; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .card h4 { margin: 0 0 10px 0; color: #888; }
+        .card p { font-size: 24px; font-weight: bold; margin: 10px 0; color: var(--accent); }
+        .btn { background: var(--accent); color: #000; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
+        .btn-outline { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+        
+        /* قسم الفيدباك والتحليل */
+        .section-box { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid var(--gray); margin-bottom: 20px; }
+        textarea { width: 100%; background: #1a1a1a; border: 1px solid var(--gray); border-radius: 10px; color: #fff; padding: 15px; margin-top: 10px; outline: none; }
+        
+        /* قائمة الفريق */
+        .team-item { display: flex; justify-content: space-between; background: #000; padding: 10px 15px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #222; }
+        .role-tag { font-size: 11px; color: var(--accent); background: rgba(0,242,254,0.1); padding: 2px 8px; border-radius: 5px; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h2>لوحة مدير الفرع: <span id="store-name" style="color:var(--accent)">جاري التحميل...</span></h2>
-        <button class="btn" onclick="location.href='settings.html'">الإعدادات</button>
+        <h2>مدير المتجر: <span id="store-name" style="color:var(--accent)">...</span></h2>
+        <div style="display:flex; gap:10px;">
+            <button class="btn btn-outline" style="width:auto" onclick="location.reload()">تحديث</button>
+            <button class="btn" style="width:auto; background:var(--red); color:#fff" onclick="logout()">خروج</button>
+        </div>
     </div>
+
     <div class="grid">
-        <div class="card"><h4>مبيعات اليوم</h4><p id="today-sales">0 ج.م</p></div>
-        <div class="card"><h4>عدد الفواتير</h4><p id="inv-count">0</p></div>
-        <div class="card"><h4>تنبيهات النواقص</h4><p id="stock-alerts" style="color:red">0</p></div>
+        <div class="card">
+            <h4>إجمالي المبيعات</h4>
+            <p id="total-sales-view">0 ج.م</p>
+            <button class="btn btn-outline" onclick="updateSales()">تحديث للمطور ⬆️</button>
+        </div>
+        <div class="card">
+            <h4>صافي الربح</h4>
+            <p id="net-profit-view">0 ج.م</p>
+            <button class="btn btn-outline" onclick="updateProfit()">إرسال التقرير 📊</button>
+        </div>
+        <div class="card">
+            <h4>تنبيهات المخزن</h4>
+            <p id="stock-alerts" style="color:var(--red)">0</p>
+            <button class="btn" onclick="location.href='inventory.html'">عرض النواقص</button>
+        </div>
     </div>
+
+    <div class="section-box">
+        <h3>📝 أرسل ملاحظاتك للمطور (Feedback):</h3>
+        <p style="font-size:12px; color:#666;">سيتم عرض هذا الفيدباك مباشرة في لوحة تحكم الإدارة.</p>
+        <textarea id="mgr-feedback" rows="3" placeholder="اكتب اقتراحاتك أو المشاكل التي تواجهك هنا..."></textarea>
+        <button class="btn" onclick="sendFeedback()">إرسال الفيدباك الآن</button>
+    </div>
+
+    <div class="section-box">
+        <h3>👥 فريق العمل بالفرع:</h3>
+        <div id="team-list">جاري تحميل بيانات الفريق...</div>
+    </div>
+
     <script>
-        // هنا بيتم جلب بيانات المتجر الخاص بالمدير فقط بناءً على الـ store_key المخزن في الـ Session
+        const SUPABASE_URL = 'https://xyvxowlbvuqbggkslwqr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // جلب البيانات من الجلسة
+        const userStoreKey = sessionStorage.getItem('store_key');
+        const username = sessionStorage.getItem('username');
+
+        if (!userStoreKey) {
+            window.location.href = 'index.html';
+        }
+
+        async function loadManagerData() {
+            // 1. جلب بيانات المتجر
+            const { data: store, error } = await _supabase.from('stores').select('*').eq('store_key', userStoreKey).single();
+            if (store) {
+                document.getElementById('store-name').innerText = store.store_name;
+                document.getElementById('total-sales-view').innerText = (store.total_sales || 0) + " ج.م";
+                document.getElementById('net-profit-view').innerText = (store.net_profit || 0) + " ج.م";
+                document.getElementById('mgr-feedback').value = store.feedback || '';
+            }
+
+            // 2. جلب فريق العمل
+            const { data: team } = await _supabase.from('users').select('*').eq('store_key', userStoreKey);
+            const list = document.getElementById('team-list');
+            list.innerHTML = '';
+            team?.forEach(member => {
+                const roleAr = member.role === 'manager' ? 'مدير' : 'كاشير';
+                list.innerHTML += `
+                    <div class="team-item">
+                        <span>${member.username} <small style="color:#666">(${member.phone || 'بلا رقم'})</small></span>
+                        <span class="role-tag">${roleAr}</span>
+                    </div>`;
+            });
+        }
+
+        async function updateSales() {
+            const newVal = prompt("أدخل إجمالي المبيعات الجديد:");
+            if (newVal) {
+                await _supabase.from('stores').update({ total_sales: newVal }).eq('store_key', userStoreKey);
+                alert("تم تحديث المبيعات للمطور");
+                loadManagerData();
+            }
+        }
+
+        async function updateProfit() {
+            const newVal = prompt("أدخل صافي الربح الحالي:");
+            if (newVal) {
+                await _supabase.from('stores').update({ net_profit: newVal }).eq('store_key', userStoreKey);
+                alert("تم إرسال تقرير الربح");
+                loadManagerData();
+            }
+        }
+
+        async function sendFeedback() {
+            const fb = document.getElementById('mgr-feedback').value;
+            const { error } = await _supabase.from('stores').update({ feedback: fb }).eq('store_key', userStoreKey);
+            if (error) alert("خطأ: " + error.message);
+            else alert("تم إرسال الفيدباك بنجاح للمطور");
+        }
+
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        loadManagerData();
     </script>
 </body>
 </html>
