@@ -2,50 +2,135 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fateen OS | Developer PRO</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root { --bg: #050505; --card: #111111; --accent: #00f2fe; --red: #ff4d4d; --white: #ffffff; --gray: #222; }
         * { font-family: 'Cairo', sans-serif; box-sizing: border-box; transition: 0.3s; }
         body { margin: 0; background: var(--bg); color: var(--white); padding: 20px; }
+        
+        /* الهيدر والإحصائيات */
         .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: var(--card); border-radius: 20px; border: 1px solid var(--gray); margin-bottom: 25px; }
-        .version-box { background: #000; border: 1px dashed var(--accent); padding: 5px 15px; border-radius: 10px; display: flex; align-items: center; gap: 10px; }
-        .version-box input { width: 80px; background: transparent; border: 1px solid #333; color: var(--accent); text-align: center; outline: none; }
-        .stores-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; align-items: start; }
-        .store-card { background: var(--card); border: 1px solid var(--gray); border-radius: 22px; padding: 20px; cursor: pointer; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .stat-item { background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid var(--gray); text-align: center; }
+        .stat-item p { margin: 10px 0 0; font-size: 24px; font-weight: 700; color: var(--accent); }
+
+        /* منطقة التحكم والبحث */
+        .controls-area { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; }
+        .search-box { flex: 1; min-width: 250px; padding: 12px; background: #1a1a1a; border: 1px solid var(--gray); border-radius: 12px; color: #fff; outline: none; }
+        .btn-excel { background: #2e7d32; color: #fff; padding: 12px 20px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; }
+        .btn-add-store { padding: 12px 30px; background: var(--white); color: #000; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; }
+
+        /* حل مشكلة تمدد الكروت */
+        .stores-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+            gap: 20px; 
+            align-items: start; 
+        }
+        .store-card { 
+            background: var(--card); 
+            border: 1px solid var(--gray); 
+            border-radius: 22px; 
+            padding: 20px; 
+            cursor: pointer; 
+            position: relative; 
+            height: fit-content; 
+        }
+        .store-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+        
+        .expiry-badge { position: absolute; top: 15px; left: 15px; font-size: 10px; padding: 4px 10px; border-radius: 10px; font-weight: bold; }
+        .active-badge { background: rgba(0, 242, 254, 0.1); color: var(--accent); }
+        .expired-badge { background: rgba(255, 77, 77, 0.1); color: var(--red); }
+
+        /* المودال */
         .modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:none; justify-content:center; align-items:center; z-index:2000; backdrop-filter:blur(10px); }
         .modal-content { background:#111; width:90%; max-width:550px; padding:30px; border-radius:25px; border: 1px solid var(--gray); max-height: 90vh; overflow-y: auto; }
         input, select, textarea { width:100%; padding: 12px; background:#1a1a1a; border:1px solid var(--gray); border-radius:12px; color: #fff; margin-bottom: 12px; outline: none; }
-        .btn-save { background: var(--accent); color: #000; padding: 10px; border-radius: 10px; cursor: pointer; border: none; font-weight: bold; width: 100%; }
-        .emp-item { background: #000; padding: 10px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; border: 1px solid #222; }
-        .role-badge { font-size: 11px; color: var(--accent); border: 1px solid var(--accent); padding: 2px 6px; border-radius: 5px; margin-right: 10px; }
+        .btn-action { width: 100%; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; border: none; margin-top: 10px; }
+        .btn-save { background: var(--accent); color: #000; }
+        .btn-cancel { background: transparent; color: #888; border: 1px solid var(--gray); }
+
+        .analysis-box { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #000; padding: 15px; border-radius: 15px; border: 1px dashed var(--accent); margin-bottom: 15px; }
+        .analysis-item { text-align: center; }
+        .analysis-item small { color: #666; }
+        .analysis-item p { margin: 5px 0; color: var(--accent); font-weight: bold; }
+        .emp-list-item { background: #000; padding: 12px 15px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>Fateen <span style="color:var(--accent)">PRO</span></h1>
-        <div class="version-box">
-            <span style="font-size:12px;">إصدار النظام:</span>
-            <input type="text" id="sys-ver-input" onchange="updateVersion(this.value)">
-        </div>
-        <button onclick="sessionStorage.clear(); location.href='index.html'" style="color:var(--red); background:none; border:1px solid var(--red); padding:5px 15px; border-radius:10px; cursor:pointer;">خروج</button>
+        <h1>لوحة تحكم فطين <span style="color:var(--accent)">PRO</span></h1>
+        <button onclick="logout()" style="background:none; border: 1px solid var(--red); color: var(--red); padding: 5px 15px; border-radius: 10px; cursor: pointer;">خروج</button>
     </div>
 
-    <div class="stores-grid" id="stores-list"></div>
+    <div class="stats-grid">
+        <div class="stat-item"><h4>الأرباح المتوقعة</h4><p id="stat-revenue">0</p></div>
+        <div class="stat-item"><h4>المتاجر</h4><p id="stat-stores">0</p></div>
+        <div class="stat-item"><h4>موظفين</h4><p id="stat-emps">0</p></div>
+        <div class="stat-item"><h4>مديرين</h4><p id="stat-mgrs">0</p></div>
+    </div>
 
-    <div id="detailsModal" class="modal">
+    <div class="controls-area">
+        <input type="text" id="storeSearch" class="search-box" placeholder="بحث باسم المتجر أو الكود..." oninput="filterStores()">
+        <button class="btn-excel" onclick="exportToExcel()">تصدير Excel</button>
+        <button class="btn-add-store" onclick="openModal('addStoreModal')">+ إضافة متجر جديد</button>
+    </div>
+
+    <div class="stores-grid" id="stores-display"></div>
+
+    <div id="addStoreModal" class="modal">
         <div class="modal-content">
-            <h2 id="st-title"></h2>
-            <h4>فريق العمل:</h4>
-            <div id="team-list"></div>
-            <hr style="border:0; border-top:1px solid #222; margin:20px 0;">
-            <input type="text" id="new-u" placeholder="اسم المستخدم الجديد">
-            <input type="password" id="new-p" placeholder="الباسورد">
-            <select id="new-r"><option value="employee">كاشير</option><option value="manager">مدير</option></select>
-            <button class="btn-save" onclick="addUser()">إضافة عضو للفريق</button>
-            <button onclick="document.getElementById('detailsModal').style.display='none'" style="background:none; color:#888; width:100%; margin-top:10px; border:none; cursor:pointer;">إغلاق</button>
+            <h2>إضافة متجر جديد</h2>
+            <input type="text" id="new-st-key" placeholder="كود المتجر">
+            <input type="text" id="new-st-name" placeholder="اسم المتجر">
+            <input type="tel" id="new-st-phone" placeholder="رقم هاتف المدير">
+            <input type="number" id="new-st-price" placeholder="سعر الاشتراك">
+            <input type="date" id="new-st-expiry">
+            <textarea id="new-st-notes" placeholder="ملاحظات المطور" rows="2"></textarea>
+            <button class="btn-action btn-save" onclick="addNewStore()">حفظ البيانات</button>
+            <button class="btn-action btn-cancel" onclick="closeModal('addStoreModal')">إلغاء</button>
+        </div>
+    </div>
+
+    <div id="storeDetailModal" class="modal">
+        <div class="modal-content">
+            <h2 id="view-st-name"></h2>
+            <div id="store-meta" style="margin-bottom: 20px; color: #888; font-size: 14px;"></div>
+            
+            <h4>تحليل الأداء (من المدير):</h4>
+            <div class="analysis-box">
+                <div class="analysis-item"><small>المبيعات</small><p id="analysis-sales">0</p></div>
+                <div class="analysis-item"><small>صافي الربح</small><p id="analysis-profit">0</p></div>
+            </div>
+
+            <div id="toggle-container"></div>
+            
+            <h4>فيدباك المدير الحالي:</h4>
+            <textarea id="st-feedback" readonly style="background:#0a0a0a; color:#00f2fe; border-color:#333;"></textarea>
+
+            <h4>ملاحظات المطور:</h4>
+            <textarea id="edit-st-notes"></textarea>
+            <button onclick="updateNotes()" class="btn-action btn-save" style="width:auto; padding:5px 15px;">تحديث الملاحظات</button>
+            
+            <h4 style="margin-top:20px;">إضافة موظف للفرع:</h4>
+            <div style="background:#000; padding:15px; border-radius:15px; border:1px solid #222;">
+                <input type="text" id="q-u-name" placeholder="اسم المستخدم">
+                <input type="tel" id="q-u-phone" placeholder="رقم الهاتف">
+                <input type="password" id="q-u-pass" placeholder="كلمة المرور">
+                <select id="q-u-role"><option value="employee">كاشير</option><option value="manager">مدير فرع</option></select>
+                <button class="btn-action btn-save" onclick="quickAddUser()">تأكيد الإضافة</button>
+            </div>
+
+            <h4 style="margin-top:20px;">فريق العمل الحالي:</h4>
+            <div id="employee-list"></div>
+            
+            <button class="btn-action" style="background:var(--red); color:#fff; margin-top:20px;" onclick="deleteCurrentStore()">حذف المتجر نهائياً</button>
+            <button class="btn-action btn-cancel" onclick="closeModal('storeDetailModal')">إغلاق</button>
         </div>
     </div>
 
@@ -53,64 +138,121 @@
         const SUPABASE_URL = 'https://xyvxowlbvuqbggkslwqr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        let activeKey = null;
+        let activeStoreKey = null;
+        let allStores = [];
 
-        async function updateVersion(v) {
-            await _supabase.from('settings').update({ version: v }).eq('id', 1);
-            alert("تم تحديث الفيرجن للجميع!");
-        }
+        function openModal(id) { document.getElementById(id).style.display='flex'; }
+        function closeModal(id) { document.getElementById(id).style.display='none'; }
+        function logout() { sessionStorage.clear(); window.location.href='index.html'; }
 
         async function loadData() {
-            const { data: ver } = await _supabase.from('settings').select('version').eq('id', 1).single();
-            if(ver) document.getElementById('sys-ver-input').value = ver.version;
-
             const { data: stores } = await _supabase.from('stores').select('*');
-            const list = document.getElementById('stores-list');
-            list.innerHTML = '';
-            stores?.forEach(st => {
-                list.innerHTML += `<div class="store-card" onclick="showDetails('${st.store_key}', '${st.store_name}')">
+            const { data: users } = await _supabase.from('users').select('*');
+            allStores = stores || [];
+            renderStores(allStores);
+
+            let totalRev = 0;
+            stores?.forEach(st => { if(st.is_active) totalRev += parseFloat(st.subscription_price || 0); });
+
+            document.getElementById('stat-revenue').innerText = totalRev + " ج.م";
+            document.getElementById('stat-stores').innerText = stores?.length || 0;
+            document.getElementById('stat-emps').innerText = users?.filter(u => u.role === 'employee').length || 0;
+            document.getElementById('stat-mgrs').innerText = users?.filter(u => u.role === 'manager').length || 0;
+        }
+
+        function renderStores(data) {
+            const grid = document.getElementById('stores-display');
+            grid.innerHTML = '';
+            data.forEach(st => {
+                grid.innerHTML += `<div class="store-card" onclick='showStoreDetails(${JSON.stringify(st)})'>
+                    <div class="expiry-badge ${st.is_active ? 'active-badge' : 'expired-badge'}">${st.is_active ? 'نشط' : 'متوقف'}</div>
                     <h3>${st.store_name}</h3>
-                    <p style="color:#666">كود: ${st.store_key}</p>
+                    <div style="color:var(--accent); font-weight:bold;">${st.subscription_price} ج.م</div>
                 </div>`;
             });
         }
 
-        async function showDetails(key, name) {
-            activeKey = key;
-            document.getElementById('st-title').innerText = name;
-            document.getElementById('detailsModal').style.display = 'flex';
-            loadTeam();
+        function filterStores() {
+            const term = document.getElementById('storeSearch').value.toLowerCase();
+            renderStores(allStores.filter(s => s.store_name.toLowerCase().includes(term) || s.store_key.toLowerCase().includes(term)));
         }
 
-        async function loadTeam() {
-            const { data: emps } = await _supabase.from('users').select('*').eq('store_key', activeKey);
-            const list = document.getElementById('team-list');
+        async function showStoreDetails(st) {
+            activeStoreKey = st.store_key;
+            openModal('storeDetailModal');
+            document.getElementById('view-st-name').innerText = st.store_name;
+            document.getElementById('store-meta').innerText = `كود: ${st.store_key} | هاتف المدير: ${st.phone || 'N/A'} | انتهاء: ${st.expiry_date}`;
+            document.getElementById('edit-st-notes').value = st.notes || '';
+            document.getElementById('st-feedback').value = st.feedback || 'لا يوجد فيدباك حالياً';
+            document.getElementById('analysis-sales').innerText = (st.total_sales || 0) + " ج.م";
+            document.getElementById('analysis-profit').innerText = (st.net_profit || 0) + " ج.م";
+            
+            document.getElementById('toggle-container').innerHTML = `<button class="btn-action" style="background:${st.is_active ? 'var(--red)' : 'var(--accent)'}" onclick="handleToggle(${st.is_active})">${st.is_active ? 'إيقاف المتجر' : 'تشغيل المتجر'}</button>`;
+            loadStoreUsers();
+        }
+
+        async function loadStoreUsers() {
+            const { data: emps } = await _supabase.from('users').select('*').eq('store_key', activeStoreKey);
+            const list = document.getElementById('employee-list');
             list.innerHTML = '';
             emps?.forEach(e => {
                 if(e.role !== 'developer') {
-                    const roleName = e.role === 'manager' ? 'مدير' : 'كاشير';
-                    list.innerHTML += `<div class="emp-item">
-                        <span>${e.username} <span class="role-badge">${roleName}</span></span>
-                        <button onclick="delU('${e.username}')" style="background:none; border:none; color:var(--red); cursor:pointer;">حذف</button>
+                    list.innerHTML += `<div class="emp-list-item">
+                        <span>${e.username} <small style="color:#666">(${e.phone || 'بلا رقم'})</small></span>
+                        <button onclick="delU('${e.username}')" style="background:none; color:var(--red); border:none; cursor:pointer;">حذف</button>
                     </div>`;
                 }
             });
         }
 
-        async function addUser() {
-            const u = document.getElementById('new-u').value;
-            const p = document.getElementById('new-p').value;
-            const r = document.getElementById('new-r').value;
-            if(!u || !p) return alert("أكمل البيانات");
-            await _supabase.from('users').insert([{ username: u, password: p, role: r, store_key: activeKey }]);
-            loadTeam();
+        async function quickAddUser() {
+            const u = document.getElementById('q-u-name').value;
+            const ph = document.getElementById('q-u-phone').value;
+            const p = document.getElementById('q-u-pass').value;
+            const r = document.getElementById('q-u-role').value;
+            if(!u || !ph || !p) return alert("أكمل البيانات");
+            await _supabase.from('users').insert([{ username: u, phone: ph, password: p, store_key: activeStoreKey, role: r }]);
+            loadStoreUsers(); loadData();
         }
 
-        async function delU(un) {
-            if(confirm("حذف؟")) {
-                await _supabase.from('users').delete().eq('username', un);
-                loadTeam();
+        async function addNewStore() {
+            const key = document.getElementById('new-st-key').value;
+            const name = document.getElementById('new-st-name').value;
+            const phone = document.getElementById('new-st-phone').value;
+            const price = document.getElementById('new-st-price').value;
+            const expiry = document.getElementById('new-st-expiry').value;
+            const notes = document.getElementById('new-st-notes').value;
+            if(!key || !name || !phone) return alert("بيانات ناقصة");
+            await _supabase.from('stores').insert([{ store_key: key, store_name: name, phone: phone, subscription_price: price, expiry_date: expiry, notes: notes, is_active: true }]);
+            closeModal('addStoreModal'); loadData();
+        }
+
+        async function handleToggle(status) {
+            await _supabase.from('stores').update({ is_active: !status }).eq('store_key', activeStoreKey);
+            closeModal('storeDetailModal'); loadData();
+        }
+
+        async function updateNotes() {
+            await _supabase.from('stores').update({ notes: document.getElementById('edit-st-notes').value }).eq('store_key', activeStoreKey);
+            alert("تم التحديث"); loadData();
+        }
+
+        async function delU(uname) {
+            if(confirm("حذف؟")) { await _supabase.from('users').delete().eq('username', uname); loadStoreUsers(); loadData(); }
+        }
+
+        async function deleteCurrentStore() {
+            if(confirm("حذف نهائي؟")) {
+                await _supabase.from('users').delete().eq('store_key', activeStoreKey);
+                await _supabase.from('stores').delete().eq('store_key', activeStoreKey);
+                closeModal('storeDetailModal'); loadData();
             }
+        }
+
+        function exportToExcel() {
+            const ws = XLSX.utils.json_to_sheet(allStores);
+            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Stores");
+            XLSX.writeFile(wb, "Fateen_Stores.xlsx");
         }
 
         loadData();
