@@ -2,7 +2,6 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fateen OS | Developer PRO</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -11,75 +10,42 @@
         * { font-family: 'Cairo', sans-serif; box-sizing: border-box; transition: 0.3s; }
         body { margin: 0; background: var(--bg); color: var(--white); padding: 20px; }
         .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: var(--card); border-radius: 20px; border: 1px solid var(--gray); margin-bottom: 25px; }
-        
-        /* تنسيق خانة الفيرجن الجديدة */
         .version-box { background: #000; border: 1px dashed var(--accent); padding: 5px 15px; border-radius: 10px; display: flex; align-items: center; gap: 10px; }
-        .version-box input { width: 80px; margin: 0; padding: 5px; text-align: center; background: transparent; border: 1px solid #333; color: var(--accent); font-weight: bold; }
-
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
-        .stat-item { background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid var(--gray); text-align: center; }
-        .stat-item p { margin: 10px 0 0; font-size: 24px; font-weight: 700; color: var(--accent); }
-        .btn-add-store { width: auto; padding: 12px 30px; background: var(--white); color: #000; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-bottom: 25px; display: block; margin-right: auto; }
-        .stores-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        .store-card { background: var(--card); border: 1px solid var(--gray); border-radius: 22px; padding: 20px; cursor: pointer; position: relative; }
-        .store-card:hover { border-color: var(--accent); }
+        .version-box input { width: 80px; background: transparent; border: 1px solid #333; color: var(--accent); text-align: center; outline: none; }
+        .stores-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; align-items: start; }
+        .store-card { background: var(--card); border: 1px solid var(--gray); border-radius: 22px; padding: 20px; cursor: pointer; }
         .modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:none; justify-content:center; align-items:center; z-index:2000; backdrop-filter:blur(10px); }
         .modal-content { background:#111; width:90%; max-width:550px; padding:30px; border-radius:25px; border: 1px solid var(--gray); max-height: 90vh; overflow-y: auto; }
         input, select, textarea { width:100%; padding: 12px; background:#1a1a1a; border:1px solid var(--gray); border-radius:12px; color: #fff; margin-bottom: 12px; outline: none; }
-        .btn-action { width: 100%; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; border: none; margin-top: 10px; }
-        .btn-save { background: var(--accent); color: #000; }
-        .btn-cancel { background: transparent; color: #888; border: 1px solid var(--gray); }
-        .emp-list-item { background: #000; padding: 12px 15px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
-        .role-badge { font-size: 11px; padding: 2px 8px; border-radius: 5px; font-weight: bold; }
-        .badge-mgr { background: rgba(0, 242, 254, 0.1); color: var(--accent); border: 1px solid var(--accent); }
-        .badge-emp { background: rgba(255, 255, 255, 0.05); color: #888; border: 1px solid #444; }
+        .btn-save { background: var(--accent); color: #000; padding: 10px; border-radius: 10px; cursor: pointer; border: none; font-weight: bold; width: 100%; }
+        .emp-item { background: #000; padding: 10px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; border: 1px solid #222; }
+        .role-badge { font-size: 11px; color: var(--accent); border: 1px solid var(--accent); padding: 2px 6px; border-radius: 5px; margin-right: 10px; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>لوحة تحكم فطين <span style="color:var(--accent)">PRO</span></h1>
-        
+        <h1>Fateen <span style="color:var(--accent)">PRO</span></h1>
         <div class="version-box">
-            <span style="font-size:12px; color:#666;">إصدار النظام:</span>
-            <input type="text" id="sys-version" value="v2.0" onchange="updateSystemVersion(this.value)">
+            <span style="font-size:12px;">إصدار النظام:</span>
+            <input type="text" id="sys-ver-input" onchange="updateVersion(this.value)">
         </div>
-
-        <button onclick="logout()" style="background:none; border: 1px solid var(--red); color: var(--red); padding: 5px 15px; border-radius: 10px; cursor: pointer;">خروج</button>
+        <button onclick="sessionStorage.clear(); location.href='index.html'" style="color:var(--red); background:none; border:1px solid var(--red); padding:5px 15px; border-radius:10px; cursor:pointer;">خروج</button>
     </div>
 
-    <div class="stats-grid">
-        <div class="stat-item"><h4>الأرباح</h4><p id="stat-revenue">0</p></div>
-        <div class="stat-item"><h4>المتاجر</h4><p id="stat-stores">0</p></div>
-        <div class="stat-item"><h4>موظفين</h4><p id="stat-emps">0</p></div>
-        <div class="stat-item"><h4>مديرين</h4><p id="stat-mgrs">0</p></div>
-    </div>
+    <div class="stores-grid" id="stores-list"></div>
 
-    <button class="btn-add-store" onclick="openModal('addStoreModal')">+ إضافة متجر جديد</button>
-    <div class="stores-grid" id="stores-display"></div>
-
-    <div id="storeDetailModal" class="modal">
+    <div id="detailsModal" class="modal">
         <div class="modal-content">
-            <h2 id="view-st-name"></h2>
-            <div id="store-meta" style="margin-bottom: 20px; color: #666;"></div>
-            <div id="toggle-container"></div>
-            
-            <h4>ملاحظات المطور:</h4>
-            <textarea id="edit-st-notes"></textarea>
-            <button onclick="updateNotes()" class="btn-action btn-save" style="width:auto; padding:5px 15px;">تحديث الملاحظات</button>
-            
-            <h4 style="margin-top:20px;">فريق العمل الحالي:</h4>
-            <div id="employee-list"></div>
-            
-            <div style="background:#000; padding:15px; border-radius:15px; margin-top:15px; border:1px solid #222;">
-                <h4>إضافة عضو جديد:</h4>
-                <input type="text" id="q-u-name" placeholder="اسم المستخدم">
-                <input type="password" id="q-u-pass" placeholder="الباسورد">
-                <select id="q-u-role"><option value="employee">موظف كاشير</option><option value="manager">مدير فرع</option></select>
-                <button class="btn-action btn-save" onclick="quickAddUser()">تأكيد الإضافة</button>
-            </div>
-            
-            <button class="btn-action btn-cancel" onclick="closeModal('storeDetailModal')" style="margin-top:20px;">إغلاق</button>
+            <h2 id="st-title"></h2>
+            <h4>فريق العمل:</h4>
+            <div id="team-list"></div>
+            <hr style="border:0; border-top:1px solid #222; margin:20px 0;">
+            <input type="text" id="new-u" placeholder="اسم المستخدم الجديد">
+            <input type="password" id="new-p" placeholder="الباسورد">
+            <select id="new-r"><option value="employee">كاشير</option><option value="manager">مدير</option></select>
+            <button class="btn-save" onclick="addUser()">إضافة عضو للفريق</button>
+            <button onclick="document.getElementById('detailsModal').style.display='none'" style="background:none; color:#888; width:100%; margin-top:10px; border:none; cursor:pointer;">إغلاق</button>
         </div>
     </div>
 
@@ -87,73 +53,64 @@
         const SUPABASE_URL = 'https://xyvxowlbvuqbggkslwqr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        let activeStoreKey = null;
+        let activeKey = null;
 
-        function openModal(id) { document.getElementById(id).style.display='flex'; }
-        function closeModal(id) { document.getElementById(id).style.display='none'; }
-        function logout() { sessionStorage.clear(); window.location.href='index.html'; }
-
-        // دالة تحديث الفيرجن (يمكنك ربطها بجدول إعدادات عامة لاحقاً)
-        function updateSystemVersion(val) {
-            localStorage.setItem('fateen_version', val);
-            alert("تم تحديث إصدار النظام لجميع المتاجر: " + val);
+        async function updateVersion(v) {
+            await _supabase.from('settings').update({ version: v }).eq('id', 1);
+            alert("تم تحديث الفيرجن للجميع!");
         }
 
         async function loadData() {
-            const { data: stores } = await _supabase.from('stores').select('*');
-            const { data: users } = await _supabase.from('users').select('*');
-            const grid = document.getElementById('stores-display');
-            grid.innerHTML = '';
-            
-            // تحميل الفيرجن المخزن
-            if(localStorage.getItem('fateen_version')) {
-                document.getElementById('sys-version').value = localStorage.getItem('fateen_version');
-            }
+            const { data: ver } = await _supabase.from('settings').select('version').eq('id', 1).single();
+            if(ver) document.getElementById('sys-ver-input').value = ver.version;
 
+            const { data: stores } = await _supabase.from('stores').select('*');
+            const list = document.getElementById('stores-list');
+            list.innerHTML = '';
             stores?.forEach(st => {
-                grid.innerHTML += `<div class="store-card" onclick='showStoreDetails(${JSON.stringify(st)})'>
+                list.innerHTML += `<div class="store-card" onclick="showDetails('${st.store_key}', '${st.store_name}')">
                     <h3>${st.store_name}</h3>
-                    <div style="color:var(--accent);">${st.subscription_price} ج.م</div>
+                    <p style="color:#666">كود: ${st.store_key}</p>
                 </div>`;
             });
-
-            document.getElementById('stat-stores').innerText = stores?.length || 0;
-            document.getElementById('stat-emps').innerText = users?.filter(u => u.role === 'employee').length || 0;
-            document.getElementById('stat-mgrs').innerText = users?.filter(u => u.role === 'manager').length || 0;
         }
 
-        async function showStoreDetails(st) {
-            activeStoreKey = st.store_key;
-            openModal('storeDetailModal');
-            document.getElementById('view-st-name').innerText = st.store_name;
-            loadStoreUsers();
+        async function showDetails(key, name) {
+            activeKey = key;
+            document.getElementById('st-title').innerText = name;
+            document.getElementById('detailsModal').style.display = 'flex';
+            loadTeam();
         }
 
-        async function loadStoreUsers() {
-            const { data: emps } = await _supabase.from('users').select('*').eq('store_key', activeStoreKey);
-            const list = document.getElementById('employee-list');
+        async function loadTeam() {
+            const { data: emps } = await _supabase.from('users').select('*').eq('store_key', activeKey);
+            const list = document.getElementById('team-list');
             list.innerHTML = '';
             emps?.forEach(e => {
                 if(e.role !== 'developer') {
-                    // تحديد الوظيفة بدلاً من الهاتف
-                    const roleName = e.role === 'manager' ? 'مدير فرع' : 'موظف كاشير';
-                    const roleClass = e.role === 'manager' ? 'badge-mgr' : 'badge-emp';
-                    
-                    list.innerHTML += `<div class="emp-list-item">
-                        <span>${e.username} <span class="role-badge ${roleClass}">${roleName}</span></span>
-                        <button onclick="delU('${e.username}')" style="background:none; color:var(--red); border:none; cursor:pointer;">حذف</button>
+                    const roleName = e.role === 'manager' ? 'مدير' : 'كاشير';
+                    list.innerHTML += `<div class="emp-item">
+                        <span>${e.username} <span class="role-badge">${roleName}</span></span>
+                        <button onclick="delU('${e.username}')" style="background:none; border:none; color:var(--red); cursor:pointer;">حذف</button>
                     </div>`;
                 }
             });
         }
 
-        async function quickAddUser() {
-            const u = document.getElementById('q-u-name').value;
-            const p = document.getElementById('q-u-pass').value;
-            const r = document.getElementById('q-u-role').value;
+        async function addUser() {
+            const u = document.getElementById('new-u').value;
+            const p = document.getElementById('new-p').value;
+            const r = document.getElementById('new-r').value;
             if(!u || !p) return alert("أكمل البيانات");
-            await _supabase.from('users').insert([{ username: u, password: p, store_key: activeStoreKey, role: r }]);
-            loadStoreUsers();
+            await _supabase.from('users').insert([{ username: u, password: p, role: r, store_key: activeKey }]);
+            loadTeam();
+        }
+
+        async function delU(un) {
+            if(confirm("حذف؟")) {
+                await _supabase.from('users').delete().eq('username', un);
+                loadTeam();
+            }
         }
 
         loadData();
