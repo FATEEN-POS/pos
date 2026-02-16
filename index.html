@@ -31,7 +31,6 @@
             <input type="text" id="storeKeyInput" placeholder="كود المتجر">
             <button id="nextBtn">التحقق من المتجر</button>
         </div>
-
         <div id="step2" style="display: none;">
             <div id="storeNameDisplay" style="color:#00f2fe; margin-bottom:15px; font-weight:bold;"></div>
             <input type="text" id="usernameInput" placeholder="اسم المستخدم">
@@ -84,7 +83,8 @@
                 sessionStorage.setItem('userRole', user.role);
                 sessionStorage.setItem('store_key', window.currentStore.store_key);
 
-                if (user.role === 'developer') window.location.href = "developer (1).html";
+                // تم التعديل هنا ليكون developer.html
+                if (user.role === 'developer') window.location.href = "developer.html";
                 else if (user.role === 'manager') window.location.href = "manager.html";
                 else window.location.href = "pos.html";
             } else alert("بيانات خطأ");
