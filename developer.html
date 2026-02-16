@@ -2,50 +2,40 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Fateen OS | Developer PRO</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام فطين POS - دخول ذكي</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #050505; --card: #111111; --accent: #00f2fe; --red: #ff4d4d; --white: #ffffff; --gray: #222; }
-        * { font-family: 'Cairo', sans-serif; box-sizing: border-box; transition: 0.3s; }
-        body { margin: 0; background: var(--bg); color: var(--white); padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: var(--card); border-radius: 20px; border: 1px solid var(--gray); margin-bottom: 25px; }
-        .version-box { background: #000; border: 1px dashed var(--accent); padding: 5px 15px; border-radius: 10px; display: flex; align-items: center; gap: 10px; }
-        .version-box input { width: 80px; background: transparent; border: 1px solid #333; color: var(--accent); text-align: center; outline: none; }
-        .stores-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; align-items: start; }
-        .store-card { background: var(--card); border: 1px solid var(--gray); border-radius: 22px; padding: 20px; cursor: pointer; }
-        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:none; justify-content:center; align-items:center; z-index:2000; backdrop-filter:blur(10px); }
-        .modal-content { background:#111; width:90%; max-width:550px; padding:30px; border-radius:25px; border: 1px solid var(--gray); max-height: 90vh; overflow-y: auto; }
-        input, select, textarea { width:100%; padding: 12px; background:#1a1a1a; border:1px solid var(--gray); border-radius:12px; color: #fff; margin-bottom: 12px; outline: none; }
-        .btn-save { background: var(--accent); color: #000; padding: 10px; border-radius: 10px; cursor: pointer; border: none; font-weight: bold; width: 100%; }
-        .emp-item { background: #000; padding: 10px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; border: 1px solid #222; }
-        .role-badge { font-size: 11px; color: var(--accent); border: 1px solid var(--accent); padding: 2px 6px; border-radius: 5px; margin-right: 10px; }
+        * { font-family: 'Cairo', sans-serif; box-sizing: border-box; }
+        body { margin: 0; background: #000; color: #fff; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, #1a1a1a 0%, #000 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: 0.8s; }
+        .logo-text { font-size: 3rem; font-weight: 700; letter-spacing: 8px; animation: pulse 2s infinite; }
+        #sys-version-display { font-size: 14px; color: #444; margin-top: 10px; letter-spacing: 2px; }
+        .login-box { background: rgba(255, 255, 255, 0.03); padding: 40px; border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.1); width: 90%; max-width: 400px; backdrop-filter: blur(20px); text-align: center; display: none; opacity: 0; transition: 0.8s; }
+        input { width: 100%; padding: 15px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; color: #fff; margin-bottom: 20px; text-align: right; outline: none; }
+        button { width: 100%; padding: 15px; background: #fff; color: #000; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>Fateen <span style="color:var(--accent)">PRO</span></h1>
-        <div class="version-box">
-            <span style="font-size:12px;">إصدار النظام:</span>
-            <input type="text" id="sys-ver-input" onchange="updateVersion(this.value)">
-        </div>
-        <button onclick="sessionStorage.clear(); location.href='index.html'" style="color:var(--red); background:none; border:1px solid var(--red); padding:5px 15px; border-radius:10px; cursor:pointer;">خروج</button>
+    <div id="splash-screen">
+        <div class="logo-text">FATEEN</div>
+        <div id="sys-version-display">Loading...</div>
     </div>
 
-    <div class="stores-grid" id="stores-list"></div>
-
-    <div id="detailsModal" class="modal">
-        <div class="modal-content">
-            <h2 id="st-title"></h2>
-            <h4>فريق العمل:</h4>
-            <div id="team-list"></div>
-            <hr style="border:0; border-top:1px solid #222; margin:20px 0;">
-            <input type="text" id="new-u" placeholder="اسم المستخدم الجديد">
-            <input type="password" id="new-p" placeholder="الباسورد">
-            <select id="new-r"><option value="employee">كاشير</option><option value="manager">مدير</option></select>
-            <button class="btn-save" onclick="addUser()">إضافة عضو للفريق</button>
-            <button onclick="document.getElementById('detailsModal').style.display='none'" style="background:none; color:#888; width:100%; margin-top:10px; border:none; cursor:pointer;">إغلاق</button>
+    <div class="login-box" id="loginUI">
+        <div id="step1">
+            <h2>دخول النظام</h2>
+            <input type="text" id="storeKeyInput" placeholder="كود المتجر">
+            <button id="nextBtn">التحقق من المتجر</button>
+        </div>
+        <div id="step2" style="display: none;">
+            <div id="storeNameDisplay" style="color:#00f2fe; margin-bottom:15px; font-weight:bold;"></div>
+            <input type="text" id="usernameInput" placeholder="اسم المستخدم">
+            <input type="password" id="passwordInput" placeholder="كلمة المرور">
+            <button id="loginBtn">دخول</button>
         </div>
     </div>
 
@@ -53,67 +43,52 @@
         const SUPABASE_URL = 'https://xyvxowlbvuqbggkslwqr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        let activeKey = null;
 
-        async function updateVersion(v) {
-            await _supabase.from('settings').update({ version: v }).eq('id', 1);
-            alert("تم تحديث الفيرجن للجميع!");
+        async function loadSystemVersion() {
+            const { data } = await _supabase.from('settings').select('version').eq('id', 1).single();
+            if (data) document.getElementById('sys-version-display').innerText = data.version;
         }
 
-        async function loadData() {
-            const { data: ver } = await _supabase.from('settings').select('version').eq('id', 1).single();
-            if(ver) document.getElementById('sys-ver-input').value = ver.version;
+        window.onload = () => {
+            loadSystemVersion();
+            setTimeout(() => {
+                document.getElementById('splash-screen').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('splash-screen').style.display = 'none';
+                    document.getElementById('loginUI').style.display = 'block';
+                    setTimeout(() => document.getElementById('loginUI').style.opacity = '1', 50);
+                }, 800);
+            }, 2000);
+        };
 
-            const { data: stores } = await _supabase.from('stores').select('*');
-            const list = document.getElementById('stores-list');
-            list.innerHTML = '';
-            stores?.forEach(st => {
-                list.innerHTML += `<div class="store-card" onclick="showDetails('${st.store_key}', '${st.store_name}')">
-                    <h3>${st.store_name}</h3>
-                    <p style="color:#666">كود: ${st.store_key}</p>
-                </div>`;
-            });
-        }
+        document.getElementById('nextBtn').onclick = async function() {
+            const sKey = document.getElementById('storeKeyInput').value;
+            const { data: store } = await _supabase.from('stores').select('*').eq('store_key', sKey).single();
+            if (store) {
+                window.currentStore = store;
+                document.getElementById('step1').style.display = 'none';
+                document.getElementById('step2').style.display = 'block';
+                document.getElementById('storeNameDisplay').innerText = store.store_name;
+            } else alert("الكود خطأ");
+        };
 
-        async function showDetails(key, name) {
-            activeKey = key;
-            document.getElementById('st-title').innerText = name;
-            document.getElementById('detailsModal').style.display = 'flex';
-            loadTeam();
-        }
+        document.getElementById('loginBtn').onclick = async function() {
+            const u = document.getElementById('usernameInput').value;
+            const p = document.getElementById('passwordInput').value;
+            const { data } = await _supabase.from('users').select('*').eq('username', u).eq('password', p).eq('store_key', window.currentStore.store_key);
 
-        async function loadTeam() {
-            const { data: emps } = await _supabase.from('users').select('*').eq('store_key', activeKey);
-            const list = document.getElementById('team-list');
-            list.innerHTML = '';
-            emps?.forEach(e => {
-                if(e.role !== 'developer') {
-                    const roleName = e.role === 'manager' ? 'مدير' : 'كاشير';
-                    list.innerHTML += `<div class="emp-item">
-                        <span>${e.username} <span class="role-badge">${roleName}</span></span>
-                        <button onclick="delU('${e.username}')" style="background:none; border:none; color:var(--red); cursor:pointer;">حذف</button>
-                    </div>`;
-                }
-            });
-        }
+            if (data && data.length > 0) {
+                const user = data[0];
+                sessionStorage.setItem('username', user.username);
+                sessionStorage.setItem('userRole', user.role);
+                sessionStorage.setItem('store_key', window.currentStore.store_key);
 
-        async function addUser() {
-            const u = document.getElementById('new-u').value;
-            const p = document.getElementById('new-p').value;
-            const r = document.getElementById('new-r').value;
-            if(!u || !p) return alert("أكمل البيانات");
-            await _supabase.from('users').insert([{ username: u, password: p, role: r, store_key: activeKey }]);
-            loadTeam();
-        }
-
-        async function delU(un) {
-            if(confirm("حذف؟")) {
-                await _supabase.from('users').delete().eq('username', un);
-                loadTeam();
-            }
-        }
-
-        loadData();
+                // تم التعديل هنا ليكون developer.html
+                if (user.role === 'developer') window.location.href = "developer.html";
+                else if (user.role === 'manager') window.location.href = "manager.html";
+                else window.location.href = "pos.html";
+            } else alert("بيانات خطأ");
+        };
     </script>
 </body>
 </html>
