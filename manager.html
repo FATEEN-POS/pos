@@ -10,70 +10,68 @@
         * { font-family: 'Cairo', sans-serif; box-sizing: border-box; transition: 0.3s; }
         body { background: var(--bg); color: var(--white); margin: 0; padding: 20px; }
         .header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: var(--card); border-radius: 15px; border: 1px solid var(--gray); margin-bottom: 20px; }
+        
+        /* ستايل شارات المعلومات في الهيدر */
+        .info-badges { display: flex; gap: 10px; align-items: center; }
+        .badge-v { background: rgba(0, 242, 254, 0.1); color: var(--accent); padding: 4px 12px; border-radius: 8px; font-size: 12px; border: 1px solid rgba(0, 242, 254, 0.3); font-weight: bold; }
+        .badge-expiry { background: rgba(255, 77, 77, 0.1); color: var(--red); padding: 4px 12px; border-radius: 8px; font-size: 12px; border: 1px solid rgba(255, 77, 77, 0.3); font-weight: bold; }
+
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 25px; }
         .card { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid var(--gray); text-align: center; }
-        .card h3 { margin: 0; color: #888; font-size: 16px; }
-        .card p { font-size: 28px; font-weight: bold; margin: 10px 0; color: var(--accent); }
-        .section-title { margin: 30px 0 15px; display: flex; justify-content: space-between; align-items: center; }
-        .btn { padding: 10px 20px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
-        .btn-accent { background: var(--accent); color: #000; }
-        .btn-outline { background: transparent; border: 1px solid var(--gray); color: #fff; }
-        .team-list { background: var(--card); border-radius: 15px; border: 1px solid var(--gray); padding: 10px; }
-        .team-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid var(--gray); }
-        .team-item:last-child { border-bottom: none; }
-        .role-tag { font-size: 12px; padding: 4px 10px; border-radius: 20px; background: rgba(255,255,255,0.05); }
-        textarea { width: 100%; background: #000; border: 1px solid var(--gray); color: #fff; border-radius: 10px; padding: 15px; margin-top: 10px; outline: none; }
+        .card h3 { margin: 0; font-size: 14px; color: #888; }
+        .card p { margin: 10px 0 0; font-size: 28px; font-weight: 700; color: var(--accent); }
         
-        /* بوكس الفيرجن */
-        .version-badge { background: rgba(255, 255, 255, 0.05); color: #888; padding: 4px 10px; border-radius: 8px; font-size: 11px; border: 1px solid var(--gray); }
+        .action-btns { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .btn { padding: 15px; border-radius: 12px; border: none; cursor: pointer; font-weight: 700; font-size: 16px; background: var(--white); color: #000; }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,242,254,0.2); }
+        
+        .feedback-section { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid var(--gray); }
+        textarea { width: 100%; height: 100px; background: #000; border: 1px solid var(--gray); border-radius: 10px; color: #fff; padding: 15px; margin-top: 10px; outline: none; }
+        .team-list { margin-top: 20px; }
+        .team-item { display: flex; justify-content: space-between; background: #000; padding: 10px 15px; border-radius: 8px; margin-bottom: 5px; border: 1px solid #222; }
     </style>
 </head>
 <body>
 
     <div class="header">
         <div>
-            <div style="display:flex; align-items:center; gap:10px;">
-                <h1 style="margin:0; font-size:24px;">لوحة مدير المتجر</h1>
-                <span class="version-badge">v2.0.4</span>
+            <h1 id="store-name-title" style="margin:0; font-size:20px;">لوحة تحكم المدير</h1>
+            <div class="info-badges">
+                <span id="sys-v" class="badge-v">جاري التحميل...</span>
+                <span id="days-left" class="badge-expiry">...</span>
             </div>
-            <p id="mgr-st-name" style="color:var(--accent); margin:5px 0 0;"></p>
         </div>
-        <button class="btn btn-outline" style="color:var(--red); border-color:var(--red);" onclick="logout()">خروج</button>
+        <button onclick="logout()" style="background:none; border: 1px solid var(--red); color: var(--red); padding: 8px 15px; border-radius: 10px; cursor: pointer;">خروج</button>
     </div>
 
     <div class="grid">
         <div class="card">
-            <h3>إجمالي مبيعات اليوم</h3>
-            <p id="mgr-sales">0</p>
-            <button class="btn btn-outline" onclick="updateSales()">تحديث يدوي للمطور</button>
+            <h3>إجمالي مبيعات المتجر</h3>
+            <p id="total-sales">0</p>
+            <button onclick="updateSales()" style="margin-top:10px; background:none; color:var(--accent); border:none; cursor:pointer; font-size:12px;">تحديث</button>
         </div>
         <div class="card">
             <h3>صافي الربح الحالي</h3>
-            <p id="mgr-profit">0</p>
-            <button class="btn btn-outline" onclick="updateProfit()">إرسال تقرير للمطور</button>
-        </div>
-        <div class="card">
-            <h3>الوصول السريع</h3>
-            <div style="display:flex; gap:10px; margin-top:15px;">
-                <button class="btn btn-accent" style="flex:1" onclick="location.href='inventory.html'">المخزن</button>
-                <button class="btn btn-accent" style="flex:1" onclick="location.href='pos.html'">الكاشير</button>
-            </div>
+            <p id="net-profit">0</p>
+            <button onclick="updateProfit()" style="margin-top:10px; background:none; color:var(--accent); border:none; cursor:pointer; font-size:12px;">إرسال تقرير</button>
         </div>
     </div>
 
-    <div class="section-title">
-        <h2>أعضاء الفريق</h2>
+    <div class="action-btns">
+        <button class="btn" onclick="location.href='pos.html'">شاشة البيع (POS)</button>
+        <button class="btn" onclick="location.href='inventory.html'">المخزن والمنتجات</button>
+        <button class="btn" onclick="location.href='settings.html'">إعدادات المتجر</button>
     </div>
-    <div class="team-list" id="team-list">
-        </div>
 
-    <div class="section-title">
-        <h2>تواصل مع المطور</h2>
+    <div class="feedback-section">
+        <h3>تواصل مع المطور (بلاغات / طلبات)</h3>
+        <textarea id="mgr-feedback" placeholder="اكتب ملاحظاتك أو أي عطل فني هنا ليراه المطور فوراً..."></textarea>
+        <button class="btn" onclick="sendFeedback()" style="margin-top:10px; width:100%; background:var(--accent);">إرسال للمطور</button>
     </div>
-    <div class="card" style="text-align:right;">
-        <label>اقتراح أو شكوى للمطور:</label>
-        <textarea id="mgr-feedback" rows="4" placeholder="اكتب رسالتك هنا..."></textarea>
-        <button class="btn btn-accent" style="margin-top:15px;" onclick="sendFeedback()">إرسال الرسالة</button>
+
+    <div class="team-list">
+        <h3>طاقم العمل</h3>
+        <div id="team-display"></div>
     </div>
 
     <script>
@@ -84,28 +82,47 @@
         const userStoreKey = sessionStorage.getItem('store_key');
 
         async function loadManagerData() {
+            if (!userStoreKey) return location.href = 'index.html';
+
+            // 1. جلب نسخة النظام
+            const { data: vData } = await _supabase.from('system_settings').select('value').eq('key', 'sys_version').single();
+            if(vData) document.getElementById('sys-v').innerText = "V " + vData.value;
+
+            // 2. جلب بيانات المتجر وحساب الأيام المتبقية
             const { data: store } = await _supabase.from('stores').select('*').eq('store_key', userStoreKey).single();
             if (store) {
-                document.getElementById('mgr-st-name').innerText = store.store_name;
-                document.getElementById('mgr-sales').innerText = store.total_sales || 0;
-                document.getElementById('mgr-profit').innerText = store.net_profit || 0;
-                document.getElementById('mgr-feedback').value = store.feedback || '';
+                document.getElementById('store-name-title').innerText = store.store_name;
+                document.getElementById('total-sales').innerText = (store.total_sales || 0) + " ج.م";
+                document.getElementById('net-profit').innerText = (store.net_profit || 0) + " ج.م";
+                document.getElementById('mgr-feedback').value = store.feedback || "";
+
+                // حساب الأيام المتبقية
+                const expiryDate = new Date(store.expiry_date);
+                const today = new Date();
+                const diffTime = expiryDate - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                const expiryBadge = document.getElementById('days-left');
+                if (diffDays > 0) {
+                    expiryBadge.innerText = `باقي ${diffDays} يوم على الاشتراك`;
+                    expiryBadge.style.color = diffDays <= 5 ? "var(--red)" : "var(--accent)";
+                } else {
+                    expiryBadge.innerText = "الاشتراك منتهي!";
+                    expiryBadge.style.color = "var(--red)";
+                }
             }
 
-            const { data: members } = await _supabase.from('users').select('*').eq('store_key', userStoreKey);
-            if (members) renderTeam(members);
-        }
-
-        function renderTeam(members) {
-            const teamList = document.getElementById('team-list');
-            teamList.innerHTML = '';
-            members.forEach(member => {
-                if(member.role !== 'developer') {
-                    const roleAr = member.role === 'manager' ? 'مدير' : 'كاشير';
-                    teamList.innerHTML += `
+            // 3. جلب طاقم العمل
+            const { data: users } = await _supabase.from('users').select('*').eq('store_key', userStoreKey);
+            const teamDisplay = document.getElementById('team-display');
+            teamDisplay.innerHTML = '';
+            users?.forEach(member => {
+                if (member.role !== 'developer') {
+                    const roleAr = member.role === 'manager' ? 'مدير' : 'موظف كاشير';
+                    teamDisplay.innerHTML += `
                         <div class="team-item">
-                            <span>${member.username} <small style="color:#666">(${roleAr})</small></span>
-                            <span class="role-tag">${roleAr}</span>
+                            <span>${member.username}</span>
+                            <span style="color:var(--accent); font-size:12px;">${roleAr}</span>
                         </div>`;
                 }
             });
@@ -115,7 +132,6 @@
             const newVal = prompt("أدخل إجمالي المبيعات الجديد:");
             if (newVal) {
                 await _supabase.from('stores').update({ total_sales: newVal }).eq('store_key', userStoreKey);
-                alert("تم تحديث المبيعات للمطور");
                 loadManagerData();
             }
         }
@@ -124,7 +140,7 @@
             const newVal = prompt("أدخل صافي الربح الحالي:");
             if (newVal) {
                 await _supabase.from('stores').update({ net_profit: newVal }).eq('store_key', userStoreKey);
-                alert("تم إرسال تقرير الربح");
+                alert("تم تحديث تقرير الأرباح");
                 loadManagerData();
             }
         }
@@ -132,8 +148,8 @@
         async function sendFeedback() {
             const fb = document.getElementById('mgr-feedback').value;
             const { error } = await _supabase.from('stores').update({ feedback: fb }).eq('store_key', userStoreKey);
-            if (error) alert("خطأ: " + error.message);
-            else alert("تم إرسال الفيدباك بنجاح للمطور");
+            if (error) alert("خطأ في الإرسال");
+            else alert("تم إرسال ملاحظاتك للمطور");
         }
 
         function logout() {
@@ -142,6 +158,8 @@
         }
 
         loadManagerData();
+        // تحديث تلقائي كل دقيقة لمتابعة العداد
+        setInterval(loadManagerData, 60000);
     </script>
 </body>
 </html>
