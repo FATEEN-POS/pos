@@ -11,60 +11,47 @@
         body { margin: 0; background: #000; color: #fff; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
         #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, #1a1a1a 0%, #000 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: 0.8s; }
         .logo-text { font-size: 3rem; font-weight: 700; letter-spacing: 8px; animation: pulse 2s infinite; }
-        #sys-version-display { font-size: 14px; color: #444; margin-top: 10px; letter-spacing: 2px; }
-        .login-box { background: rgba(255, 255, 255, 0.03); padding: 40px; border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.1); width: 90%; max-width: 400px; backdrop-filter: blur(20px); text-align: center; display: none; opacity: 0; transition: 0.8s; }
-        input { width: 100%; padding: 15px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; color: #fff; margin-bottom: 20px; text-align: right; outline: none; }
-        button { width: 100%; padding: 15px; background: #fff; color: #000; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        #sys-version-display { font-size: 14px; color: #444; margin-top: 20px; }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.95); } }
+        .login-card { background: #111; padding: 40px; border-radius: 30px; border: 1px solid #222; width: 90%; max-width: 400px; text-align: center; }
+        input { width: 100%; padding: 15px; margin-bottom: 15px; background: #000; border: 1px solid #333; color: #fff; border-radius: 12px; outline: none; text-align: center; font-size: 18px; }
+        button { width: 100%; padding: 15px; background: #00f2fe; color: #000; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 18px; }
     </style>
 </head>
 <body>
-
     <div id="splash-screen">
-        <div class="logo-text">FATEEN</div>
-        <div id="sys-version-display">Loading...</div>
+        <div class="logo-text">FATEEN <span style="color:#00f2fe">OS</span></div>
+        <div id="sys-version-display">جارِ تحميل النظام...</div>
     </div>
 
-    <div class="login-box" id="loginUI">
-        <div id="step1">
-            <h2>دخول النظام</h2>
-            <input type="text" id="storeKeyInput" placeholder="كود المتجر">
-            <button id="nextBtn">التحقق من المتجر</button>
-        </div>
-        <div id="step2" style="display: none;">
-            <div id="storeNameDisplay" style="color:#00f2fe; margin-bottom:15px; font-weight:bold;"></div>
-            <input type="text" id="usernameInput" placeholder="اسم المستخدم">
-            <input type="password" id="passwordInput" placeholder="كلمة المرور">
-            <button id="loginBtn">دخول</button>
-        </div>
+    <div class="login-card" id="step1">
+        <h2 style="margin-top:0">كود المتجر</h2>
+        <input type="text" id="storeKeyInput" placeholder="أدخل كود الاشتراك">
+        <button id="checkStoreBtn">متابعة</button>
+    </div>
+
+    <div class="login-card" id="step2" style="display:none">
+        <h2 id="storeNameDisplay" style="color:#00f2fe; margin-top:0"></h2>
+        <input type="text" id="usernameInput" placeholder="اسم المستخدم">
+        <input type="password" id="passwordInput" placeholder="كلمة المرور">
+        <button id="loginBtn">دخول النظام</button>
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://xyvxowlbvuqbggkslwqr.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo';
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const _supabase = supabase.createClient('https://xyvxowlbvuqbggkslwqr.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo');
 
-        async function loadSystemVersion() {
-            const { data } = await _supabase.from('settings').select('version').eq('id', 1).single();
-            if (data) document.getElementById('sys-version-display').innerText = data.version;
+        async function init() {
+            const { data } = await _supabase.from('system_settings').select('value').eq('key', 'sys_version').single();
+            if(data) document.getElementById('sys-version-display').innerText = "V " + data.value;
+            setTimeout(() => { document.getElementById('splash-screen').style.opacity = '0'; setTimeout(() => document.getElementById('splash-screen').remove(), 800); }, 2000);
         }
+        init();
 
-        window.onload = () => {
-            loadSystemVersion();
-            setTimeout(() => {
-                document.getElementById('splash-screen').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('splash-screen').style.display = 'none';
-                    document.getElementById('loginUI').style.display = 'block';
-                    setTimeout(() => document.getElementById('loginUI').style.opacity = '1', 50);
-                }, 800);
-            }, 2000);
-        };
-
-        document.getElementById('nextBtn').onclick = async function() {
+        document.getElementById('checkStoreBtn').onclick = async function() {
             const sKey = document.getElementById('storeKeyInput').value;
             const { data: store } = await _supabase.from('stores').select('*').eq('store_key', sKey).single();
             if (store) {
+                if(!store.is_active) return alert("هذا المتجر موقوف حالياً.");
                 window.currentStore = store;
                 document.getElementById('step1').style.display = 'none';
                 document.getElementById('step2').style.display = 'block';
@@ -76,14 +63,11 @@
             const u = document.getElementById('usernameInput').value;
             const p = document.getElementById('passwordInput').value;
             const { data } = await _supabase.from('users').select('*').eq('username', u).eq('password', p).eq('store_key', window.currentStore.store_key);
-
             if (data && data.length > 0) {
                 const user = data[0];
                 sessionStorage.setItem('username', user.username);
                 sessionStorage.setItem('userRole', user.role);
                 sessionStorage.setItem('store_key', window.currentStore.store_key);
-
-                // تم التعديل هنا ليكون developer.html
                 if (user.role === 'developer') window.location.href = "developer.html";
                 else if (user.role === 'manager') window.location.href = "manager.html";
                 else window.location.href = "pos.html";
