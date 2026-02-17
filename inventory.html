@@ -1,1 +1,121 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>Fateen OS | Inventory</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --bg: #050505; --card: #111111; --accent: #00f2fe; --white: #ffffff; --gray: #222; --red: #ff4d4d; }
+        * { font-family: 'Cairo', sans-serif; box-sizing: border-box; transition: 0.3s; }
+        body { background: var(--bg); color: var(--white); margin: 0; padding: 20px; }
+        
+        .header-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .version-badge { background: rgba(0, 242, 254, 0.1); color: var(--accent); padding: 4px 12px; border-radius: 8px; font-size: 12px; border: 1px solid var(--accent); font-weight: bold; }
 
+        .main-title { font-size: 32px; font-weight: 700; color: var(--white); text-align: center; margin-bottom: 10px; }
+        .store-tag { text-align: center; color: var(--accent); margin-bottom: 30px; font-size: 18px; }
+
+        .inventory-container { background: var(--card); border-radius: 20px; border: 1px solid var(--gray); padding: 20px; }
+        .controls { display: flex; gap: 15px; margin-bottom: 20px; }
+        .search-bar { flex: 1; padding: 12px; background: #000; border: 1px solid var(--gray); border-radius: 10px; color: #fff; outline: none; }
+        
+        .btn-add { background: var(--accent); color: #000; border: none; padding: 10px 25px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #1a1a1a; color: var(--accent); padding: 15px; text-align: right; border-bottom: 2px solid var(--gray); }
+        td { padding: 15px; border-bottom: 1px solid var(--gray); }
+        .stock-low { color: var(--red); font-weight: bold; }
+
+        .back-btn { background: none; border: 1px solid var(--gray); color: #888; padding: 8px 20px; border-radius: 10px; cursor: pointer; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <div class="header-nav">
+        <button class="back-btn" onclick="location.href='manager.html'">← عودة للوحة المدير</button>
+        <span id="sys-v" class="version-badge">V ...</span>
+    </div>
+
+    <h1 class="main-title">لوحة المخزن والمنتجات</h1>
+    <div id="store-name-display" class="store-tag">متجر ...</div>
+
+    <div class="inventory-container">
+        <div class="controls">
+            <input type="text" id="inv-search" class="search-bar" placeholder="بحث عن منتج بالاسم أو الباركود..." oninput="filterInventory()">
+            <button class="btn-add" onclick="alert('قريباً: إضافة منتج جديد')">+ إضافة منتج</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>الباركود</th>
+                    <th>اسم المنتج</th>
+                    <th>الكمية</th>
+                    <th>سعر البيع</th>
+                    <th>الحالة</th>
+                </tr>
+            </thead>
+            <tbody id="inventory-table">
+                <tr><td colspan="5" style="text-align:center;">جاري تحميل المخزن...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://xyvxowlbvuqbggkslwqr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const storeKey = sessionStorage.getItem('store_key');
+
+        async function loadInventory() {
+            if (!storeKey) return location.href = 'index.html';
+
+            // 1. جلب الفيرجن
+            const { data: vData } = await _supabase.from('system_settings').select('value').eq('key', 'sys_version').single();
+            if(vData) document.getElementById('sys-v').innerText = "V " + vData.value;
+
+            // 2. جلب بيانات المتجر وفحص النشاط
+            const { data: store } = await _supabase.from('stores').select('*').eq('store_key', storeKey).single();
+            if (store) {
+                if (!store.is_active) { logout(); return; }
+                document.getElementById('store-name-display').innerText = "متجر " + store.store_name;
+            }
+
+            // 3. جلب المنتجات (بافتراض وجود جدول باسم products)
+            const { data: products } = await _supabase.from('products').select('*').eq('store_key', storeKey);
+            
+            const tableBody = document.getElementById('inventory-table');
+            tableBody.innerHTML = '';
+
+            if (products && products.length > 0) {
+                products.forEach(p => {
+                    const status = p.stock <= 5 ? '<span class="stock-low">نقص حاد</span>' : 'متوفر';
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td>${p.barcode || '---'}</td>
+                            <td>${p.product_name}</td>
+                            <td>${p.stock}</td>
+                            <td>${p.price} ج.م</td>
+                            <td>${status}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">لا توجد منتجات حالياً</td></tr>';
+            }
+        }
+
+        function filterInventory() {
+            // كود البحث الفوري سيتم تفعيله هنا
+        }
+
+        function logout() { sessionStorage.clear(); location.href = 'index.html'; }
+
+        loadInventory();
+        // التحديث التلقائي كل دقيقة
+        setInterval(loadInventory, 60000);
+    </script>
+</body>
+</html>
