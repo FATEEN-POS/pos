@@ -29,8 +29,9 @@
         .store-card:hover { border-color: var(--accent); transform: translateY(-5px); }
         .store-card h3 { margin: 0 0 10px; font-size: 18px; }
         
-        /* استبدال النقطة الخضراء بنص الأيام المتبقية */
         .days-left { position: absolute; top: 15px; left: 15px; font-size: 11px; padding: 4px 10px; border-radius: 8px; font-weight: bold; }
+        /* بوكس الفيرجن */
+        .version-badge { background: rgba(0, 242, 254, 0.1); color: var(--accent); padding: 4px 12px; border-radius: 8px; font-size: 12px; border: 1px solid rgba(0, 242, 254, 0.3); font-weight: bold; }
 
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(10px); }
         .modal-content { background: #111; width: 90%; max-width: 550px; padding: 30px; border-radius: 25px; border: 1px solid var(--gray); max-height: 90vh; overflow-y: auto; }
@@ -46,7 +47,10 @@
 <body>
 
     <div class="header">
-        <h1>لوحة تحكم فطين <span style="color:var(--accent)">PRO</span></h1>
+        <div style="display:flex; align-items:center; gap:15px;">
+            <h1>لوحة تحكم فطين <span style="color:var(--accent)">PRO</span></h1>
+            <span class="version-badge">v2.0.4</span>
+        </div>
         <div style="display:flex; gap:10px;">
             <button onclick="exportToExcel()" style="background:var(--gray); color:#fff; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">تصدير Excel</button>
             <button onclick="logout()" style="background:none; border: 1px solid var(--red); color: var(--red); padding: 5px 15px; border-radius: 10px; cursor: pointer;">خروج</button>
@@ -154,7 +158,6 @@
             grid.innerHTML = '';
             
             storesList.forEach(st => {
-                // حساب الأيام المتبقية
                 const today = new Date();
                 const expiry = new Date(st.expiry_date);
                 const diffTime = expiry - today;
