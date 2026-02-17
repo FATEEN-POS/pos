@@ -12,93 +12,102 @@
         .header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: var(--card); border-radius: 15px; border: 1px solid var(--gray); margin-bottom: 20px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 25px; }
         .card { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid var(--gray); text-align: center; }
-        .card h4 { margin: 0 0 10px 0; color: #888; }
-        .card p { font-size: 24px; font-weight: bold; margin: 10px 0; color: var(--accent); }
-        .btn { background: var(--accent); color: #000; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
-        .btn-outline { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+        .card h3 { margin: 0; color: #888; font-size: 16px; }
+        .card p { font-size: 28px; font-weight: bold; margin: 10px 0; color: var(--accent); }
+        .section-title { margin: 30px 0 15px; display: flex; justify-content: space-between; align-items: center; }
+        .btn { padding: 10px 20px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
+        .btn-accent { background: var(--accent); color: #000; }
+        .btn-outline { background: transparent; border: 1px solid var(--gray); color: #fff; }
+        .team-list { background: var(--card); border-radius: 15px; border: 1px solid var(--gray); padding: 10px; }
+        .team-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid var(--gray); }
+        .team-item:last-child { border-bottom: none; }
+        .role-tag { font-size: 12px; padding: 4px 10px; border-radius: 20px; background: rgba(255,255,255,0.05); }
+        textarea { width: 100%; background: #000; border: 1px solid var(--gray); color: #fff; border-radius: 10px; padding: 15px; margin-top: 10px; outline: none; }
         
-        /* قسم الفيدباك والتحليل */
-        .section-box { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid var(--gray); margin-bottom: 20px; }
-        textarea { width: 100%; background: #1a1a1a; border: 1px solid var(--gray); border-radius: 10px; color: #fff; padding: 15px; margin-top: 10px; outline: none; }
-        
-        /* قائمة الفريق */
-        .team-item { display: flex; justify-content: space-between; background: #000; padding: 10px 15px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #222; }
-        .role-tag { font-size: 11px; color: var(--accent); background: rgba(0,242,254,0.1); padding: 2px 8px; border-radius: 5px; }
+        /* بوكس الفيرجن */
+        .version-badge { background: rgba(255, 255, 255, 0.05); color: #888; padding: 4px 10px; border-radius: 8px; font-size: 11px; border: 1px solid var(--gray); }
     </style>
 </head>
 <body>
+
     <div class="header">
-        <h2>مدير المتجر: <span id="store-name" style="color:var(--accent)">...</span></h2>
-        <div style="display:flex; gap:10px;">
-            <button class="btn btn-outline" style="width:auto" onclick="location.reload()">تحديث</button>
-            <button class="btn" style="width:auto; background:var(--red); color:#fff" onclick="logout()">خروج</button>
+        <div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <h1 style="margin:0; font-size:24px;">لوحة مدير المتجر</h1>
+                <span class="version-badge">v2.0.4</span>
+            </div>
+            <p id="mgr-st-name" style="color:var(--accent); margin:5px 0 0;"></p>
         </div>
+        <button class="btn btn-outline" style="color:var(--red); border-color:var(--red);" onclick="logout()">خروج</button>
     </div>
 
     <div class="grid">
         <div class="card">
-            <h4>إجمالي المبيعات</h4>
-            <p id="total-sales-view">0 ج.م</p>
-            <button class="btn btn-outline" onclick="updateSales()">تحديث للمطور ⬆️</button>
+            <h3>إجمالي مبيعات اليوم</h3>
+            <p id="mgr-sales">0</p>
+            <button class="btn btn-outline" onclick="updateSales()">تحديث يدوي للمطور</button>
         </div>
         <div class="card">
-            <h4>صافي الربح</h4>
-            <p id="net-profit-view">0 ج.م</p>
-            <button class="btn btn-outline" onclick="updateProfit()">إرسال التقرير 📊</button>
+            <h3>صافي الربح الحالي</h3>
+            <p id="mgr-profit">0</p>
+            <button class="btn btn-outline" onclick="updateProfit()">إرسال تقرير للمطور</button>
         </div>
         <div class="card">
-            <h4>تنبيهات المخزن</h4>
-            <p id="stock-alerts" style="color:var(--red)">0</p>
-            <button class="btn" onclick="location.href='inventory.html'">عرض النواقص</button>
+            <h3>الوصول السريع</h3>
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button class="btn btn-accent" style="flex:1" onclick="location.href='inventory.html'">المخزن</button>
+                <button class="btn btn-accent" style="flex:1" onclick="location.href='pos.html'">الكاشير</button>
+            </div>
         </div>
     </div>
 
-    <div class="section-box">
-        <h3>📝 أرسل ملاحظاتك للمطور (Feedback):</h3>
-        <p style="font-size:12px; color:#666;">سيتم عرض هذا الفيدباك مباشرة في لوحة تحكم الإدارة.</p>
-        <textarea id="mgr-feedback" rows="3" placeholder="اكتب اقتراحاتك أو المشاكل التي تواجهك هنا..."></textarea>
-        <button class="btn" onclick="sendFeedback()">إرسال الفيدباك الآن</button>
+    <div class="section-title">
+        <h2>أعضاء الفريق</h2>
     </div>
+    <div class="team-list" id="team-list">
+        </div>
 
-    <div class="section-box">
-        <h3>👥 فريق العمل بالفرع:</h3>
-        <div id="team-list">جاري تحميل بيانات الفريق...</div>
+    <div class="section-title">
+        <h2>تواصل مع المطور</h2>
+    </div>
+    <div class="card" style="text-align:right;">
+        <label>اقتراح أو شكوى للمطور:</label>
+        <textarea id="mgr-feedback" rows="4" placeholder="اكتب رسالتك هنا..."></textarea>
+        <button class="btn btn-accent" style="margin-top:15px;" onclick="sendFeedback()">إرسال الرسالة</button>
     </div>
 
     <script>
         const SUPABASE_URL = 'https://xyvxowlbvuqbggkslwqr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
-        // جلب البيانات من الجلسة
-        const userStoreKey = sessionStorage.getItem('store_key');
-        const username = sessionStorage.getItem('username');
 
-        if (!userStoreKey) {
-            window.location.href = 'index.html';
-        }
+        const userStoreKey = sessionStorage.getItem('store_key');
 
         async function loadManagerData() {
-            // 1. جلب بيانات المتجر
-            const { data: store, error } = await _supabase.from('stores').select('*').eq('store_key', userStoreKey).single();
+            const { data: store } = await _supabase.from('stores').select('*').eq('store_key', userStoreKey).single();
             if (store) {
-                document.getElementById('store-name').innerText = store.store_name;
-                document.getElementById('total-sales-view').innerText = (store.total_sales || 0) + " ج.م";
-                document.getElementById('net-profit-view').innerText = (store.net_profit || 0) + " ج.م";
+                document.getElementById('mgr-st-name').innerText = store.store_name;
+                document.getElementById('mgr-sales').innerText = store.total_sales || 0;
+                document.getElementById('mgr-profit').innerText = store.net_profit || 0;
                 document.getElementById('mgr-feedback').value = store.feedback || '';
             }
 
-            // 2. جلب فريق العمل
-            const { data: team } = await _supabase.from('users').select('*').eq('store_key', userStoreKey);
-            const list = document.getElementById('team-list');
-            list.innerHTML = '';
-            team?.forEach(member => {
-                const roleAr = member.role === 'manager' ? 'مدير' : 'كاشير';
-                list.innerHTML += `
-                    <div class="team-item">
-                        <span>${member.username} <small style="color:#666">(${member.phone || 'بلا رقم'})</small></span>
-                        <span class="role-tag">${roleAr}</span>
-                    </div>`;
+            const { data: members } = await _supabase.from('users').select('*').eq('store_key', userStoreKey);
+            if (members) renderTeam(members);
+        }
+
+        function renderTeam(members) {
+            const teamList = document.getElementById('team-list');
+            teamList.innerHTML = '';
+            members.forEach(member => {
+                if(member.role !== 'developer') {
+                    const roleAr = member.role === 'manager' ? 'مدير' : 'كاشير';
+                    teamList.innerHTML += `
+                        <div class="team-item">
+                            <span>${member.username} <small style="color:#666">(${roleAr})</small></span>
+                            <span class="role-tag">${roleAr}</span>
+                        </div>`;
+                }
             });
         }
 
