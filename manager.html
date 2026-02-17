@@ -6,62 +6,53 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #050505; --card: #111111; --accent: #00f2fe; --white: #ffffff; --gray: #222; --red: #ff4d4d; }
-        * { font-family: 'Cairo', sans-serif; box-sizing: border-box; }
-        body { background: var(--bg); color: var(--white); margin: 0; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: var(--card); border-radius: 15px; border: 1px solid var(--gray); margin-bottom: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
-        .card { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid var(--gray); text-align: center; }
-        .version-badge { background: rgba(255, 255, 255, 0.05); color: #888; padding: 4px 10px; border-radius: 8px; font-size: 11px; }
-        .btn { padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; }
-        textarea { width: 100%; background: #000; color: #fff; padding: 15px; border-radius: 10px; margin-top: 10px; }
+        :root { --bg: #050505; --card: #111; --accent: #00f2fe; --gray: #222; --red: #ff4d4d; }
+        body { background: var(--bg); color: #fff; font-family: 'Cairo'; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid var(--gray); }
+        .v-badge { background: rgba(255, 255, 255, 0.05); color: #555; padding: 3px 8px; border-radius: 5px; font-size: 11px; }
+        .btn { padding: 12px 25px; border-radius: 12px; border: none; cursor: pointer; font-weight: bold; background: var(--accent); color: #000; margin: 10px; }
     </style>
 </head>
 <body>
     <div class="header">
         <div>
             <div style="display:flex; align-items:center; gap:10px;">
-                <h1 style="margin:0; font-size:24px;">لوحة المدير</h1>
-                <span id="sys-v" class="version-badge">...</span>
+                <h2 style="margin:0">لوحة المدير</h2>
+                <span id="sys-v" class="v-badge">...</span>
             </div>
-            <p id="mgr-st-name" style="color:var(--accent); margin:5px 0 0;"></p>
+            <p id="st-name-display" style="color:var(--accent); margin:5px 0 0;"></p>
         </div>
-        <button class="btn" style="color:var(--red); border:1px solid var(--red); background:none;" onclick="logout()">خروج</button>
+        <button onclick="sessionStorage.clear(); location.href='index.html'" style="background:none; color:var(--red); border:1px solid var(--red); padding:5px 15px; border-radius:8px; cursor:pointer;">خروج</button>
     </div>
-    <div class="grid">
-        <div class="card"><h3>مبيعات اليوم</h3><p id="mgr-sales">0</p></div>
-        <div class="card"><h3>صافي الربح</h3><p id="mgr-profit">0</p></div>
-        <div class="card"><div style="display:flex; gap:10px;"><button class="btn" style="background:var(--accent); flex:1;" onclick="location.href='inventory.html'">المخزن</button><button class="btn" style="background:var(--accent); flex:1;" onclick="location.href='pos.html'">الكاشير</button></div></div>
+
+    <div style="text-align:center; margin-top:50px;">
+        <button class="btn" onclick="location.href='pos.html'">شاشة الكاشير</button>
+        <button class="btn" onclick="location.href='inventory.html'">المخزن</button>
+        <button class="btn" onclick="location.href='settings.html'">الإعدادات</button>
     </div>
-    <div class="card" style="margin-top:20px; text-align:right;">
-        <label>فيدباك للمطور:</label>
-        <textarea id="mgr-feedback" rows="4"></textarea>
-        <button class="btn" style="background:var(--accent); margin-top:10px;" onclick="sendFeedback()">إرسال</button>
-    </div>
+
     <script>
-        const SUPABASE_URL = 'https://xyvxowlbvuqbggkslwqr.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo';
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        const userStoreKey = sessionStorage.getItem('store_key');
+        const _supabase = supabase.createClient('https://xyvxowlbvuqbggkslwqr.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo');
+        const sKey = sessionStorage.getItem('store_key');
 
-        async function loadManagerData() {
+        async function checkStatus() {
+            // جلب الإصدار
             const { data: v } = await _supabase.from('system_settings').select('value').eq('key', 'sys_version').single();
-            if(v) document.getElementById('sys-v').innerText = v.value;
+            if(v) document.getElementById('sys-v').innerText = "V " + v.value;
 
-            const { data: store } = await _supabase.from('stores').select('*').eq('store_key', userStoreKey).single();
+            // فحص حالة الحساب
+            const { data: store } = await _supabase.from('stores').select('is_active, store_name').eq('store_key', sKey).single();
             if (store) {
-                document.getElementById('mgr-st-name').innerText = store.store_name;
-                document.getElementById('mgr-sales').innerText = store.total_sales || 0;
-                document.getElementById('mgr-profit').innerText = store.net_profit || 0;
-                document.getElementById('mgr-feedback').value = store.feedback || '';
+                if(!store.is_active) {
+                    alert("عذراً، المتجر موقوف حالياً.");
+                    sessionStorage.clear(); window.location.href='index.html';
+                }
+                document.getElementById('st-name-display').innerText = store.store_name;
             }
         }
-        async function sendFeedback() {
-            await _supabase.from('stores').update({ feedback: document.getElementById('mgr-feedback').value }).eq('store_key', userStoreKey);
-            alert("تم الإرسال");
-        }
-        function logout() { sessionStorage.clear(); window.location.href = 'index.html'; }
-        loadManagerData();
+
+        checkStatus();
+        setInterval(checkStatus, 120000); // فحص كل دقيقتين
     </script>
 </body>
 </html>
