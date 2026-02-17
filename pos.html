@@ -4,24 +4,47 @@
     <meta charset="UTF-8">
     <title>Fateen OS | POS Cashier</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #000; --card: #111; --accent: #00f2fe; --gray: #222; }
-        body { background: var(--bg); color: #fff; font-family: 'Cairo'; margin: 0; display: flex; height: 100vh; }
-        .products-section { flex: 2; padding: 20px; border-left: 1px solid var(--gray); }
+        :root { --bg: #000; --card: #111; --accent: #00f2fe; --gray: #222; --red: #ff4d4d; }
+        * { box-sizing: border-box; }
+        body { background: var(--bg); color: #fff; font-family: 'Cairo'; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        
+        .products-section { flex: 2; padding: 20px; border-left: 1px solid var(--gray); display: flex; flex-direction: column; }
         .cart-section { flex: 1; background: var(--card); padding: 20px; display: flex; flex-direction: column; }
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+        
+        /* الهيدر الجديد في شاشة الكاشير */
+        .pos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--gray); }
+        .store-info { display: flex; align-items: center; gap: 15px; }
+        .version-badge { background: rgba(0, 242, 254, 0.1); color: var(--accent); padding: 2px 10px; border-radius: 6px; font-size: 12px; border: 1px solid var(--accent); }
+        
+        .main-title { font-size: 35px; font-weight: 700; color: var(--accent); margin: 0 0 20px 0; text-align: center; }
+        
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; overflow-y: auto; }
         .item { background: var(--gray); padding: 15px; border-radius: 10px; text-align: center; cursor: pointer; border: 1px solid transparent; }
-        .item:hover { border-color: var(--accent); }
+        .item:hover { border-color: var(--accent); transform: scale(1.02); }
+        
         .total-box { margin-top: auto; border-top: 2px solid var(--accent); padding-top: 20px; }
         .btn-pay { background: var(--accent); color: #000; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; font-size: 20px; cursor: pointer; border: none; }
         
-        /* بوكس الفيرجن */
-        .version-tag { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: #444; background: rgba(0,0,0,0.5); padding: 2px 8px; border-radius: 5px; pointer-events: none; }
+        .logout-btn { background: none; border: 1px solid var(--red); color: var(--red); padding: 5px 15px; border-radius: 8px; cursor: pointer; font-size: 14px; }
     </style>
 </head>
 <body>
+
     <div class="products-section">
+        <h1 class="main-title">لوحة الكاشير</h1>
+
+        <div class="pos-header">
+            <div class="store-info">
+                <span id="store-name" style="font-weight: bold; font-size: 18px;">متجر ...</span>
+                <span id="sys-v" class="version-badge">V ...</span>
+            </div>
+            <button class="logout-btn" onclick="logout()">خروج</button>
+        </div>
+
         <input type="text" placeholder="بحث عن صنف أو باركود..." style="width:100%; padding:15px; background:#111; border:1px solid #333; color:#fff; border-radius:10px; margin-bottom:20px;">
+        
         <div class="product-grid">
             <div class="item">صنف تجريبي</div>
             <div class="item">صنف تجريبي</div>
@@ -31,18 +54,55 @@
 
     <div class="cart-section">
         <h2>الفاتورة</h2>
-        <div style="flex:1; overflow-y:auto;">
+        <div style="flex:1; overflow-y:auto;" id="cart-items">
             <p style="color:#666; text-align:center;">السلة فارغة</p>
         </div>
         <div class="total-box">
-            <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size:24px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size:24px; font-weight:bold;">
                 <span>الإجمالي:</span>
-                <span style="color:var(--accent)">0.00</span>
+                <span id="total-amount">0.00</span>
             </div>
-            <button class="btn-pay">دفع وفاتورة (F12)</button>
+            <button class="btn-pay" onclick="alert('جاري إتمام البيع...')">دفع وطباعة (F12)</button>
         </div>
     </div>
 
-    <div class="version-tag">System Version: v2.0.4</div>
+    <script>
+        const SUPABASE_URL = 'https://xyvxowlbvuqbggkslwqr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const storeKey = sessionStorage.getItem('store_key');
+
+        async function initPOS() {
+            if (!storeKey) return window.location.href = 'index.html';
+
+            // جلب الفيرجن
+            const { data: vData } = await _supabase.from('system_settings').select('value').eq('key', 'sys_version').single();
+            if(vData) document.getElementById('sys-v').innerText = "V " + vData.value;
+
+            // جلب بيانات المتجر وفحص النشاط
+            const { data: store } = await _supabase.from('stores').select('*').eq('store_key', storeKey).single();
+            if (store) {
+                // التعديل 3: إغلاق تلقائي لو السيستم مقفول
+                if (!store.is_active) {
+                    alert("عذراً، هذا المتجر غير نشط حالياً.");
+                    logout();
+                    return;
+                }
+                document.getElementById('store-name').innerText = "متجر " + store.store_name;
+            }
+        }
+
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        // التعديل 3: تحديث البيانات كل دقيقة تلقائياً
+        setInterval(initPOS, 60000);
+
+        // تشغيل عند الفتح
+        initPOS();
+    </script>
 </body>
 </html>
