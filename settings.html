@@ -3,37 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <title>Fateen OS | Settings</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root { --bg: #050505; --card: #111111; --accent: #00f2fe; --gray: #222; }
-        body { background: var(--bg); color: #fff; font-family: 'Cairo'; padding: 40px; }
-        .settings-container { max-width: 600px; margin: auto; background: var(--card); padding: 30px; border-radius: 25px; border: 1px solid var(--gray); }
-        input, select { width: 100%; padding: 12px; background: #000; border: 1px solid var(--gray); color: #fff; border-radius: 10px; margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; color: var(--accent); font-weight: bold; }
-        .btn-save { background: var(--accent); color: #000; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; }
-    </style>
+    <style>body{background:#000; color:#fff; font-family:'Cairo'; padding:20px;}</style>
 </head>
 <body>
-    <div class="settings-container">
-        <h2 style="text-align:center;">إعدادات المتجر</h2>
-        
-        <label>اسم المنشأة (يظهر في الريسيت)</label>
-        <input type="text" id="set-name" placeholder="اسم المحل">
+    <h1>إعدادات المتجر</h1>
+    <button onclick="location.href='manager.html'">العودة للرئيسية</button>
+    <p id="sys-v" style="position:fixed; bottom:10px; left:10px; color:#222; font-size:10px;"></p>
 
-        <label>لوجو المحل (URL)</label>
-        <input type="text" id="set-logo" placeholder="رابط الصورة">
+    <script>
+        const _supabase = supabase.createClient('https://xyvxowlbvuqbggkslwqr.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo');
+        const sKey = sessionStorage.getItem('store_key');
 
-        <label>مقاس الطابعة</label>
-        <select id="set-printer">
-            <option value="80">80mm (كبيرة)</option>
-            <option value="58">58mm (صغيرة)</option>
-        </select>
+        async function checkStatus() {
+            const { data: v } = await _supabase.from('system_settings').select('value').eq('key', 'sys_version').single();
+            if(v) document.getElementById('sys-v').innerText = "V " + v.value;
 
-        <label>رسالة تذييل الفاتورة</label>
-        <input type="text" id="set-footer" placeholder="شكراً لزيارتكم">
-
-        <button class="btn-save" onclick="alert('تم الحفظ بنجاح!')">حفظ كل الإعدادات</button>
-        <button onclick="history.back()" style="background:none; color:#666; width:100%; border:none; margin-top:15px; cursor:pointer;">العودة للخلف</button>
-    </div>
+            const { data } = await _supabase.from('stores').select('is_active').eq('store_key', sKey).single();
+            if(data && !data.is_active) { sessionStorage.clear(); window.location.href='index.html'; }
+        }
+        checkStatus();
+        setInterval(checkStatus, 120000);
+    </script>
 </body>
 </html>
