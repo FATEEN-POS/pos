@@ -12,23 +12,26 @@
         * { font-family: 'Cairo', sans-serif; box-sizing: border-box; transition: 0.3s; }
         body { margin: 0; background: var(--bg); color: var(--white); padding: 20px; }
         
-        /* الهيدر والإحصائيات */
         .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: var(--card); border-radius: 20px; border: 1px solid var(--gray); margin-bottom: 25px; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .stat-item { background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid var(--gray); text-align: center; }
         .stat-item h4 { margin: 0; color: #888; font-size: 14px; }
         .stat-item p { margin: 10px 0 0; font-size: 24px; font-weight: 700; color: var(--accent); }
 
-        /* الأزرار والمتاجر */
-        .btn-add-store { width: auto; padding: 12px 30px; background: var(--white); color: #000; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-bottom: 25px; display: block; margin-right: auto; }
+        .search-container { margin-bottom: 25px; display: flex; gap: 15px; align-items: center; }
+        .search-input { flex: 1; padding: 12px 20px; background: var(--card); border: 1px solid var(--gray); border-radius: 12px; color: #fff; outline: none; }
+        .search-input:focus { border-color: var(--accent); }
+
+        .btn-add-store { padding: 12px 30px; background: var(--white); color: #000; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
         
         .stores-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
         .store-card { background: var(--card); border: 1px solid var(--gray); border-radius: 22px; padding: 20px; cursor: pointer; position: relative; overflow: hidden; }
         .store-card:hover { border-color: var(--accent); transform: translateY(-5px); }
         .store-card h3 { margin: 0 0 10px; font-size: 18px; }
-        .store-status { position: absolute; top: 15px; left: 15px; width: 10px; height: 10px; border-radius: 50%; }
+        
+        /* استبدال النقطة الخضراء بنص الأيام المتبقية */
+        .days-left { position: absolute; top: 15px; left: 15px; font-size: 11px; padding: 4px 10px; border-radius: 8px; font-weight: bold; }
 
-        /* مودال */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(10px); }
         .modal-content { background: #111; width: 90%; max-width: 550px; padding: 30px; border-radius: 25px; border: 1px solid var(--gray); max-height: 90vh; overflow-y: auto; }
         
@@ -57,7 +60,10 @@
         <div class="stat-item"><h4>إجمالي المديرين</h4><p id="stat-mgrs">0</p></div>
     </div>
 
-    <button class="btn-add-store" onclick="openModal('addStoreModal')">+ إضافة متجر جديد</button>
+    <div class="search-container">
+        <input type="text" id="storeSearch" class="search-input" placeholder="بحث عن متجر بالاسم أو الكود..." oninput="filterStores()">
+        <button class="btn-add-store" onclick="openModal('addStoreModal')">+ إضافة متجر جديد</button>
+    </div>
 
     <div class="stores-grid" id="stores-display"></div>
 
@@ -132,26 +138,49 @@
             const { data: users } = await _supabase.from('users').select('*');
             allStores = stores || [];
             
-            const grid = document.getElementById('stores-display');
-            grid.innerHTML = '';
-            
+            displayStores(allStores);
+
             let totalRevenue = 0;
-            stores?.forEach(st => {
-                totalRevenue += Number(st.subscription_price || 0);
-                const statusColor = st.is_active ? '#00ff00' : '#ff0000';
-                grid.innerHTML += `
-                    <div class="store-card" onclick='showStoreDetails(${JSON.stringify(st)})'>
-                        <div class="store-status" style="background:${statusColor}"></div>
-                        <h3>${st.store_name}</h3>
-                        <p style="color:var(--accent); margin:0;">${st.subscription_price} ج.م</p>
-                        <p style="color:#555; font-size:12px; margin-top:10px;">ينتهي: ${st.expiry_date}</p>
-                    </div>`;
-            });
+            stores?.forEach(st => totalRevenue += Number(st.subscription_price || 0));
 
             document.getElementById('stat-revenue').innerText = totalRevenue + ' ج.م';
             document.getElementById('stat-stores').innerText = stores?.length || 0;
             document.getElementById('stat-emps').innerText = users?.filter(u => u.role === 'employee').length || 0;
             document.getElementById('stat-mgrs').innerText = users?.filter(u => u.role === 'manager').length || 0;
+        }
+
+        function displayStores(storesList) {
+            const grid = document.getElementById('stores-display');
+            grid.innerHTML = '';
+            
+            storesList.forEach(st => {
+                // حساب الأيام المتبقية
+                const today = new Date();
+                const expiry = new Date(st.expiry_date);
+                const diffTime = expiry - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                let daysText = diffDays > 0 ? `باقي ${diffDays} يوم` : 'منتهي';
+                let daysColor = diffDays > 5 ? 'var(--accent)' : 'var(--red)';
+                let bgColor = diffDays > 5 ? 'rgba(0, 242, 254, 0.1)' : 'rgba(255, 77, 77, 0.1)';
+
+                grid.innerHTML += `
+                    <div class="store-card" onclick='showStoreDetails(${JSON.stringify(st)})'>
+                        <div class="days-left" style="color:${daysColor}; background:${bgColor}">${daysText}</div>
+                        <h3>${st.store_name}</h3>
+                        <p style="color:var(--accent); margin:0;">${st.subscription_price} ج.م</p>
+                        <p style="color:#555; font-size:12px; margin-top:10px;">ينتهي: ${st.expiry_date}</p>
+                    </div>`;
+            });
+        }
+
+        function filterStores() {
+            const term = document.getElementById('storeSearch').value.toLowerCase();
+            const filtered = allStores.filter(st => 
+                st.store_name.toLowerCase().includes(term) || 
+                st.store_key.toLowerCase().includes(term)
+            );
+            displayStores(filtered);
         }
 
         async function showStoreDetails(st) {
@@ -202,7 +231,6 @@
             const months = document.getElementById('st-duration').value;
             const notes = document.getElementById('st-notes').value;
             
-            // حساب تاريخ الانتهاء تلقائياً بناءً على الشهور المختارة
             const expiryDate = new Date();
             expiryDate.setMonth(expiryDate.getMonth() + parseInt(months));
             const expiryString = expiryDate.toISOString().split('T')[0];
@@ -210,13 +238,8 @@
             const key = 'ST' + Math.floor(Math.random() * 9000 + 1000);
 
             await _supabase.from('stores').insert([{ 
-                store_key: key, 
-                store_name: name, 
-                phone: phone, 
-                subscription_price: price, 
-                expiry_date: expiryString, 
-                notes: notes, 
-                is_active: true 
+                store_key: key, store_name: name, phone: phone, subscription_price: price, 
+                expiry_date: expiryString, notes: notes, is_active: true 
             }]);
             closeModal('addStoreModal'); loadData();
         }
