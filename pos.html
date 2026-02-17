@@ -6,63 +6,68 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #000; --card: #111; --accent: #00f2fe; --gray: #222; --red: #ff4d4d; }
-        * { box-sizing: border-box; }
-        body { background: var(--bg); color: #fff; font-family: 'Cairo'; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        :root { --bg: #000; --card: #111; --accent: #00f2fe; --gray: #222; --red: #ff4d4d; --green: #00ff88; }
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; }
+        body { background: var(--bg); color: #fff; margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
         .products-section { flex: 2; padding: 20px; border-left: 1px solid var(--gray); display: flex; flex-direction: column; }
-        .cart-section { flex: 1; background: var(--card); padding: 20px; display: flex; flex-direction: column; }
+        .cart-section { flex: 1; background: var(--card); padding: 20px; display: flex; flex-direction: column; border-right: 1px solid var(--gray); }
         
-        /* الهيدر الجديد في شاشة الكاشير */
         .pos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--gray); }
-        .store-info { display: flex; align-items: center; gap: 15px; }
         .version-badge { background: rgba(0, 242, 254, 0.1); color: var(--accent); padding: 2px 10px; border-radius: 6px; font-size: 12px; border: 1px solid var(--accent); }
         
-        .main-title { font-size: 35px; font-weight: 700; color: var(--accent); margin: 0 0 20px 0; text-align: center; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; overflow-y: auto; padding-right: 5px; }
+        .item { background: var(--gray); padding: 15px; border-radius: 12px; text-align: center; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
+        .item:hover { border-color: var(--accent); transform: scale(1.03); }
+        .item .price { color: var(--accent); font-weight: bold; display: block; margin-top: 5px; }
+        .item .stock { font-size: 11px; color: #888; }
+
+        .cart-list { flex: 1; overflow-y: auto; margin-top: 15px; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #222; font-size: 14px; }
         
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; overflow-y: auto; }
-        .item { background: var(--gray); padding: 15px; border-radius: 10px; text-align: center; cursor: pointer; border: 1px solid transparent; }
-        .item:hover { border-color: var(--accent); transform: scale(1.02); }
-        
-        .total-box { margin-top: auto; border-top: 2px solid var(--accent); padding-top: 20px; }
+        .payment-methods { display: flex; gap: 10px; margin: 15px 0; }
+        .pay-option { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--gray); text-align: center; cursor: pointer; font-weight: bold; }
+        .pay-option.active { border-color: var(--accent); background: rgba(0, 242, 254, 0.1); color: var(--accent); }
+
+        .total-box { margin-top: auto; border-top: 2px solid var(--accent); padding-top: 15px; }
         .btn-pay { background: var(--accent); color: #000; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; font-size: 20px; cursor: pointer; border: none; }
-        
-        .logout-btn { background: none; border: 1px solid var(--red); color: var(--red); padding: 5px 15px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+        .btn-pay:disabled { background: #444; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
     <div class="products-section">
-        <h1 class="main-title">لوحة الكاشير</h1>
-
         <div class="pos-header">
-            <div class="store-info">
+            <div style="display:flex; align-items:center; gap:10px;">
                 <span id="store-name" style="font-weight: bold; font-size: 18px;">متجر ...</span>
                 <span id="sys-v" class="version-badge">V ...</span>
             </div>
-            <button class="logout-btn" onclick="logout()">خروج</button>
+            <input type="text" id="p-search" placeholder="بحث باسم المنتج أو الباركود..." oninput="loadProducts()" 
+                   style="width: 300px; padding: 8px 15px; background: #111; border: 1px solid var(--gray); color: #fff; border-radius: 8px;">
+            <button onclick="location.href='manager.html'" style="background:none; border:1px solid #444; color:#888; padding:5px 15px; border-radius:8px; cursor:pointer;">الخروج</button>
         </div>
 
-        <input type="text" placeholder="بحث عن صنف أو باركود..." style="width:100%; padding:15px; background:#111; border:1px solid #333; color:#fff; border-radius:10px; margin-bottom:20px;">
-        
-        <div class="product-grid">
-            <div class="item">صنف تجريبي</div>
-            <div class="item">صنف تجريبي</div>
-            <div class="item">صنف تجريبي</div>
-        </div>
+        <div class="product-grid" id="product-list">
+            </div>
     </div>
 
     <div class="cart-section">
-        <h2>الفاتورة</h2>
-        <div style="flex:1; overflow-y:auto;" id="cart-items">
-            <p style="color:#666; text-align:center;">السلة فارغة</p>
+        <h2 style="margin-top:0;">فاتورة البيع</h2>
+        <div class="cart-list" id="cart-items">
+            <p style="text-align:center; color:#555; margin-top:50px;">السلة فارغة</p>
         </div>
+
+        <div class="payment-methods">
+            <div id="pay-cash" class="pay-option active" onclick="setPayment('كاش')">💵 كاش</div>
+            <div id="pay-visa" class="pay-option" onclick="setPayment('فيزا')">💳 فيزا</div>
+        </div>
+
         <div class="total-box">
-            <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size:24px; font-weight:bold;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size:26px; font-weight:bold;">
                 <span>الإجمالي:</span>
                 <span id="total-amount">0.00</span>
             </div>
-            <button class="btn-pay" onclick="alert('جاري إتمام البيع...')">دفع وطباعة (F12)</button>
+            <button id="checkout-btn" class="btn-pay" onclick="completeSale()" disabled>إتمام العملية (F12)</button>
         </div>
     </div>
 
@@ -70,39 +75,108 @@
         const SUPABASE_URL = 'https://xyvxowlbvuqbggkslwqr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
         const storeKey = sessionStorage.getItem('store_key');
 
-        async function initPOS() {
-            if (!storeKey) return window.location.href = 'index.html';
+        let cart = [];
+        let paymentMethod = 'كاش';
 
-            // جلب الفيرجن
+        async function loadProducts() {
+            const search = document.getElementById('p-search').value;
+            let query = _supabase.from('products').select('*').eq('store_key', storeKey).gt('stock', 0);
+            if(search) query = query.or(`product_name.ilike.%${search}%,barcode.ilike.%${search}%`);
+            
+            const { data: products } = await query;
+            const container = document.getElementById('product-list');
+            container.innerHTML = products?.map(p => `
+                <div class="item" onclick='addToCart(${JSON.stringify(p)})'>
+                    <strong>${p.product_name}</strong>
+                    <span class="price">${p.price} ج.م</span>
+                    <span class="stock">المخزن: ${p.stock}</span>
+                </div>
+            `).join('') || '';
+        }
+
+        function addToCart(product) {
+            const existing = cart.find(item => item.id === product.id);
+            if (existing) {
+                if(existing.qty < product.stock) existing.qty++;
+                else alert("عفواً، الكمية نفدت من المخزن");
+            } else {
+                cart.push({ ...product, qty: 1 });
+            }
+            renderCart();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cart-items');
+            if (cart.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#555; margin-top:50px;">السلة فارغة</p>';
+                document.getElementById('total-amount').innerText = '0.00';
+                document.getElementById('checkout-btn').disabled = true;
+                return;
+            }
+
+            container.innerHTML = cart.map((item, index) => `
+                <div class="cart-item">
+                    <span>${item.product_name} x ${item.qty}</span>
+                    <span>${(item.price * item.qty).toFixed(2)} <button onclick="removeFromCart(${index})" style="color:var(--red); background:none; border:none; cursor:pointer; margin-right:10px;">X</button></span>
+                </div>
+            `).join('');
+
+            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            document.getElementById('total-amount').innerText = total.toFixed(2);
+            document.getElementById('checkout-btn').disabled = false;
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            renderCart();
+        }
+
+        function setPayment(method) {
+            paymentMethod = method;
+            document.querySelectorAll('.pay-option').forEach(el => el.classList.remove('active'));
+            if(method === 'كاش') document.getElementById('pay-cash').classList.add('active');
+            else document.getElementById('pay-visa').classList.add('active');
+        }
+
+        async function completeSale() {
+            const total = parseFloat(document.getElementById('total-amount').innerText);
+            
+            // 1. تسجيل العملية في جدول المبيعات
+            const { data: sale, error: saleErr } = await _supabase.from('sales').insert([{
+                store_key: storeKey,
+                items: cart,
+                total_amount: total,
+                payment_method: paymentMethod
+            }]);
+
+            if (saleErr) return alert("خطأ في تسجيل العملية: " + saleErr.message);
+
+            // 2. تحديث المخزن (خصم الكميات)
+            for (const item of cart) {
+                await _supabase.rpc('decrement_stock', { row_id: item.id, qty: item.qty });
+                // ملاحظة: ستحتاج لإضافة Function بسيطة في Supabase لخصم المخزن بدقة أو تحديثها يدوياً كالتالي:
+                const { data: current } = await _supabase.from('products').select('stock').eq('id', item.id).single();
+                await _supabase.from('products').update({ stock: current.stock - item.qty }).eq('id', item.id);
+            }
+
+            alert("تمت عملية البيع بنجاح!");
+            cart = [];
+            renderCart();
+            loadProducts();
+        }
+
+        // تهيئة الصفحة
+        async function init() {
             const { data: vData } = await _supabase.from('system_settings').select('value').eq('key', 'sys_version').single();
             if(vData) document.getElementById('sys-v').innerText = "V " + vData.value;
-
-            // جلب بيانات المتجر وفحص النشاط
-            const { data: store } = await _supabase.from('stores').select('*').eq('store_key', storeKey).single();
-            if (store) {
-                // التعديل 3: إغلاق تلقائي لو السيستم مقفول
-                if (!store.is_active) {
-                    alert("عذراً، هذا المتجر غير نشط حالياً.");
-                    logout();
-                    return;
-                }
-                document.getElementById('store-name').innerText = "متجر " + store.store_name;
-            }
+            const { data: store } = await _supabase.from('stores').select('store_name').eq('store_key', storeKey).single();
+            if(store) document.getElementById('store-name').innerText = "متجر " + store.store_name;
+            loadProducts();
         }
 
-        function logout() {
-            sessionStorage.clear();
-            window.location.href = 'index.html';
-        }
-
-        // التعديل 3: تحديث البيانات كل دقيقة تلقائياً
-        setInterval(initPOS, 60000);
-
-        // تشغيل عند الفتح
-        initPOS();
+        init();
     </script>
 </body>
 </html>
