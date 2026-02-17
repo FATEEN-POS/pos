@@ -67,7 +67,15 @@
             <input type="text" id="st-name" placeholder="اسم المتجر">
             <input type="text" id="st-phone" placeholder="رقم الهاتف">
             <input type="number" id="st-price" placeholder="سعر الاشتراك">
-            <input type="date" id="st-expiry" placeholder="تاريخ الانتهاء">
+            
+            <label style="display:block; margin-bottom:8px; font-size:14px; color:#888;">مدة الاشتراك:</label>
+            <select id="st-duration">
+                <option value="1">فترة تجريبية لمدة شهر</option>
+                <option value="3">ربع سنوي (3 شهور)</option>
+                <option value="6">نص سنوي (6 شهور)</option>
+                <option value="12">سنة كاملة (12 شهر)</option>
+            </select>
+
             <textarea id="st-notes" placeholder="ملاحظات المطور"></textarea>
             <button class="btn-action btn-save" onclick="saveNewStore()">حفظ المتجر</button>
             <button class="btn-action btn-cancel" onclick="closeModal('addStoreModal')">إلغاء</button>
@@ -168,7 +176,6 @@
             list.innerHTML = '';
             emps?.forEach(e => {
                 if(e.role !== 'developer') {
-                    // عرض الوظيفة بدل التليفون
                     const roleNameAr = e.role === 'manager' ? 'مدير فرع' : 'موظف كاشير';
                     list.innerHTML += `
                         <div class="emp-list-item">
@@ -192,11 +199,25 @@
             const name = document.getElementById('st-name').value;
             const phone = document.getElementById('st-phone').value;
             const price = document.getElementById('st-price').value;
-            const expiry = document.getElementById('st-expiry').value;
+            const months = document.getElementById('st-duration').value;
             const notes = document.getElementById('st-notes').value;
+            
+            // حساب تاريخ الانتهاء تلقائياً بناءً على الشهور المختارة
+            const expiryDate = new Date();
+            expiryDate.setMonth(expiryDate.getMonth() + parseInt(months));
+            const expiryString = expiryDate.toISOString().split('T')[0];
+
             const key = 'ST' + Math.floor(Math.random() * 9000 + 1000);
 
-            await _supabase.from('stores').insert([{ store_key: key, store_name: name, phone: phone, subscription_price: price, expiry_date: expiry, notes: notes, is_active: true }]);
+            await _supabase.from('stores').insert([{ 
+                store_key: key, 
+                store_name: name, 
+                phone: phone, 
+                subscription_price: price, 
+                expiry_date: expiryString, 
+                notes: notes, 
+                is_active: true 
+            }]);
             closeModal('addStoreModal'); loadData();
         }
 
