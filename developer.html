@@ -12,12 +12,14 @@
         * { font-family: 'Cairo', sans-serif; box-sizing: border-box; transition: 0.3s; }
         body { margin: 0; background: var(--bg); color: var(--white); padding: 20px; }
         
+        /* الهيدر والإحصائيات */
         .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: var(--card); border-radius: 20px; border: 1px solid var(--gray); margin-bottom: 25px; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .stat-item { background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid var(--gray); text-align: center; }
         .stat-item h4 { margin: 0; color: #888; font-size: 14px; }
         .stat-item p { margin: 10px 0 0; font-size: 24px; font-weight: 700; color: var(--accent); }
 
+        /* الأزرار والمتاجر */
         .btn-add-store { width: auto; padding: 12px 30px; background: var(--white); color: #000; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-bottom: 25px; display: block; margin-right: auto; }
         
         .stores-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
@@ -26,6 +28,7 @@
         .store-card h3 { margin: 0 0 10px; font-size: 18px; }
         .store-status { position: absolute; top: 15px; left: 15px; width: 10px; height: 10px; border-radius: 50%; }
 
+        /* مودال */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(10px); }
         .modal-content { background: #111; width: 90%; max-width: 550px; padding: 30px; border-radius: 25px; border: 1px solid var(--gray); max-height: 90vh; overflow-y: auto; }
         
@@ -41,14 +44,17 @@
 
     <div class="header">
         <h1>لوحة تحكم فطين <span style="color:var(--accent)">PRO</span></h1>
-        <button onclick="logout()" style="background:none; border: 1px solid var(--red); color: var(--red); padding: 5px 15px; border-radius: 10px; cursor: pointer;">خروج</button>
+        <div style="display:flex; gap:10px;">
+            <button onclick="exportToExcel()" style="background:var(--gray); color:#fff; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">تصدير Excel</button>
+            <button onclick="logout()" style="background:none; border: 1px solid var(--red); color: var(--red); padding: 5px 15px; border-radius: 10px; cursor: pointer;">خروج</button>
+        </div>
     </div>
 
     <div class="stats-grid">
-        <div class="stat-item"><h4>إجمالي الأرباح</h4><p id="stat-revenue">0</p></div>
-        <div class="stat-item"><h4>المتاجر</h4><p id="stat-stores">0</p></div>
-        <div class="stat-item"><h4>الموظفين</h4><p id="stat-emps">0</p></div>
-        <div class="stat-item"><h4>المديرين</h4><p id="stat-mgrs">0</p></div>
+        <div class="stat-item"><h4>إجمالي الأرباح المتوقعة</h4><p id="stat-revenue">0</p></div>
+        <div class="stat-item"><h4>المتاجر المشتركة</h4><p id="stat-stores">0</p></div>
+        <div class="stat-item"><h4>إجمالي الموظفين</h4><p id="stat-emps">0</p></div>
+        <div class="stat-item"><h4>إجمالي المديرين</h4><p id="stat-mgrs">0</p></div>
     </div>
 
     <button class="btn-add-store" onclick="openModal('addStoreModal')">+ إضافة متجر جديد</button>
@@ -75,15 +81,18 @@
             
             <div id="toggle-container"></div>
             
+            <h4 style="margin-top:20px;">بلاغات وفيدباك المدير:</h4>
+            <div id="mgr-feedback-display" style="background:#000; padding:15px; border-radius:15px; border:1px solid var(--gray); color:var(--accent); margin-bottom:15px;">لا يوجد فيدباك حالياً</div>
+
             <h4 style="margin-top:20px;">ملاحظات المطور:</h4>
             <textarea id="edit-st-notes"></textarea>
-            <button onclick="updateNotes()" class="btn-action btn-save" style="width:auto; padding:5px 15px;">تحديث الملاحظات</button>
+            <button onclick="updateNotes()" class="btn-action btn-save" style="width:auto; padding:5px 15px; font-size:12px;">تحديث الملاحظات</button>
             
             <h4 style="margin-top:20px;">فريق العمل الحالي:</h4>
             <div id="employee-list"></div>
             
             <div style="background:#000; padding:15px; border-radius:15px; margin-top:15px; border:1px solid #222;">
-                <h4>إضافة عضو جديد:</h4>
+                <h4>إضافة عضو سريع:</h4>
                 <input type="text" id="q-u-name" placeholder="اسم المستخدم">
                 <input type="password" id="q-u-pass" placeholder="الباسورد">
                 <select id="q-u-role">
@@ -142,6 +151,7 @@
             openModal('storeDetailModal');
             document.getElementById('view-st-name').innerText = st.store_name;
             document.getElementById('edit-st-notes').value = st.notes || '';
+            document.getElementById('mgr-feedback-display').innerText = st.feedback || 'لا يوجد فيدباك حالياً';
             document.getElementById('store-meta').innerHTML = `كود المتجر: ${st.store_key} | هاتف: ${st.phone}`;
             
             const toggleBtn = st.is_active ? 
@@ -158,11 +168,11 @@
             list.innerHTML = '';
             emps?.forEach(e => {
                 if(e.role !== 'developer') {
-                    // التعديل هنا: عرض الوظيفة بدلاً من رقم الهاتف
-                    const roleName = e.role === 'manager' ? 'مدير فرع' : 'موظف كاشير';
+                    // عرض الوظيفة بدل التليفون
+                    const roleNameAr = e.role === 'manager' ? 'مدير فرع' : 'موظف كاشير';
                     list.innerHTML += `
                         <div class="emp-list-item">
-                            <span>${e.username} <small style="color:var(--accent); margin-right:10px;">(${roleName})</small></span>
+                            <span>${e.username} <small style="color:var(--accent); margin-right:10px;">(${roleNameAr})</small></span>
                             <button onclick="delU('${e.username}')" style="background:none; color:var(--red); border:none; cursor:pointer;">حذف</button>
                         </div>`;
                 }
@@ -210,6 +220,12 @@
                 await _supabase.from('stores').delete().eq('store_key', activeStoreKey);
                 closeModal('storeDetailModal'); loadData();
             }
+        }
+
+        function exportToExcel() {
+            const ws = XLSX.utils.json_to_sheet(allStores);
+            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Stores");
+            XLSX.writeFile(wb, "FateenOS_Stores.xlsx");
         }
 
         loadData();
