@@ -1,9 +1,9 @@
-# 🚀 Fateen OS: The Future of Retail Intelligence
+#  Fateen OS: The Future of Retail Intelligence
 ### نظام إدارة المبيعات والمحاسبة الذكي - "فطين"
 
 ---
 
-## 🌍 Overview / نظرة عامة
+##  Overview / نظرة عامة
 
 **English:**
 **Fateen OS** is a high-performance Point of Sale (POS) and inventory management system, specifically engineered for the Egyptian market. Built with speed and reliability in mind, it bridges the gap between traditional trade and cloud-based intelligence, ensuring business continuity even in challenging environments.
@@ -13,7 +13,7 @@
 
 ---
 
-## 🎯 Our Vision / رؤيتنا
+##  Our Vision / رؤيتنا
 
 **English:**
 To become the digital backbone for retail and SMEs in Upper Egypt by providing accessible, smart, and localized technology that understands the Egyptian commercial logic.
@@ -23,7 +23,7 @@ To become the digital backbone for retail and SMEs in Upper Egypt by providing a
 
 ---
 
-## ✨ Key Features / المميزات الرئيسية
+##  Key Features / المميزات الرئيسية
 
 | Feature / الميزة | Description / الوصف |
 | :--- | :--- |
@@ -40,7 +40,7 @@ To become the digital backbone for retail and SMEs in Upper Egypt by providing a
 
 ---
 
-## 🛠️ Technical Stack / الترسانة التقنية
+##  Technical Stack / الترسانة التقنية
 
 * **Frontend:** HTML5, CSS3 (Modern Dark UI), Vanilla JavaScript (No heavy frameworks for maximum speed).
 * **Backend:** Supabase (PostgreSQL, Realtime, Auth).
@@ -49,7 +49,7 @@ To become the digital backbone for retail and SMEs in Upper Egypt by providing a
 
 ---
 
-## 📁 System Architecture / هيكلية النظام
+##  System Architecture / هيكلية النظام
 
 * `index.html`: Unified Login Gateway / بوابة تسجيل الدخول الموحدة.
 * `pos.html`: Smart POS Interface / واجهة البيع الذكية.
@@ -61,7 +61,7 @@ To become the digital backbone for retail and SMEs in Upper Egypt by providing a
 
 ---
 
-## 🚀 How to Start / كيف تبدأ؟
+##  How to Start / كيف تبدأ؟
 
 1.  **Host it:** Upload files to any static hosting (Netlify, Vercel, or local server).
 2.  **Database:** Link your [Supabase](https://supabase.com) project URL and API Key.
@@ -69,7 +69,7 @@ To become the digital backbone for retail and SMEs in Upper Egypt by providing a
 
 ---
 
-## 🤝 Support / الدعم
+##  Support / الدعم
 
 **English:**
 Designed and maintained with a focus on **Aswan's** commercial growth. For support, check the `about.html` chat bot.
