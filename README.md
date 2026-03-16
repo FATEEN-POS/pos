@@ -12,7 +12,19 @@
 **نظام فطين (Fateen OS)** هو نظام كاشير وإدارة مخازن فائق الأداء، صُمم خصيصاً ليلبي احتياجات السوق المصري وصعيد مصر (أسوان). يجمع النظام بين سرعة التنفيذ وسهولة الاستخدام، ليكون الجسر الذي ينقل التجارة التقليدية إلى عصر الذكاء الاصطناعي والسحابي، مع ضمان استقرار العمل في كافة الظروف.
 
 ---
+##  Why Invest in Fateen OS? /  لماذا يعتبر "فطين" استثماراً ناجحاً؟
+**English:**
+- Zero Latency: Built with pure Vanilla JS to ensure maximum performance on low-end hardware.
+- Scalability: Manage multiple branches from a single dashboard.
+- Local Compliance: Pre-configured for Egyptian VAT (14%) and the Electronic Invoice Authority.
+- Financial Depth: Includes an integrated ledger for credit sales (Shekek), expenses, and marketer commissions.
+**العربية:**
 
+- سرعة استجابة فائقة: مبني بلغة JavaScript صرفة لضمان أداء مثالي على أجهزة الكاشير الضعيفة والقديمة.
+- قابلية التوسع: إمكانية إدارة عدة فروع من لوحة تحكم واحدة لحظياً.
+- التوافق المحلي: مهيأ لضريبة القيمة المضافة (14%) ومتطلبات منظومة الفاتورة الإلكترونية المصرية.
+- عمق محاسبي: يشمل إدارة كاملة للبيع الآجل (الشكك)، المصروفات، وعمولات المسوقين.
+---
 ##  Our Vision / رؤيتنا
 
 **English:**
