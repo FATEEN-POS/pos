@@ -18,8 +18,8 @@
 - Scalability: Manage multiple branches from a single dashboard.
 - Local Compliance: Pre-configured for Egyptian VAT (14%) and the Electronic Invoice Authority.
 - Financial Depth: Includes an integrated ledger for credit sales (Shekek), expenses, and marketer commissions.
+  
 **العربية:**
-
 - سرعة استجابة فائقة: مبني بلغة JavaScript صرفة لضمان أداء مثالي على أجهزة الكاشير الضعيفة والقديمة.
 - قابلية التوسع: إمكانية إدارة عدة فروع من لوحة تحكم واحدة لحظياً.
 - التوافق المحلي: مهيأ لضريبة القيمة المضافة (14%) ومتطلبات منظومة الفاتورة الإلكترونية المصرية.
