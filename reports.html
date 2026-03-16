@@ -2,439 +2,885 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Fateen OS | Ultra Reports</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مركز التقارير - Fateen OS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <style>
-        :root { --bg: #050505; --card: #111; --accent: #00f2fe; --gray: #222; --red: #ff4d4d; --green: #00ff88; --orange: #ffa500; }
-        * { font-family: 'Cairo', sans-serif; box-sizing: border-box; }
-        body { background: var(--bg); color: #fff; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        /* ===== VARIABLES ===== */
+        :root {
+            --bg:#080808; --surface:#111111; --surface2:#181818; --surface3:#202020;
+            --accent:#00f2fe; --accent-dim:rgba(0,242,254,0.08); --accent-glow:rgba(0,242,254,0.15);
+            --border:#252525; --text:#f0f0f0; --text-muted:#666;
+            --green:#00e676; --green-dim:rgba(0,230,118,0.1);
+            --red:#ff4d4d; --red-dim:rgba(255,77,77,0.1);
+            --orange:#ffa040; --orange-dim:rgba(255,160,64,0.1);
+            --purple:#a78bfa; --purple-dim:rgba(167,139,250,0.1);
+            --btn-color:#000; --input-bg:#0d0d0d;
+            --shadow:0 4px 24px rgba(0,0,0,0.6);
+            --radius:14px; --radius-sm:9px;
+            --sidebar-w:260px;
+        }
+        [data-theme="light"] {
+            --bg:#f0ede5; --surface:#ffffff; --surface2:#f5f2eb; --surface3:#eae7df;
+            --accent:#004643; --accent-dim:rgba(0,70,67,0.07); --accent-glow:rgba(0,70,67,0.1);
+            --border:#ddd8cf; --text:#1a1a1a; --text-muted:#888;
+            --green:#00875a; --green-dim:rgba(0,135,90,0.08);
+            --red:#c0392b; --red-dim:rgba(192,57,43,0.08);
+            --orange:#d35400; --orange-dim:rgba(211,84,0,0.08);
+            --purple:#7c3aed; --purple-dim:rgba(124,58,237,0.08);
+            --btn-color:#f0ede5; --input-bg:#f5f2eb;
+            --shadow:0 4px 24px rgba(0,0,0,0.08);
+        }
 
-        .sidebar { width: 260px; background: var(--card); border-left: 1px solid var(--gray); display: flex; flex-direction: column; padding: 20px; overflow-y: auto; }
-        .sidebar-header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid var(--gray); padding-bottom: 10px; }
-        #display-store-name { color: var(--accent); font-size: 18px; margin: 0; }
-        .nav-group-title { font-size: 11px; color: #555; margin: 15px 0 5px; display: block; }
-        .nav-btn { background: none; border: none; color: #888; padding: 10px; text-align: right; cursor: pointer; border-radius: 8px; font-size: 13px; width: 100%; }
-        .nav-btn:hover, .nav-btn.active { background: rgba(0,242,254,0.1); color: var(--accent); }
+        *,*::before,*::after{box-sizing:border-box;font-family:'Cairo',sans-serif;margin:0;padding:0;}
+        body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;transition:background 0.25s,color 0.25s;}
 
-        .main-content { flex: 1; padding: 25px; overflow-y: auto; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.4s; }
+        /* ===== TOPBAR ===== */
+        .topbar{
+            background:var(--surface);border-bottom:1px solid var(--border);
+            padding:0 24px;display:flex;justify-content:space-between;align-items:center;
+            position:sticky;top:0;z-index:200;box-shadow:var(--shadow);height:60px;flex-shrink:0;
+        }
+        .topbar-left{display:flex;align-items:center;gap:14px;}
+        .topbar-right{display:flex;align-items:center;gap:8px;}
+        .store-name{font-size:17px;font-weight:800;}
+        .page-label{font-size:11px;color:var(--text-muted);}
+        .version-chip{background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:800;}
+        .theme-btn,.back-btn{display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:7px 13px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:700;text-decoration:none;transition:border-color 0.2s;}
+        .theme-btn:hover,.back-btn:hover{border-color:var(--accent);}
 
-        .report-card { background: var(--card); border: 1px solid var(--gray); border-radius: 15px; padding: 20px; margin-bottom: 20px; position: relative; }
-        .download-btn { position: absolute; top: 20px; left: 20px; background: #fff; color: #000; border: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold; }
+        /* ===== LAYOUT ===== */
+        .layout{display:flex;flex:1;overflow:hidden;height:calc(100vh - 60px);}
 
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; }
-        .stat-box { background: #000; padding: 12px; border-radius: 10px; border-right: 3px solid var(--accent); }
-        .stat-box span { font-size: 11px; color: #777; display: block; }
-        .stat-box strong { font-size: 16px; }
+        /* ===== SIDEBAR ===== */
+        .sidebar{
+            width:var(--sidebar-w);background:var(--surface);border-left:1px solid var(--border);
+            display:flex;flex-direction:column;padding:16px;overflow-y:auto;flex-shrink:0;
+        }
+        .sidebar-title{
+            font-size:11px;font-weight:800;color:var(--text-muted);letter-spacing:2px;
+            text-transform:uppercase;padding:4px 10px 12px;border-bottom:1px solid var(--border);margin-bottom:12px;
+        }
+        .nav-btn{
+            display:flex;align-items:center;gap:10px;
+            background:transparent;border:1px solid transparent;color:var(--text-muted);
+            padding:11px 14px;border-radius:var(--radius-sm);margin-bottom:4px;cursor:pointer;
+            text-align:right;width:100%;font-size:13px;font-weight:700;
+            transition:all 0.2s;
+        }
+        .nav-btn:hover{border-color:var(--border);color:var(--text);background:var(--surface2);}
+        .nav-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
+        .nav-btn .nav-icon{font-size:16px;width:20px;text-align:center;}
+        .sidebar-spacer{flex:1;}
+        .nav-btn.nav-back{border-color:var(--red-dim);color:var(--red);margin-top:4px;}
+        .nav-btn.nav-back:hover{background:var(--red-dim);}
 
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: right; font-size: 12px; color: var(--accent); padding: 10px; border-bottom: 1px solid var(--gray); }
-        td { padding: 10px; font-size: 13px; border-bottom: 1px solid #1a1a1a; }
+        /* ===== MAIN ===== */
+        .main-content{flex:1;overflow-y:auto;padding:24px;}
 
-        .btn-pay { background: var(--green); color: #000; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 11px; }
-        .btn-del { background: var(--red); color: #fff; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 11px; margin-right: 5px; }
+        /* ===== PAGE HEADER ===== */
+        .page-header{margin-bottom:22px;}
+        .page-header h2{font-size:22px;font-weight:900;margin-bottom:4px;}
+        .page-header p{font-size:12px;color:var(--text-muted);}
 
-        .search-bar { width: 100%; background: #000; border: 1px solid var(--gray); color: #fff; padding: 10px; border-radius: 10px; margin-bottom: 15px; font-size: 13px; outline: none; }
-        .search-bar:focus { border-color: var(--accent); }
+        /* ===== KPI CARDS ===== */
+        .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:22px;}
+        .kpi-card{
+            background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+            padding:18px 16px;position:relative;overflow:hidden;
+            transition:transform 0.2s,box-shadow 0.2s;
+        }
+        .kpi-card:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,0.3);}
+        .kpi-card::before{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--kpi-color,var(--accent));}
+        .kpi-label{font-size:11px;color:var(--text-muted);font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+        .kpi-label .kpi-icon{font-size:14px;}
+        .kpi-value{font-size:24px;font-weight:900;color:var(--kpi-color,var(--text));line-height:1;}
+        .kpi-sub{font-size:11px;color:var(--text-muted);margin-top:6px;}
 
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: var(--card); padding: 25px; border-radius: 15px; border: 1px solid var(--accent); width: 380px; }
-        .modal-content input, .modal-content select { width: 100%; background: #000; border: 1px solid var(--gray); color: #fff; padding: 10px; margin-bottom: 10px; border-radius: 8px; }
+        /* ===== FILTER BAR ===== */
+        .filter-bar{
+            background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+            padding:14px 18px;margin-bottom:18px;
+            display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+        }
+        .filter-group{display:flex;align-items:center;gap:6px;}
+        .filter-label{font-size:12px;color:var(--text-muted);font-weight:700;white-space:nowrap;}
+        .filter-input{
+            background:var(--input-bg);border:1px solid var(--border);color:var(--text);
+            padding:8px 12px;border-radius:var(--radius-sm);
+            font-family:'Cairo',sans-serif;font-size:12px;outline:none;cursor:pointer;
+            transition:border-color 0.2s;
+        }
+        .filter-input:focus{border-color:var(--accent);}
+        .filter-spacer{flex:1;}
+        .period-btns{display:flex;gap:6px;}
+        .period-btn{
+            padding:7px 12px;background:var(--surface2);border:1px solid var(--border);
+            color:var(--text-muted);border-radius:var(--radius-sm);cursor:pointer;
+            font-family:'Cairo',sans-serif;font-size:11px;font-weight:700;
+            transition:all 0.2s;
+        }
+        .period-btn:hover,.period-btn.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);}
 
-        .filter-box { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; flex-wrap: wrap; }
-        .filter-box label { font-size: 12px; color: #888; }
-        .filter-box input[type="date"] { background: #000; border: 1px solid var(--gray); color: #fff; padding: 5px; border-radius: 5px; font-size: 12px; }
+        /* ===== BUTTONS ===== */
+        .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius-sm);border:none;cursor:pointer;font-family:'Cairo',sans-serif;font-weight:700;font-size:13px;white-space:nowrap;transition:opacity 0.2s,transform 0.15s;}
+        .btn:hover{opacity:0.85;transform:translateY(-1px);}
+        .btn:active{transform:translateY(0);}
+        .btn-accent{background:var(--accent);color:var(--btn-color);}
+        .btn-green{background:var(--green);color:#000;}
+        .btn-orange{background:var(--orange);color:#000;}
+        .btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+        .btn-red{background:var(--red);color:#fff;}
+        .btn-sm{padding:6px 12px;font-size:12px;}
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* ===== TABLE ===== */
+        .table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);margin-bottom:20px;}
+        .table-card-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+        .table-card-header h3{font-size:14px;font-weight:800;}
+        .table-wrap{overflow-x:auto;}
+        table{width:100%;border-collapse:collapse;}
+        thead tr{background:var(--surface2);}
+        th{padding:11px 14px;text-align:right;font-size:11px;color:var(--text-muted);font-weight:700;border-bottom:1px solid var(--border);white-space:nowrap;}
+        td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:12px;}
+        tbody tr:last-child td{border-bottom:none;}
+        tbody tr:hover{background:var(--surface2);cursor:pointer;}
+
+        .badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;}
+        .badge-green{background:var(--green-dim);color:var(--green);}
+        .badge-red{background:var(--red-dim);color:var(--red);}
+        .badge-orange{background:var(--orange-dim);color:var(--orange);}
+        .badge-accent{background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent);}
+        .badge-purple{background:var(--purple-dim);color:var(--purple);}
+
+        /* ===== CHART ===== */
+        .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px;box-shadow:var(--shadow);}
+        .chart-card h3{font-size:14px;font-weight:800;margin-bottom:16px;color:var(--text);}
+        .chart-wrap{position:relative;height:280px;}
+        .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+
+        /* ===== REPORT SECTION ===== */
+        .report-section{display:none;animation:fadeIn 0.3s ease;}
+        .report-section.active{display:block;}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+        /* ===== MODAL ===== */
+        .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:2000;justify-content:center;align-items:center;padding:16px;}
+        .modal.open{display:flex;}
+        .modal-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;width:460px;max-width:100%;max-height:90vh;overflow-y:auto;padding:24px;box-shadow:var(--shadow);}
+        .modal-title{font-size:16px;font-weight:800;color:var(--accent);margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+        .modal-close{cursor:pointer;color:var(--text-muted);font-size:18px;}
+        .modal-close:hover{color:var(--red);}
+
+        /* ===== RECEIPT ===== */
+        .receipt-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);}
+        .receipt-row:last-child{border-bottom:none;}
+        .receipt-total{text-align:center;padding:16px 0;font-size:26px;font-weight:900;color:var(--green);}
+
+        /* ===== PERF TABLE ===== */
+        .rank-num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--surface3);font-size:11px;font-weight:800;color:var(--text-muted);}
+        .rank-1{background:rgba(255,215,0,0.15);color:#ffd700;}
+        .rank-2{background:rgba(192,192,192,0.15);color:#c0c0c0;}
+        .rank-3{background:rgba(205,127,50,0.15);color:#cd7f32;}
+
+        /* ===== PROGRESS BAR ===== */
+        .progress-wrap{background:var(--surface3);border-radius:20px;height:6px;overflow:hidden;margin-top:6px;}
+        .progress-fill{height:100%;border-radius:20px;background:var(--accent);transition:width 0.6s ease;}
+
+        /* ===== TOAST ===== */
+        #toast-container{position:fixed;bottom:20px;left:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:320px;}
+        .toast{padding:11px 15px;border-radius:var(--radius-sm);font-size:13px;font-weight:700;border:1px solid;animation:toastIn 0.3s ease;cursor:pointer;display:flex;align-items:center;gap:8px;}
+        .toast-success{background:var(--green-dim);border-color:var(--green);color:var(--green);}
+        .toast-error{background:var(--red-dim);border-color:var(--red);color:var(--red);}
+        .toast-info{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);}
+        @keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+        /* ===== MOBILE ===== */
+        @media(max-width:768px){
+            .layout{flex-direction:column;height:auto;}
+            .sidebar{width:100%;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;padding:10px;border-left:none;border-bottom:1px solid var(--border);height:auto;}
+            .sidebar-title,.sidebar-spacer,.nav-btn.nav-back{display:none;}
+            .nav-btn{padding:8px 12px;flex-shrink:0;margin-bottom:0;white-space:nowrap;width:auto;}
+            .main-content{padding:14px;}
+            .kpi-grid{grid-template-columns:repeat(2,1fr);}
+            .chart-grid{grid-template-columns:1fr;}
+            .filter-bar{padding:10px;}
+            .topbar{padding:0 14px;}
+            .period-btns{display:none;}
+            .col-hide{display:none;}
+        }
+        @media(max-width:480px){
+            .kpi-grid{grid-template-columns:repeat(2,1fr);}
+        }
     </style>
 </head>
 <body>
 
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <h2 id="display-store-name">تحميل...</h2>
-            <span id="display-sys-v" style="font-size: 10px; color: #444;">V 1.0.0</span>
+<!-- TOPBAR -->
+<div class="topbar">
+    <div class="topbar-left">
+        <a class="back-btn" href="manager.html">⬅️ رجوع</a>
+        <div>
+            <div class="store-name" id="store-name-display">Fateen OS</div>
+            <div class="page-label">مركز التقارير</div>
         </div>
-        
-        <span class="nav-group-title">📊 المبيعات</span>
-        <button class="nav-btn active" onclick="showTab('sales-tab', this)">ملخص يومي وفترات</button>
-        <button class="nav-btn" onclick="showTab('top-items-tab', this)">الأصناف الأكثر مبيعاً</button>
-        <button class="nav-btn" onclick="showTab('returns-tab', this)">تقارير المرتجعات</button>
+        <span class="version-chip" id="version-chip">V0.5</span>
+    </div>
+    <div class="topbar-right">
+        <button class="theme-btn" onclick="toggleTheme()"><span id="theme-icon">🌙</span></button>
+    </div>
+</div>
 
-        <span class="nav-group-title">📦 المخزن</span>
-        <button class="nav-btn" onclick="showTab('inv-status-tab', this)">القيمة والجرد الحالي</button>
-        <button class="nav-btn" onclick="showTab('inv-move-tab', this)">حركة الصنف والهاك</button>
+<div class="layout">
 
-        <span class="nav-group-title">👥 الموظفين</span>
-        <button class="nav-btn" onclick="showTab('staff-tab', this)">أداء الموظف والوردية</button>
-
-        <span class="nav-group-title">💰 المالية</span>
-        <button class="nav-btn" onclick="showTab('profit-tab', this)">الأرباح والذروة</button>
-        <button class="nav-btn" onclick="showTab('vendors-tab', this)">ديون الموردين</button>
-
-        <button class="nav-btn" onclick="location.href='manager.html'" style="margin-top:auto; color:var(--red)">↩ خروج</button>
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="sidebar-title">التقارير</div>
+        <button class="nav-btn active" onclick="showSection('daily',this)"><span class="nav-icon">📅</span> ملخص المبيعات</button>
+        <button class="nav-btn" onclick="showSection('periods',this)"><span class="nav-icon">📈</span> فترات المبيعات</button>
+        <button class="nav-btn" onclick="showSection('performance',this)"><span class="nav-icon">🏆</span> أداء الموظفين</button>
+        <button class="nav-btn" onclick="showSection('products',this)"><span class="nav-icon">📦</span> مراقبة المخزن</button>
+        <div class="sidebar-spacer"></div>
+        <button class="nav-btn nav-back" onclick="location.href='manager.html'"><span class="nav-icon">⬅️</span> الرجوع للإدارة</button>
     </div>
 
+    <!-- MAIN -->
     <div class="main-content">
-        <div id="sales-tab" class="tab-content active">
-            <div class="report-card" id="pdf-sales">
-                <button class="download-btn" onclick="downloadPDF('pdf-sales', 'Daily_Sales')">📥 PDF</button>
-                <h3>ملخص المبيعات</h3>
-                <input type="date" id="sale-date" onchange="loadSalesData()">
-                <div class="stats-grid">
-                    <div class="stat-box"><span>إجمالي البيع</span><strong id="day-sales">0.00</strong></div>
-                    <div class="stat-box"><span>عدد الفواتير</span><strong id="day-orders">0</strong></div>
+
+        <!-- ======= DAILY ======= -->
+        <div id="daily" class="report-section active">
+            <div class="page-header">
+                <h2>📅 ملخص المبيعات</h2>
+                <p>عرض وتحليل جميع العمليات خلال فترة محددة</p>
+            </div>
+
+            <!-- Period Shortcuts -->
+            <div class="filter-bar">
+                <div class="period-btns">
+                    <button class="period-btn active" onclick="setPeriod('daily','today',this)">اليوم</button>
+                    <button class="period-btn" onclick="setPeriod('daily','week',this)">الأسبوع</button>
+                    <button class="period-btn" onclick="setPeriod('daily','month',this)">الشهر</button>
                 </div>
-                <table>
-                    <thead><tr><th>الوقت</th><th>رقم الفاتورة</th><th>المبلغ</th><th>الوسيلة</th></tr></thead>
-                    <tbody id="sales-list"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="top-items-tab" class="tab-content">
-            <div class="report-card" id="pdf-top-items">
-                <button class="download-btn" onclick="downloadPDF('pdf-top-items', 'Top_Selling_Items')">📥 PDF</button>
-                <h3>الأصناف الأكثر مبيعاً (توب 10)</h3>
-                <table>
-                    <thead><tr><th>الصنف</th><th>الكمية المباعة</th></tr></thead>
-                    <tbody id="top-items-list"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="returns-tab" class="tab-content">
-            <div class="report-card" id="pdf-returns">
-                <button class="download-btn" onclick="downloadPDF('pdf-returns', 'Returns_Report')">📥 PDF</button>
-                <h3>سجل المرتجعات</h3>
-                <table>
-                    <thead><tr><th>الوقت</th><th>رقم الفاتورة</th><th>الأصناف المرتجعة</th><th>القيمة المستردة</th><th>الموظف</th></tr></thead>
-                    <tbody id="returns-list"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="inv-status-tab" class="tab-content">
-            <div class="report-card" id="pdf-inventory">
-                <button class="download-btn" onclick="downloadPDF('pdf-inventory', 'Inventory_Status')">📥 PDF</button>
-                <h3>جرد وقيمة المخزن</h3>
-                <div class="stats-grid">
-                    <div class="stat-box"><span>قيمة المخزن (بيع)</span><strong id="inv-val-sale">0.00</strong></div>
-                    <div class="stat-box"><span>قيمة المخزن (تكلفة)</span><strong id="inv-val-cost">0.00</strong></div>
-                    <div class="stat-box" style="border-color:var(--red)"><span>نواقص</span><strong id="short-count">0</strong></div>
+                <div class="filter-group">
+                    <span class="filter-label">من:</span>
+                    <input type="date" id="d-start" class="filter-input">
                 </div>
-                <table>
-                    <thead><tr><th>الصنف</th><th>رصيد</th><th>تكلفة</th><th>الحالة</th></tr></thead>
-                    <tbody id="inventory-list"></tbody>
-                </table>
+                <div class="filter-group">
+                    <span class="filter-label">إلى:</span>
+                    <input type="date" id="d-end" class="filter-input">
+                </div>
+                <div class="filter-spacer"></div>
+                <button class="btn btn-accent btn-sm" onclick="loadDaily()">🔄 تحديث</button>
+                <button class="btn btn-ghost btn-sm" onclick="askExport('daily-table','Sales_Report')">📤 تصدير</button>
             </div>
-        </div>
 
-        <div id="inv-move-tab" class="tab-content">
-            <div class="report-card">
-                <h3>بحث حركة صنف معين</h3>
-                <select id="product-selector" onchange="loadProductHistory()" style="width:100%; background:#000; color:#fff; padding:10px; border:1px solid var(--gray); border-radius:8px; margin-bottom:15px;">
-                    <option value="">اختر الصنف لمعاينة حركته...</option>
-                </select>
-                <div id="product-history-content">
-                    <table>
-                        <thead><tr><th>التاريخ</th><th>نوع الحركة</th><th>الكمية</th></tr></thead>
-                        <tbody id="product-history-list"></tbody>
+            <!-- KPIs -->
+            <div class="kpi-grid">
+                <div class="kpi-card" style="--kpi-color:var(--accent)">
+                    <div class="kpi-label"><span class="kpi-icon">💰</span> إجمالي البيع</div>
+                    <div class="kpi-value" id="d-total">0</div>
+                    <div class="kpi-sub">ج.م</div>
+                </div>
+                <div class="kpi-card" style="--kpi-color:var(--red)">
+                    <div class="kpi-label"><span class="kpi-icon">↩️</span> المرتجعات</div>
+                    <div class="kpi-value" id="d-return">0</div>
+                    <div class="kpi-sub">ج.م</div>
+                </div>
+                <div class="kpi-card" style="--kpi-color:var(--green)">
+                    <div class="kpi-label"><span class="kpi-icon">💵</span> كاش</div>
+                    <div class="kpi-value" id="d-cash">0</div>
+                    <div class="kpi-sub">ج.م</div>
+                </div>
+                <div class="kpi-card" style="--kpi-color:var(--purple)">
+                    <div class="kpi-label"><span class="kpi-icon">💳</span> فيزا / شبكة</div>
+                    <div class="kpi-value" id="d-card">0</div>
+                    <div class="kpi-sub">ج.م</div>
+                </div>
+                <div class="kpi-card" style="--kpi-color:var(--orange)">
+                    <div class="kpi-label"><span class="kpi-icon">🧾</span> عدد الفواتير</div>
+                    <div class="kpi-value" id="d-count">0</div>
+                    <div class="kpi-sub">عملية</div>
+                </div>
+                <div class="kpi-card" style="--kpi-color:var(--accent)">
+                    <div class="kpi-label"><span class="kpi-icon">📊</span> متوسط الفاتورة</div>
+                    <div class="kpi-value" id="d-avg">0</div>
+                    <div class="kpi-sub">ج.م</div>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-card">
+                <div class="table-card-header">
+                    <h3>سجل العمليات</h3>
+                    <span id="d-count-label" style="font-size:12px;color:var(--text-muted);">0 عملية</span>
+                </div>
+                <div class="table-wrap">
+                    <table id="daily-table">
+                        <thead><tr>
+                            <th>رقم العملية</th>
+                            <th>التاريخ والوقت</th>
+                            <th>البائع</th>
+                            <th class="col-hide">طريقة الدفع</th>
+                            <th>القيمة</th>
+                            <th>الحالة</th>
+                        </tr></thead>
+                        <tbody id="daily-body"><tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px;">جاري التحميل...</td></tr></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <div id="profit-tab" class="tab-content">
-            <div class="report-card" id="pdf-profit">
-                <button class="download-btn" onclick="downloadPDF('pdf-profit', 'Profit_Report')">📥 PDF</button>
-                <h3>صافي الأرباح والذروة</h3>
-                <div class="stats-grid">
-                    <div class="stat-box" style="border-color:var(--green)"><span>صافي الربح التقديري</span><strong id="net-profit-val">0.00</strong></div>
-                    <div class="stat-box"><span>إجمالي المبيعات</span><strong id="total-sales-val">0.00</strong></div>
+        <!-- ======= PERIODS ======= -->
+        <div id="periods" class="report-section">
+            <div class="page-header">
+                <h2>📈 فترات المبيعات</h2>
+                <p>تحليل بياني مقارن لأداء المبيعات</p>
+            </div>
+            <div class="filter-bar">
+                <div class="period-btns">
+                    <button class="period-btn active" onclick="setPeriod('periods','week',this)">أسبوع</button>
+                    <button class="period-btn" onclick="setPeriod('periods','month',this)">شهر</button>
+                    <button class="period-btn" onclick="setPeriod('periods','quarter',this)">ربع سنة</button>
                 </div>
-                <div style="height: 250px; margin-top: 20px;">
-                    <canvas id="peakChart"></canvas>
+                <div class="filter-group"><span class="filter-label">من:</span><input type="date" id="p-start" class="filter-input"></div>
+                <div class="filter-group"><span class="filter-label">إلى:</span><input type="date" id="p-end" class="filter-input"></div>
+                <div class="filter-spacer"></div>
+                <button class="btn btn-accent btn-sm" onclick="loadPeriodReport()">📊 تحليل</button>
+            </div>
+
+            <!-- KPIs -->
+            <div class="kpi-grid">
+                <div class="kpi-card" style="--kpi-color:var(--accent)">
+                    <div class="kpi-label"><span class="kpi-icon">💰</span> إجمالي المبيعات</div>
+                    <div class="kpi-value" id="p-total-val">0</div>
+                    <div class="kpi-sub">ج.م</div>
+                </div>
+                <div class="kpi-card" style="--kpi-color:var(--orange)">
+                    <div class="kpi-label"><span class="kpi-icon">🧾</span> عدد العمليات</div>
+                    <div class="kpi-value" id="p-count">0</div>
+                    <div class="kpi-sub">فاتورة</div>
+                </div>
+                <div class="kpi-card" style="--kpi-color:var(--red)">
+                    <div class="kpi-label"><span class="kpi-icon">↩️</span> المرتجعات</div>
+                    <div class="kpi-value" id="p-return-val">0</div>
+                    <div class="kpi-sub">ج.م</div>
+                </div>
+                <div class="kpi-card" style="--kpi-color:var(--green)">
+                    <div class="kpi-label"><span class="kpi-icon">📊</span> متوسط اليوم</div>
+                    <div class="kpi-value" id="p-daily-avg">0</div>
+                    <div class="kpi-sub">ج.م / يوم</div>
+                </div>
+            </div>
+
+            <div class="chart-grid">
+                <div class="chart-card" style="grid-column:1/-1">
+                    <h3>📈 المبيعات اليومية</h3>
+                    <div class="chart-wrap"><canvas id="lineChart"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <h3>💳 طرق الدفع</h3>
+                    <div class="chart-wrap" style="height:220px;"><canvas id="doughnutChart"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <h3>📊 بيع مقابل مرتجع</h3>
+                    <div class="chart-wrap" style="height:220px;"><canvas id="barChart"></canvas></div>
                 </div>
             </div>
         </div>
 
-        <div id="vendors-tab" class="tab-content">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h2>ديون الموردين</h2>
-                <button onclick="document.getElementById('vendorModal').style.display='flex'" style="background:var(--accent); border:none; padding:8px 15px; border-radius:8px; font-weight:bold; cursor:pointer;">+ فاتورة آجلة</button>
+        <!-- ======= PERFORMANCE ======= -->
+        <div id="performance" class="report-section">
+            <div class="page-header">
+                <h2>🏆 أداء الموظفين</h2>
+                <p>تحليل كفاءة وإنتاجية الفريق</p>
             </div>
-            <div class="report-card" id="pdf-vendors">
-                <button class="download-btn" onclick="downloadPDF('pdf-vendors', 'Vendors_Debt')">📥 PDF</button>
-                <input type="text" id="vendor-search" class="search-bar" placeholder="ابحث عن مورد..." oninput="filterVendors()">
-                <table>
-                    <thead><tr><th>المورد</th><th>المديونية</th><th>آخر حركة</th><th>إجراءات الدفع والحذف</th></tr></thead>
-                    <tbody id="vendors-list-body"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="staff-tab" class="tab-content">
-            <div class="report-card" id="pdf-staff">
-                <button class="download-btn" onclick="downloadPDF('pdf-staff', 'Staff_Performance')">📥 PDF</button>
-                <h3>إحصائيات الموظفين</h3>
-                <div class="filter-box">
-                    <label>من:</label> <input type="date" id="staff-from" onchange="loadStaffPerformance()">
-                    <label>إلى:</label> <input type="date" id="staff-to" onchange="loadStaffPerformance()">
-                    <input type="text" id="staff-search" class="search-bar" style="margin: 10px 0 0 0;" placeholder="ابحث عن اسم موظف..." oninput="filterStaff()">
+            <div class="filter-bar">
+                <div class="period-btns">
+                    <button class="period-btn active" onclick="setPeriod('performance','today',this)">اليوم</button>
+                    <button class="period-btn" onclick="setPeriod('performance','week',this)">الأسبوع</button>
+                    <button class="period-btn" onclick="setPeriod('performance','month',this)">الشهر</button>
                 </div>
-                <table>
-                    <thead><tr><th>الموظف</th><th>عدد العمليات</th><th>إجمالي المبيعات</th></tr></thead>
-                    <tbody id="staff-performance-list"></tbody>
-                </table>
+                <div class="filter-group"><span class="filter-label">من:</span><input type="date" id="perf-start" class="filter-input"></div>
+                <div class="filter-group"><span class="filter-label">إلى:</span><input type="date" id="perf-end" class="filter-input"></div>
+                <div class="filter-spacer"></div>
+                <button class="btn btn-accent btn-sm" onclick="loadPerformance()">🔄 تحديث</button>
+            </div>
+
+            <!-- KPI أفضل موظف -->
+            <div class="kpi-grid" id="perf-kpis" style="margin-bottom:20px;"></div>
+
+            <div class="table-card">
+                <div class="table-card-header"><h3>ترتيب الفريق</h3></div>
+                <div class="table-wrap">
+                    <table id="perf-table">
+                        <thead><tr>
+                            <th>#</th>
+                            <th>اسم الموظف</th>
+                            <th>عدد العمليات</th>
+                            <th>إجمالي المبيعات</th>
+                            <th class="col-hide">متوسط الفاتورة</th>
+                            <th>الأداء</th>
+                        </tr></thead>
+                        <tbody id="perf-body"><tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px;">جاري التحميل...</td></tr></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
+        <!-- ======= PRODUCTS ======= -->
+        <div id="products" class="report-section">
+            <div class="page-header">
+                <h2>📦 مراقبة المخزن</h2>
+                <p>حركة المنتجات والمخزون</p>
+            </div>
+            <div class="filter-bar">
+                <div class="period-btns">
+                    <button class="period-btn active" onclick="setPeriod('products','month',this)">الشهر</button>
+                    <button class="period-btn" onclick="setPeriod('products','quarter',this)">ربع سنة</button>
+                </div>
+                <div class="filter-group"><span class="filter-label">من:</span><input type="date" id="prod-start" class="filter-input"></div>
+                <div class="filter-group"><span class="filter-label">إلى:</span><input type="date" id="prod-end" class="filter-input"></div>
+                <div class="filter-spacer"></div>
+                <button class="btn btn-accent btn-sm" onclick="loadProductStats()">🔄 تحديث</button>
+                <button class="btn btn-ghost btn-sm" onclick="askExport('prod-table','Inventory_Report')">📤 تصدير</button>
+            </div>
+
+            <!-- KPIs مخزن -->
+            <div class="kpi-grid">
+                <div class="kpi-card" style="--kpi-color:var(--accent)">
+                    <div class="kpi-label"><span class="kpi-icon">📦</span> إجمالي الأصناف</div>
+                    <div class="kpi-value" id="prod-total-items">0</div>
+                    <div class="kpi-sub">صنف</div>
+                </div>
+                <div class="kpi-card" style="--kpi-color:var(--red)">
+                    <div class="kpi-label"><span class="kpi-icon">⚠️</span> مخزون منخفض</div>
+                    <div class="kpi-value" id="prod-low">0</div>
+                    <div class="kpi-sub">صنف ≤ 5</div>
+                </div>
+                <div class="kpi-card" style="--kpi-color:var(--green)">
+                    <div class="kpi-label"><span class="kpi-icon">💰</span> قيمة المخزن</div>
+                    <div class="kpi-value" id="prod-value">0</div>
+                    <div class="kpi-sub">ج.م</div>
+                </div>
+                <div class="kpi-card" style="--kpi-color:var(--orange)">
+                    <div class="kpi-label"><span class="kpi-icon">🗑️</span> إجمالي الهالك</div>
+                    <div class="kpi-value" id="prod-wasted">0</div>
+                    <div class="kpi-sub">قطعة</div>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <div class="table-card-header"><h3>حركة المنتجات</h3></div>
+                <div class="table-wrap">
+                    <table id="prod-table">
+                        <thead><tr>
+                            <th>الصنف</th>
+                            <th>القسم</th>
+                            <th>المخزون</th>
+                            <th>المباع</th>
+                            <th class="col-hide">الهالك</th>
+                            <th>الدخل</th>
+                            <th class="col-hide">آخر بيع</th>
+                        </tr></thead>
+                        <tbody id="prod-body"><tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px;">جاري التحميل...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- end main-content -->
+</div><!-- end layout -->
+
+<!-- ===== MODALS ===== -->
+
+<!-- Receipt Modal -->
+<div id="receiptModal" class="modal">
+    <div class="modal-box">
+        <div class="modal-title">
+            <span id="receipt-title">تفاصيل الفاتورة</span>
+            <span class="modal-close" onclick="closeModal('receiptModal')">✕</span>
+        </div>
+        <div id="receipt-details"></div>
+        <div id="return-actions"></div>
     </div>
+</div>
 
-    <div id="vendorModal" class="modal">
-        <div class="modal-content">
-            <h3>تسجيل مشتريات آجلة</h3>
-            <input type="text" id="v-name-in" placeholder="اسم المورد">
-            <input type="number" id="v-amount-in" placeholder="قيمة الفاتورة">
-            <button onclick="saveVendorInv()" style="width:100%; background:var(--accent); border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">حفظ</button>
-            <button onclick="document.getElementById('vendorModal').style.display='none'" style="width:100%; background:none; border:none; color:#888; margin-top:10px; cursor:pointer;">إلغاء</button>
+<!-- Export Modal -->
+<div id="exportModal" class="modal">
+    <div class="modal-box" style="width:320px;text-align:center;">
+        <div class="modal-title">
+            <span>📤 تصدير التقرير</span>
+            <span class="modal-close" onclick="closeModal('exportModal')">✕</span>
+        </div>
+        <p style="color:var(--text-muted);font-size:13px;margin-bottom:18px;">اختر صيغة الملف</p>
+        <div style="display:flex;gap:10px;">
+            <button class="btn btn-orange" style="flex:1;justify-content:center;" onclick="exportData('pdf')">📕 PDF</button>
+            <button class="btn btn-green"  style="flex:1;justify-content:center;" onclick="exportData('excel')">📗 Excel</button>
         </div>
     </div>
+</div>
 
-    <script>
-        const SUPABASE_URL = 'https://xyvxowlbvuqbggkslwqr.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo';
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        const storeKey = sessionStorage.getItem('store_key');
+<div id="toast-container"></div>
 
-        let allVendors = [];
-        let allStaffData = [];
+<script>
+    // ===== SECURITY CHECK =====
+    (function securityCheck(){
+        const sk=sessionStorage.getItem('store_key');
+        const un=sessionStorage.getItem('username');
+        const role=sessionStorage.getItem('userRole');
+        if(!sk||!un){location.replace('index.html');return;}
+        if(role==='employee'){location.replace('pos.html');return;}
+    })();
+    const SUPABASE_URL='https://xyvxowlbvuqbggkslwqr.supabase.co';
+    const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo';
+    const _supabase=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    const storeKey=sessionStorage.getItem('store_key');
+    let storeName='Fateen Store';
+    let lineChartInst,doughnutChartInst,barChartInst;
+    let currentExpTid,currentExpName;
 
-        async function init() {
-            if(!storeKey) return location.href='index.html';
-            const { data: store } = await _supabase.from('stores').select('store_name').eq('store_key', storeKey).single();
-            const { data: vData } = await _supabase.from('system_settings').select('value').eq('key', 'sys_version').single();
-            document.getElementById('display-store-name').innerText = "متجر " + (store?.store_name || "");
-            document.getElementById('display-sys-v').innerText = "V " + (vData?.value || "1.0.0");
-            
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('sale-date').value = today;
-            document.getElementById('staff-from').value = today;
-            document.getElementById('staff-to').value = today;
+    // TOAST
+    function showToast(msg,type='info'){
+        const icons={success:'✅',error:'❌',info:'ℹ️'};
+        const c=document.getElementById('toast-container');
+        const t=document.createElement('div');
+        t.className=`toast toast-${type}`;
+        t.innerHTML=`<span>${icons[type]}</span><span>${msg}</span>`;
+        t.onclick=()=>t.remove();
+        c.appendChild(t);
+        setTimeout(()=>t.remove(),4000);
+    }
 
-            loadAllReports();
-        }
+    // THEME
+    function toggleTheme(){
+        const html=document.documentElement;
+        const isLight=html.getAttribute('data-theme')==='light';
+        html.setAttribute('data-theme',isLight?'':'light');
+        localStorage.setItem('fateen_theme',isLight?'dark':'light');
+        document.getElementById('theme-icon').innerText=isLight?'🌙':'☀️';
+    }
+    function loadTheme(){
+        const saved=localStorage.getItem('fateen_theme');
+        if(saved==='light'){document.documentElement.setAttribute('data-theme','light');document.getElementById('theme-icon').innerText='☀️';}
+    }
 
-        function showTab(tabId, btn) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
+    // DATES
+    function todayStr(){return new Date().toISOString().split('T')[0];}
+    function daysAgoStr(n){const d=new Date();d.setDate(d.getDate()-n);return d.toISOString().split('T')[0];}
+
+    function setDefaultDates(){
+        const today=todayStr();
+        [['d-start','d-end'],['p-start','p-end'],['perf-start','perf-end'],['prod-start','prod-end']].forEach(([s,e])=>{
+            const se=document.getElementById(s),ee=document.getElementById(e);
+            if(se) se.value=today; if(ee) ee.value=today;
+        });
+        // periods default: أسبوع
+        const ps=document.getElementById('p-start');
+        if(ps) ps.value=daysAgoStr(7);
+        const prs=document.getElementById('prod-start');
+        if(prs) prs.value=daysAgoStr(30);
+        const prse=document.getElementById('prod-end');
+        if(prse) prse.value=today;
+    }
+
+    function setPeriod(section,range,btn){
+        const today=todayStr();
+        const map={
+            daily:{start:'d-start',end:'d-end'},
+            periods:{start:'p-start',end:'p-end'},
+            performance:{start:'perf-start',end:'perf-end'},
+            products:{start:'prod-start',end:'prod-end'}
+        };
+        const ids=map[section];
+        let startVal=today,endVal=today;
+        if(range==='week'){startVal=daysAgoStr(7);}
+        else if(range==='month'){startVal=daysAgoStr(30);}
+        else if(range==='quarter'){startVal=daysAgoStr(90);}
+        document.getElementById(ids.start).value=startVal;
+        document.getElementById(ids.end).value=endVal;
+        // update active btn
+        if(btn){
+            btn.closest('.filter-bar').querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
             btn.classList.add('active');
         }
+        // auto load
+        if(section==='daily') loadDaily();
+        else if(section==='periods') loadPeriodReport();
+        else if(section==='performance') loadPerformance();
+        else if(section==='products') loadProductStats();
+    }
 
-        async function loadAllReports() {
-            loadSalesData();
-            loadInventoryData();
-            loadTopItems();
-            loadReturns();
-            loadStaffPerformance();
-            loadVendors();
-            loadProfitData();
-            initPeakChart();
-        }
+    // SECTION SWITCH
+    function showSection(id,btnEl){
+        document.querySelectorAll('.report-section').forEach(s=>s.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        if(btnEl) btnEl.classList.add('active');
+        if(id==='daily') loadDaily();
+        else if(id==='performance') loadPerformance();
+        else if(id==='products') loadProductStats();
+        else if(id==='periods') loadPeriodReport();
+    }
 
-        async function loadSalesData() {
-            const date = document.getElementById('sale-date').value;
-            const { data } = await _supabase.from('sales').select('*').eq('store_key', storeKey).gte('created_at', date).lte('created_at', date + 'T23:59:59');
-            const list = document.getElementById('sales-list'); list.innerHTML = '';
-            let total = 0;
-            data?.forEach(s => {
-                if(s.type === 'sale') total += s.total_amount;
-                list.innerHTML += `<tr><td>${new Date(s.created_at).toLocaleTimeString('ar-EG')}</td><td>#${s.id.slice(0,5)}</td><td>${s.total_amount}</td><td>${s.payment_method}</td></tr>`;
+    // ======= DAILY =======
+    async function loadDaily(){
+        const start=document.getElementById('d-start').value;
+        const end=document.getElementById('d-end').value;
+        try{
+            const{data}=await _supabase.from('sales').select('*').eq('store_key',storeKey).gte('created_at',start+'T00:00:00').lte('created_at',end+'T23:59:59').limit(500).order('created_at',{ascending:false}).limit(500);
+            let total=0,ret=0,cash=0,card=0,count=0;
+            const body=document.getElementById('daily-body');
+            if(!data||!data.length){body.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px;">لا توجد بيانات في هذه الفترة</td></tr>';setKPI('d-total','0');setKPI('d-return','0');setKPI('d-cash','0');setKPI('d-card','0');setKPI('d-count','0');setKPI('d-avg','0');return;}
+            body.innerHTML=data.map(s=>{
+                const amount=parseFloat(s.total_amount)||0;
+                if(s.type==='sale'){total+=amount;count++;if(s.payment_method==='نقداً'||s.payment_method==='كاش'||!s.payment_method) cash+=amount; else card+=amount;}
+                else ret+=amount;
+                return`<tr onclick='openReceipt(${JSON.stringify(s)})'>
+                    <td style="font-family:monospace;font-size:11px;color:var(--accent);">#${String(s.id).slice(-6)}</td>
+                    <td style="font-size:11px;">${new Date(s.created_at).toLocaleString('ar-EG')}</td>
+                    <td style="font-weight:700;">${s.seller_name}</td>
+                    <td class="col-hide"><span class="badge ${s.payment_method==='فيزا'||s.payment_method==='شبكة'?'badge-purple':'badge-green'}">${s.payment_method||'كاش'}</span></td>
+                    <td style="font-weight:800;">${amount.toLocaleString()} ج.م</td>
+                    <td><span class="badge ${s.type==='sale'?'badge-green':'badge-red'}">${s.type==='sale'?'بيع':'مرتجع'}</span></td>
+                </tr>`;
+            }).join('');
+            setKPI('d-total',total.toLocaleString());
+            setKPI('d-return',ret.toLocaleString());
+            setKPI('d-cash',cash.toLocaleString());
+            setKPI('d-card',card.toLocaleString());
+            setKPI('d-count',count);
+            setKPI('d-avg',count?Math.round(total/count).toLocaleString():0);
+            document.getElementById('d-count-label').innerText=data.length+' عملية';
+        }catch(e){showToast('خطأ في تحميل المبيعات','error');}
+    }
+
+    // ======= PERIODS =======
+    async function loadPeriodReport(){
+        const start=document.getElementById('p-start').value;
+        const end=document.getElementById('p-end').value;
+        try{
+            const{data}=await _supabase.from('sales').select('*').eq('store_key',storeKey).gte('created_at',start+'T00:00:00').lte('created_at',end+'T23:59:59').limit(500);
+            let total=0,ret=0,cash=0,card=0,saleCount=0;
+            const dailyMap={};
+            data?.forEach(s=>{
+                const amount=parseFloat(s.total_amount)||0;
+                const day=s.created_at.split('T')[0];
+                if(!dailyMap[day]) dailyMap[day]={sales:0,returns:0};
+                if(s.type==='sale'){total+=amount;saleCount++;if(s.payment_method==='نقداً'||s.payment_method==='كاش'||!s.payment_method) cash+=amount; else card+=amount;dailyMap[day].sales+=amount;}
+                else{ret+=amount;dailyMap[day].returns+=amount;}
             });
-            document.getElementById('day-sales').innerText = total.toFixed(2);
-            document.getElementById('day-orders').innerText = data?.length || 0;
-        }
+            // days diff
+            const diffDays=Math.max(1,Math.ceil((new Date(end)-new Date(start))/(1000*60*60*24))+1);
+            setKPI('p-total-val',total.toLocaleString());
+            setKPI('p-count',saleCount);
+            setKPI('p-return-val',ret.toLocaleString());
+            setKPI('p-daily-avg',Math.round(total/diffDays).toLocaleString());
+            updateCharts(dailyMap,cash,card,total,ret);
+        }catch(e){showToast('خطأ في تحليل الفترة','error');}
+    }
 
-        async function loadTopItems() {
-            const { data } = await _supabase.from('sales').select('items').eq('store_key', storeKey).eq('type', 'sale');
-            let counts = {};
-            data?.forEach(s => {
-                if(s.items && Array.isArray(s.items)){
-                    s.items.forEach(item => {
-                        let name = item.name || item.product_name || "صنف غير معرف";
-                        counts[name] = (counts[name] || 0) + item.qty;
-                    });
-                }
+    function updateCharts(dailyMap,cash,card,totalSales,totalRet){
+        const labels=Object.keys(dailyMap).sort();
+        const salesData=labels.map(d=>dailyMap[d].sales);
+        const retData=labels.map(d=>dailyMap[d].returns);
+        const isDark=document.documentElement.getAttribute('data-theme')!=='light';
+        const gridColor=isDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.05)';
+        const textColor=isDark?'#666':'#999';
+
+        // Line Chart
+        if(lineChartInst) lineChartInst.destroy();
+        lineChartInst=new Chart(document.getElementById('lineChart').getContext('2d'),{
+            type:'line',
+            data:{labels,datasets:[
+                {label:'المبيعات',data:salesData,borderColor:'#00f2fe',backgroundColor:'rgba(0,242,254,0.08)',tension:0.4,fill:true,pointBackgroundColor:'#00f2fe',pointRadius:4},
+                {label:'المرتجعات',data:retData,borderColor:'#ff4d4d',backgroundColor:'rgba(255,77,77,0.05)',tension:0.4,fill:true,pointBackgroundColor:'#ff4d4d',pointRadius:4}
+            ]},
+            options:{maintainAspectRatio:false,plugins:{legend:{labels:{color:textColor,font:{family:'Cairo',size:12}}}},scales:{x:{ticks:{color:textColor,font:{family:'Cairo'}},grid:{color:gridColor}},y:{ticks:{color:textColor,font:{family:'Cairo'}},grid:{color:gridColor}}}}
+        });
+
+        // Doughnut
+        if(doughnutChartInst) doughnutChartInst.destroy();
+        doughnutChartInst=new Chart(document.getElementById('doughnutChart').getContext('2d'),{
+            type:'doughnut',
+            data:{labels:['كاش','فيزا/شبكة'],datasets:[{data:[cash,card],backgroundColor:['#00e676','#a78bfa'],borderColor:isDark?'#111':'#fff',borderWidth:4}]},
+            options:{maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:textColor,font:{family:'Cairo',size:12}}}}}
+        });
+
+        // Bar
+        if(barChartInst) barChartInst.destroy();
+        barChartInst=new Chart(document.getElementById('barChart').getContext('2d'),{
+            type:'bar',
+            data:{labels:['بيع','مرتجع'],datasets:[{data:[totalSales,totalRet],backgroundColor:['rgba(0,230,118,0.7)','rgba(255,77,77,0.7)'],borderRadius:8}]},
+            options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:textColor,font:{family:'Cairo'}},grid:{display:false}},y:{ticks:{color:textColor,font:{family:'Cairo'}},grid:{color:gridColor}}}}
+        });
+    }
+
+    // ======= PERFORMANCE =======
+    async function loadPerformance(){
+        const start=document.getElementById('perf-start').value;
+        const end=document.getElementById('perf-end').value;
+        try{
+            const{data}=await _supabase.from('sales').select('*').eq('store_key',storeKey).eq('type','sale').gte('created_at',start+'T00:00:00').lte('created_at',end+'T23:59:59');
+            const stats={};
+            data?.forEach(s=>{
+                if(!stats[s.seller_name]) stats[s.seller_name]={count:0,total:0};
+                stats[s.seller_name].count++;
+                stats[s.seller_name].total+=parseFloat(s.total_amount)||0;
             });
-            const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]).slice(0, 10);
-            const list = document.getElementById('top-items-list');
-            list.innerHTML = sorted.map(i => `<tr><td>${i[0]}</td><td>${i[1]}</td></tr>`).join('');
-        }
+            const sorted=Object.keys(stats).sort((a,b)=>stats[b].total-stats[a].total);
+            const maxTotal=sorted.length?stats[sorted[0]].total:1;
 
-        async function loadReturns() {
-            const { data } = await _supabase.from('sales').select('*').eq('store_key', storeKey).eq('type', 'return');
-            const list = document.getElementById('returns-list');
-            list.innerHTML = data?.map(r => {
-                const itemNames = r.items?.map(i => i.name || i.product_name).join(' + ') || 'غير محدد';
-                return `<tr><td>${new Date(r.created_at).toLocaleString()}</td><td>#${r.id.slice(0,5)}</td><td>${itemNames}</td><td>${r.total_amount}</td><td>${r.seller_name || 'مدير'}</td></tr>`;
-            }).join('') || '';
-        }
+            // KPI أفضل موظف
+            const kpisEl=document.getElementById('perf-kpis');
+            if(sorted.length){
+                const best=sorted[0];
+                kpisEl.innerHTML=`
+                    <div class="kpi-card" style="--kpi-color:var(--orange)"><div class="kpi-label"><span class="kpi-icon">🥇</span> أفضل موظف</div><div class="kpi-value" style="font-size:18px;">${best}</div><div class="kpi-sub">${stats[best].total.toLocaleString()} ج.م</div></div>
+                    <div class="kpi-card" style="--kpi-color:var(--accent)"><div class="kpi-label"><span class="kpi-icon">👥</span> عدد الموظفين</div><div class="kpi-value">${sorted.length}</div><div class="kpi-sub">موظف نشط</div></div>
+                    <div class="kpi-card" style="--kpi-color:var(--green)"><div class="kpi-label"><span class="kpi-icon">🧾</span> إجمالي الفريق</div><div class="kpi-value">${Object.values(stats).reduce((s,x)=>s+x.total,0).toLocaleString()}</div><div class="kpi-sub">ج.م</div></div>`;
+            } else kpisEl.innerHTML='';
 
-        async function loadInventoryData() {
-            const { data } = await _supabase.from('products').select('*').eq('store_key', storeKey);
-            const list = document.getElementById('inventory-list');
-            const selector = document.getElementById('product-selector');
-            list.innerHTML = ''; selector.innerHTML = '<option value="">اختر الصنف...</option>';
-            let saleVal = 0, costVal = 0, shorts = 0;
-            data?.forEach(p => {
-                let pName = p.name || p.product_name || "غير مسمى";
-                saleVal += (p.stock * p.price);
-                costVal += (p.stock * (p.cost_price || 0));
-                if(p.stock <= 5) shorts++;
-                list.innerHTML += `<tr><td>${pName}</td><td>${p.stock}</td><td>${p.cost_price || 0}</td><td>${p.stock <= 5 ? '🔴 ناقص' : '✅ متوفر'}</td></tr>`;
-                selector.innerHTML += `<option value="${p.id}">${pName}</option>`;
-            });
-            document.getElementById('inv-val-sale').innerText = saleVal.toFixed(2);
-            document.getElementById('inv-val-cost').innerText = costVal.toFixed(2);
-            document.getElementById('short-count').innerText = shorts;
-        }
+            const rankClasses=['rank-1','rank-2','rank-3'];
+            document.getElementById('perf-body').innerHTML=sorted.map((name,i)=>{
+                const pct=Math.round((stats[name].total/maxTotal)*100);
+                const rankCls=rankClasses[i]||'';
+                return`<tr>
+                    <td><span class="rank-num ${rankCls}">${i+1}</span></td>
+                    <td style="font-weight:800;">${name}</td>
+                    <td>${stats[name].count}</td>
+                    <td style="font-weight:800;color:var(--green);">${stats[name].total.toLocaleString()} ج.م</td>
+                    <td class="col-hide">${Math.round(stats[name].total/stats[name].count).toLocaleString()} ج.م</td>
+                    <td style="min-width:100px;">
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <div class="progress-wrap" style="flex:1;"><div class="progress-fill" style="width:${pct}%;"></div></div>
+                            <span style="font-size:11px;color:var(--text-muted);width:30px;">${pct}%</span>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px;">لا توجد بيانات</td></tr>';
+        }catch(e){showToast('خطأ في تحميل بيانات الموظفين','error');}
+    }
 
-        async function loadProductHistory() {
-            const pid = document.getElementById('product-selector').value;
-            if(!pid) return;
-            const { data } = await _supabase.from('sales').select('*').eq('store_key', storeKey);
-            const list = document.getElementById('product-history-list'); list.innerHTML = '';
-            data?.forEach(s => {
-                const item = s.items.find(i => i.id == pid);
-                if(item) {
-                    list.innerHTML += `<tr><td>${new Date(s.created_at).toLocaleDateString()}</td><td>${s.type === 'sale' ? 'مبيعات' : 'مرتجع'}</td><td>${item.qty}</td></tr>`;
-                }
-            });
-        }
-
-        async function loadProfitData() {
-            const { data } = await _supabase.from('sales').select('*').eq('store_key', storeKey).eq('type', 'sale');
-            let totalSales = 0, totalProfit = 0;
-            data?.forEach(s => {
-                totalSales += s.total_amount;
-                s.items.forEach(item => {
-                    let cost = item.cost_price || 0;
-                    totalProfit += (item.price - cost) * item.qty;
+    // ======= PRODUCTS =======
+    async function loadProductStats(){
+        const start=document.getElementById('prod-start').value;
+        const end=document.getElementById('prod-end').value;
+        try{
+            const{data:products}=await _supabase.from('products').select('*').eq('store_key',storeKey);
+            const{data:sales}=await _supabase.from('sales').select('items,created_at').eq('store_key',storeKey).eq('type','sale').gte('created_at',start+'T00:00:00').lte('created_at',end+'T23:59:59');
+            const statsMap={};
+            sales?.forEach(s=>{
+                (s.items||[]).forEach(i=>{
+                    if(!statsMap[i.id]) statsMap[i.id]={qty:0,cash:0,last:'---'};
+                    statsMap[i.id].qty+=i.qty;
+                    statsMap[i.id].cash+=(i.qty*i.price);
+                    if(statsMap[i.id].last==='---'||new Date(s.created_at)>new Date(statsMap[i.id].last)) statsMap[i.id].last=s.created_at;
                 });
             });
-            document.getElementById('net-profit-val').innerText = totalProfit.toFixed(2) + " ج.م";
-            document.getElementById('total-sales-val').innerText = totalSales.toFixed(2) + " ج.م";
-        }
+            const totalVal=products?.reduce((s,p)=>s+(p.stock*p.price),0)||0;
+            const lowCount=products?.filter(p=>p.stock<=5).length||0;
+            const wastedTotal=products?.reduce((s,p)=>s+(p.wasted_qty||0),0)||0;
+            setKPI('prod-total-items',products?.length||0);
+            setKPI('prod-low',lowCount);
+            setKPI('prod-value',totalVal.toLocaleString());
+            setKPI('prod-wasted',wastedTotal);
+            const sorted=[...( products||[])].sort((a,b)=>(statsMap[b.id]?.qty||0)-(statsMap[a.id]?.qty||0));
+            document.getElementById('prod-body').innerHTML=sorted.map(p=>{
+                const s=statsMap[p.id]||{qty:0,cash:0,last:'---'};
+                const stockBadge=p.stock===0?'badge-red':p.stock<=5?'badge-orange':'badge-green';
+                const catBadge=p.category?`<span class="badge badge-purple">${p.category}</span>`:'---';
+                return`<tr>
+                    <td style="font-weight:700;">${p.product_name}</td>
+                    <td>${catBadge}</td>
+                    <td><span class="badge ${stockBadge}">${p.stock===0?'نفد':p.stock}</span></td>
+                    <td style="font-weight:700;color:var(--accent);">${s.qty}</td>
+                    <td class="col-hide" style="color:var(--orange);">${p.wasted_qty||0}</td>
+                    <td style="font-weight:800;">${s.cash.toLocaleString()} ج.م</td>
+                    <td class="col-hide" style="font-size:11px;color:var(--text-muted);">${s.last!=='---'?new Date(s.last).toLocaleDateString('ar-EG'):'---'}</td>
+                </tr>`;
+            }).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px;">لا توجد بيانات</td></tr>';
+        }catch(e){showToast('خطأ في تحميل بيانات المخزن','error');}
+    }
 
-        // الموردين: تحميل وتصفية وحذف
-        async function loadVendors() {
-            const { data } = await _supabase.from('vendors').select('*').eq('store_key', storeKey);
-            allVendors = data || [];
-            renderVendors(allVendors);
-        }
+    // ======= RECEIPT =======
+    function openReceipt(sale){
+        document.getElementById('receipt-title').innerText='فاتورة #'+String(sale.id).slice(-6);
+        document.getElementById('receipt-details').innerHTML=`
+            <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
+                <span style="color:var(--text-muted);font-size:12px;">البائع</span><span style="font-weight:700;">${sale.seller_name}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
+                <span style="color:var(--text-muted);font-size:12px;">طريقة الدفع</span><span class="badge ${sale.payment_method==='فيزا'||sale.payment_method==='شبكة'?'badge-purple':'badge-green'}">${sale.payment_method||'كاش'}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:16px;">
+                <span style="color:var(--text-muted);font-size:12px;">التاريخ</span><span style="font-size:12px;">${new Date(sale.created_at).toLocaleString('ar-EG')}</span>
+            </div>
+            <div style="border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:12px 0;margin-bottom:12px;">
+                ${(sale.items||[]).map(i=>`<div class="receipt-row"><span>${i.product_name} <span style="color:var(--text-muted);">×${i.qty}</span></span><span style="font-weight:700;">${(i.qty*i.price).toLocaleString()} ج.م</span></div>`).join('')}
+            </div>
+            <div class="receipt-total">${parseFloat(sale.total_amount).toLocaleString()} ج.م</div>`;
+        document.getElementById('return-actions').innerHTML=sale.type==='sale'
+            ?`<button class="btn btn-red" style="width:100%;justify-content:center;margin-top:10px;" onclick="processReturn(${sale.id})">↩️ إرجاع الفاتورة كاملة</button>`
+            :`<div style="text-align:center;padding:10px;color:var(--red);font-weight:700;font-size:13px;">✅ هذه الفاتورة مرتجعة بالفعل</div>`;
+        document.getElementById('receiptModal').classList.add('open');
+    }
 
-        function renderVendors(listData) {
-            const list = document.getElementById('vendors-list-body');
-            list.innerHTML = listData.map(v => `
-                <tr>
-                    <td>${v.vendor_name}</td>
-                    <td><strong style="color:var(--red)">${v.total_debt} ج.م</strong></td>
-                    <td>${new Date(v.last_payment_date || v.created_at).toLocaleDateString()}</td>
-                    <td>
-                        <button class="btn-pay" onclick="payVendor('${v.id}', ${v.total_debt}, '${v.vendor_name}')">💰 دفع</button>
-                        <button class="btn-del" onclick="deleteVendorDebt('${v.id}', '${v.vendor_name}')">🗑️ حذف المديونية</button>
-                    </td>
-                </tr>`).join('');
-        }
-
-        function filterVendors() {
-            const query = document.getElementById('vendor-search').value.toLowerCase();
-            const filtered = allVendors.filter(v => v.vendor_name.toLowerCase().includes(query));
-            renderVendors(filtered);
-        }
-
-        async function deleteVendorDebt(id, name) {
-            if(confirm(`هل أنت متأكد من حذف مديونية المورد "${name}" تماماً من السجلات؟`)) {
-                await _supabase.from('vendors').delete().eq('id', id);
-                alert("تم الحذف بنجاح");
-                loadVendors();
+    async function processReturn(id){
+        if(!confirm('هل أنت متأكد من إرجاع هذه الفاتورة؟ سيتم إعادة المنتجات للمخزن.')) return;
+        try{
+            const{data:sale}=await _supabase.from('sales').select('*').eq('id',id).single();
+            await _supabase.from('sales').update({type:'return'}).eq('id',id);
+            for(let item of (sale.items||[])){
+                const{data:prod}=await _supabase.from('products').select('stock').eq('id',item.id).single();
+                if(prod) await _supabase.from('products').update({stock:prod.stock+item.qty}).eq('id',item.id);
             }
+            showToast('تم الإرجاع بنجاح','success');
+            closeModal('receiptModal');
+            loadDaily();
+        }catch(e){showToast('خطأ في الإرجاع','error');}
+    }
+
+    // ======= EXPORT =======
+    function askExport(tid,name){currentExpTid=tid;currentExpName=name;document.getElementById('exportModal').classList.add('open');}
+
+    function exportData(type){
+        const table=document.getElementById(currentExpTid);
+        if(type==='pdf'){
+            html2pdf().from(table).set({margin:0.5,filename:currentExpName+'.pdf',html2canvas:{scale:2,backgroundColor:'#111'}}).save();
+        } else {
+            const ws=XLSX.utils.table_to_sheet(table);
+            const wb=XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb,ws,'Report');
+            XLSX.writeFile(wb,currentExpName+'.xlsx');
         }
+        closeModal('exportModal');
+    }
 
-        async function payVendor(id, currentDebt, name) {
-            const amt = prompt(`دفع للمورد: ${name}\nالمديونية الحالية: ${currentDebt}\nأدخل المبلغ المدفوع الآن:`, currentDebt);
-            if(amt === null || amt === "" || isNaN(amt)) return;
-            const paid = parseFloat(amt);
-            const remaining = currentDebt - paid;
-            if(confirm(`تأكيد عملية الدفع:\n- المورد: ${name}\n- المديونية السابقة: ${currentDebt}\n- المدفوع الآن: ${paid}\n- المديونية المتبقية: ${remaining}`)) {
-                await _supabase.from('vendors').update({ total_debt: remaining, last_payment_date: new Date() }).eq('id', id);
-                alert("تم تحديث حساب المورد بنجاح"); 
-                loadVendors();
-            }
-        }
+    // UTILS
+    function setKPI(id,val){const el=document.getElementById(id);if(el) el.innerText=val;}
+    function closeModal(id){const el=document.getElementById(id);if(el) el.classList.remove('open');}
 
-        // الموظفين: تحميل وتصفية
-        async function loadStaffPerformance() {
-            const from = document.getElementById('staff-from').value;
-            const to = document.getElementById('staff-to').value;
-            const { data } = await _supabase.from('sales').select('*').eq('store_key', storeKey).eq('type', 'sale').gte('created_at', from).lte('created_at', to + 'T23:59:59');
+    // INIT
+    async function init(){
+        loadTheme();
+        try{
+            const{data:store}=await _supabase.from('stores').select('store_name').eq('store_key',storeKey).single();
+            if(store){storeName=store.store_name;document.getElementById('store-name-display').innerText=storeName;}
+        }catch(e){}
+        try{
+            const{data}=await _supabase.from('system_settings').select('value').eq('key','sys_version').single();
+            if(data) document.getElementById('version-chip').innerText=data.value;
+        }catch(e){}
+        setDefaultDates();
+        loadDaily();
+    }
 
-            let staff = {};
-            data?.forEach(s => {
-                let name = s.seller_name || 'المدير';
-                if(!staff[name]) staff[name] = { count: 0, total: 0 };
-                staff[name].count++; 
-                staff[name].total += s.total_amount;
-            });
-            allStaffData = Object.entries(staff);
-            renderStaff(allStaffData);
-        }
-
-        function renderStaff(listData) {
-            const list = document.getElementById('staff-performance-list');
-            list.innerHTML = listData.map(([name, stats]) => `<tr><td>${name}</td><td>${stats.count}</td><td>${stats.total.toFixed(2)}</td></tr>`).join('');
-        }
-
-        function filterStaff() {
-            const query = document.getElementById('staff-search').value.toLowerCase();
-            const filtered = allStaffData.filter(([name]) => name.toLowerCase().includes(query));
-            renderStaff(filtered);
-        }
-
-        async function saveVendorInv() {
-            const name = document.getElementById('v-name-in').value;
-            const amt = parseFloat(document.getElementById('v-amount-in').value);
-            if(!name || !amt) return;
-            const { data: ext } = await _supabase.from('vendors').select('*').eq('vendor_name', name).eq('store_key', storeKey).single();
-            if(ext) await _supabase.from('vendors').update({ total_debt: ext.total_debt + amt, last_payment_date: new Date() }).eq('id', ext.id);
-            else await _supabase.from('vendors').insert([{ store_key: storeKey, vendor_name: name, total_debt: amt }]);
-            document.getElementById('vendorModal').style.display='none';
-            loadVendors();
-        }
-
-        function downloadPDF(divId, name) {
-            const el = document.getElementById(divId);
-            const btn = el.querySelector('.download-btn');
-            btn.style.display = 'none';
-            html2pdf().from(el).set({ margin: 0.5, filename: name+'.pdf', html2canvas: {scale:2, backgroundColor:'#111'} }).save().then(()=> btn.style.display='block');
-        }
-
-        function initPeakChart() {
-            const ctx = document.getElementById('peakChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: { labels: ['9am','12pm','3pm','6pm','9pm','12am'], datasets: [{ label: 'النشاط', data: [10,30,50,90,70,20], backgroundColor: '#00f2fe' }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
-        }
-
-        init();
-    </script>
+    init();
+</script>
 </body>
 </html>
