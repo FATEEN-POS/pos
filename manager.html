@@ -208,9 +208,139 @@
         .m-footer { background: var(--footer-bg); border-radius: var(--radius-sm); padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; margin-top: 20px; border: 1px solid var(--border); }
         .m-footer .copy { font-size: 10px; color: var(--text-muted); }
         .m-footer .ver  { font-size: 11px; font-weight: 800; color: var(--accent); }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:500;backdrop-filter:blur(3px);}
+        .sidebar-overlay.open{display:block;}
+        .sidebar{
+            position:fixed;right:-300px;top:0;bottom:0;width:280px;
+            background:var(--surface);border-left:1px solid var(--border);
+            z-index:600;display:flex;flex-direction:column;
+            transition:right 0.3s cubic-bezier(0.4,0,0.2,1);
+            box-shadow:-8px 0 40px rgba(0,0,0,0.4);
+        }
+        .sidebar.open{right:0;}
+        .sidebar-head{
+            padding:18px 20px;border-bottom:1px solid var(--border);
+            display:flex;justify-content:space-between;align-items:center;flex-shrink:0;
+        }
+        .sidebar-head-title{font-size:15px;font-weight:800;color:var(--accent);}
+        .sidebar-close{cursor:pointer;color:var(--text-muted);font-size:20px;line-height:1;padding:4px;}
+        .sidebar-close:hover{color:var(--red);}
+        .sidebar-nav{flex:1;overflow-y:auto;padding:12px 10px;}
+        .sb-item{
+            display:flex;align-items:center;gap:12px;padding:12px 14px;
+            border-radius:var(--radius-sm);border:1px solid transparent;
+            color:var(--text);font-size:13px;font-weight:700;cursor:pointer;
+            margin-bottom:4px;transition:all 0.2s;text-decoration:none;
+            user-select:none;
+        }
+        .sb-item:hover{border-color:var(--accent);background:var(--accent-dim);color:var(--accent);}
+        .sb-item .sb-icon{font-size:20px;width:26px;text-align:center;flex-shrink:0;}
+        .sidebar-footer{
+            padding:14px 16px;border-top:1px solid var(--border);flex-shrink:0;
+        }
+        .sidebar-footer .copy{font-size:11px;color:var(--text-muted);text-align:center;display:block;margin-bottom:10px;}
+        .lang-toggle{
+            display:flex;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;
+        }
+        .lang-btn{
+            flex:1;padding:8px;text-align:center;font-size:12px;font-weight:800;cursor:pointer;
+            background:transparent;color:var(--text-muted);border:none;font-family:'Cairo',sans-serif;
+            transition:all 0.2s;
+        }
+        .lang-btn.active{background:var(--accent);color:var(--btn-color);}
+
+        /* sidebar trigger btn */
+        .sb-trigger{
+            display:flex;align-items:center;justify-content:center;
+            width:38px;height:38px;border-radius:var(--radius-sm);
+            background:var(--surface2);border:1px solid var(--border);
+            cursor:pointer;font-size:18px;flex-shrink:0;
+            user-select:none;
+        }
+        .sb-trigger:hover{border-color:var(--accent);}
+
+        /* ===== DAILY REPORT ===== */
+        .daily-report-grid{
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+            gap:12px;margin-bottom:16px;
+        }
+        .dr-stat{
+            background:var(--surface2);border:1px solid var(--border);
+            border-radius:var(--radius-sm);padding:14px 16px;position:relative;overflow:hidden;
+        }
+        .dr-stat::after{content:'';position:absolute;bottom:0;right:0;left:0;height:2px;}
+        .dr-stat.green::after{background:var(--green);}
+        .dr-stat.red::after{background:var(--red);}
+        .dr-stat.accent::after{background:var(--accent);}
+        .dr-stat.orange::after{background:var(--orange);}
+        .dr-stat.purple::after{background:#a78bfa;}
+        .dr-stat .dr-lbl{font-size:11px;color:var(--text-muted);margin-bottom:5px;}
+        .dr-stat .dr-val{font-size:18px;font-weight:800;}
+        .dr-stat.green .dr-val{color:var(--green);}
+        .dr-stat.red .dr-val{color:var(--red);}
+        .dr-stat.accent .dr-val{color:var(--accent);}
+        .dr-stat.orange .dr-val{color:var(--orange);}
+        .dr-stat.purple .dr-val{color:#a78bfa;}
+        .dr-compare{font-size:10px;margin-top:3px;}
+        .dr-compare.up{color:var(--green);}
+        .dr-compare.down{color:var(--red);}
+        .dr-compare.same{color:var(--text-muted);}
+
+        /* ===== USER SELECT ===== */
+        .btn,.d-nav-item,.m-nav-item,.sb-item,.cat-tab,.badge,
+        .sidebar-head,.sidebar-footer,.sb-trigger,header,
+        .d-header,.m-header,.d-stat,.m-stat{user-select:none;}
+        td,th,.toast-msg{user-select:text;}
+
+        /* ===== RESPONSIVE FIXES ===== */
+        @media(max-width:480px){
+            .m-stats{grid-template-columns:repeat(2,1fr);}
+            .m-nav{grid-template-columns:repeat(2,1fr);}
+            .modal-box{padding:16px;}
+            .d-wrap{padding:12px;}
+        }
+        @media(max-width:768px){
+            .d-header-right{gap:6px;}
+            .d-stats{grid-template-columns:1fr 1fr;}
+            .d-nav{grid-template-columns:repeat(3,1fr);}
+            .daily-report-grid{grid-template-columns:repeat(2,1fr);}
+        }
+        @media(max-width:1100px){
+            .d-nav{grid-template-columns:repeat(4,1fr);}
+        }
     </style>
 </head>
 <body>
+
+<!-- ===== SIDEBAR OVERLAY ===== -->
+<div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+
+<!-- ===== SIDEBAR ===== -->
+<div class="sidebar" id="main-sidebar">
+    <div class="sidebar-head">
+        <span class="sidebar-head-title" id="sb-title">☰ القائمة</span>
+        <span class="sidebar-close" onclick="closeSidebar()">✕</span>
+    </div>
+    <nav class="sidebar-nav">
+        <a class="sb-item" onclick="scrollToSales();closeSidebar()"><span class="sb-icon">💰</span><span data-i18n="nav_sales">مبيعات اليوم</span></a>
+        <a class="sb-item" onclick="location.href='pos.html'"><span class="sb-icon">🖥️</span><span data-i18n="nav_pos">صفحة الكاشير</span></a>
+        <a class="sb-item" onclick="location.href='about.html'"><span class="sb-icon">📞</span><span data-i18n="nav_contact">تحدث معنا</span></a>
+        <a class="sb-item" onclick="location.href='reports.html'"><span class="sb-icon">📋</span><span data-i18n="nav_reports">إدارة التقارير</span></a>
+        <a class="sb-item" onclick="location.href='inventory.html'"><span class="sb-icon">🏪</span><span data-i18n="nav_inventory">إدارة المخزن</span></a>
+        <a class="sb-item" onclick="openUserModal();closeSidebar()"><span class="sb-icon">👥</span><span data-i18n="nav_employees">إدارة الموظفين</span></a>
+        <a class="sb-item" onclick="location.href='accounting.html'"><span class="sb-icon">📒</span><span data-i18n="nav_accounting">المحاسبة</span></a>
+    </nav>
+    <div class="sidebar-footer">
+        <span class="copy" data-i18n="footer_copy">جميع الحقوق محفوظة لفطين 2026</span>
+        <div class="lang-toggle">
+            <button class="lang-btn active" id="lang-ar" onclick="setLang('ar')">عربي</button>
+            <button class="lang-btn" id="lang-en" onclick="setLang('en')">EN</button>
+        </div>
+    </div>
+</div>
 
 <!-- ================================================
      MOBILE LAYOUT
@@ -220,7 +350,8 @@
 
         <!-- Header -->
         <div class="m-header">
-            <div>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <div class="sb-trigger" onclick="openSidebar()">☰</div>
                 <h2 id="m-store-name">اسم المتجر</h2>
             </div>
             <div class="m-header-right">
@@ -246,6 +377,28 @@
             <div class="m-stat">
                 <p class="lbl">الفواتير</p>
                 <p class="val" id="m-bill-count" style="color:var(--accent);">0</p>
+            </div>
+        </div>
+
+        <!-- التقرير اليومي موبايل -->
+        <div class="section-card">
+            <div class="section-header">
+                <h3 class="section-title">📅 التقرير اليومي</h3>
+                <div style="display:flex;gap:6px;">
+                    <button class="btn btn-ghost" onclick="loadDailyReport()" style="font-size:11px;padding:5px 10px;">🔄</button>
+                    <button class="btn btn-primary" onclick="printDailyReport()" style="font-size:11px;padding:5px 10px;">🖨️</button>
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <div class="dr-stat green"><div class="dr-lbl">💰 مبيعات</div><div class="dr-val" id="m-dr-sales">—</div></div>
+                <div class="dr-stat red"><div class="dr-lbl">↩️ مرتجعات</div><div class="dr-val" id="m-dr-returns">—</div></div>
+                <div class="dr-stat accent"><div class="dr-lbl">📊 الصافي</div><div class="dr-val" id="m-dr-net">—</div></div>
+                <div class="dr-stat orange"><div class="dr-lbl">🧾 الفواتير</div><div class="dr-val" id="m-dr-count">—</div></div>
+                <div class="dr-stat green"><div class="dr-lbl">💵 كاش</div><div class="dr-val" id="m-dr-cash">—</div></div>
+                <div class="dr-stat purple" style="--purple:#a78bfa;"><div class="dr-lbl">💳 فيزا</div><div class="dr-val" id="m-dr-visa" style="color:#a78bfa;">—</div></div>
+            </div>
+            <div style="margin-top:10px;background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;">
+                <span style="color:var(--text-muted);">🏆 أعلى منتج: </span><span id="m-dr-top" style="font-weight:800;color:var(--accent);">—</span>
             </div>
         </div>
 
@@ -361,6 +514,7 @@
                 <div class="sub" id="d-welcome-msg">أهلاً بك</div>
             </div>
             <div class="d-header-right">
+                <div class="sb-trigger" onclick="openSidebar()">☰</div>
                 <span class="version-chip" id="d-version">V0.5</span>
                 <button class="theme-btn" onclick="toggleTheme()">
                     <span id="d-theme-icon">🌙</span>
@@ -386,6 +540,28 @@
             <div class="d-stat accent">
                 <h4>عدد الفواتير</h4>
                 <p id="d-bill-count">0</p>
+            </div>
+        </div>
+
+        <!-- التقرير اليومي -->
+        <div class="section-card" id="daily-report-section">
+            <div class="section-header">
+                <h3 class="section-title" data-i18n="daily_report">📅 التقرير اليومي</h3>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <input type="date" class="select-input" id="report-date" onchange="loadDailyReport()">
+                    <button class="btn btn-ghost" onclick="loadDailyReport()" style="font-size:12px;">🔄 تحديث</button>
+                    <button class="btn btn-primary" onclick="printDailyReport()" style="font-size:12px;">🖨️ طباعة</button>
+                </div>
+            </div>
+            <div class="daily-report-grid" id="dr-stats-grid">
+                <div class="dr-stat green"><div class="dr-lbl" data-i18n="dr_sales">💰 إجمالي المبيعات</div><div class="dr-val" id="dr-sales">—</div><div class="dr-compare" id="dr-sales-cmp"></div></div>
+                <div class="dr-stat red"><div class="dr-lbl" data-i18n="dr_returns">↩️ المرتجعات</div><div class="dr-val" id="dr-returns">—</div><div class="dr-compare" id="dr-returns-cmp"></div></div>
+                <div class="dr-stat accent"><div class="dr-lbl" data-i18n="dr_net">📊 الصافي</div><div class="dr-val" id="dr-net">—</div><div class="dr-compare" id="dr-net-cmp"></div></div>
+                <div class="dr-stat orange"><div class="dr-lbl" data-i18n="dr_invoices">🧾 عدد الفواتير</div><div class="dr-val" id="dr-count">—</div></div>
+                <div class="dr-stat green"><div class="dr-lbl" data-i18n="dr_cash">💵 كاش</div><div class="dr-val" id="dr-cash">—</div></div>
+                <div class="dr-stat purple"><div class="dr-lbl" data-i18n="dr_visa">💳 فيزا</div><div class="dr-val" id="dr-visa">—</div></div>
+                <div class="dr-stat accent"><div class="dr-lbl" data-i18n="dr_top_product">🏆 أعلى منتج</div><div class="dr-val" id="dr-top-product" style="font-size:13px;">—</div></div>
+                <div class="dr-stat orange"><div class="dr-lbl" data-i18n="dr_peak_hour">⏱️ أكثر ساعة</div><div class="dr-val" id="dr-peak-hour">—</div></div>
             </div>
         </div>
 
@@ -616,6 +792,8 @@
         await loadUsers();
         await loadLowStock();
         await loadSalesChart();
+        await loadDailyReport();
+        setLang(currentLang);
 
         setInterval(async () => {
             if(document.hidden) return;
@@ -742,7 +920,15 @@
         try {
             const { data: users, error } = await _supabase.from('users').select('*').eq('store_key', storeKey).in('role', ['employee','manager']);
             if(error) throw error;
-            allUsers = users || [];
+            // حساب مبيعات الشهر الحالي من جدول sales لكل موظف
+            const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
+            const { data: salesData } = await _supabase.from('sales').select('seller_name,total_amount,type').eq('store_key',storeKey).gte('created_at',monthStart.toISOString());
+            const salesMap = {};
+            (salesData||[]).forEach(s => {
+                if(s.type!=='sale') return;
+                salesMap[s.seller_name] = (salesMap[s.seller_name]||0) + (parseFloat(s.total_amount)||0);
+            });
+            allUsers = (users||[]).map(u => ({...u, monthly_sales: salesMap[u.username]||0}));
             renderUsers(allUsers);
         } catch(e) { showToast('خطأ في تحميل الموظفين: '+e.message, 'error'); }
     }
@@ -945,6 +1131,176 @@
         if(el) { el.classList.remove('open'); el.style.display=''; }
     }
     function logout() { sessionStorage.clear(); location.replace('index.html'); }
+
+    // ======= SIDEBAR =======
+    function openSidebar(){
+        document.getElementById('main-sidebar').classList.add('open');
+        document.getElementById('sb-overlay').classList.add('open');
+    }
+    function closeSidebar(){
+        document.getElementById('main-sidebar').classList.remove('open');
+        document.getElementById('sb-overlay').classList.remove('open');
+    }
+    document.addEventListener('keydown', e => { if(e.key==='Escape') closeSidebar(); });
+
+    // ======= i18n =======
+    const translations = {
+        ar: {
+            nav_sales:'مبيعات اليوم', nav_pos:'صفحة الكاشير', nav_contact:'تحدث معنا',
+            nav_reports:'إدارة التقارير', nav_inventory:'إدارة المخزن',
+            nav_employees:'إدارة الموظفين', nav_accounting:'المحاسبة',
+            footer_copy:'جميع الحقوق محفوظة لفطين 2026',
+            daily_report:'📅 التقرير اليومي',
+            dr_sales:'💰 إجمالي المبيعات', dr_returns:'↩️ المرتجعات', dr_net:'📊 الصافي',
+            dr_invoices:'🧾 عدد الفواتير', dr_cash:'💵 كاش', dr_visa:'💳 فيزا',
+            dr_top_product:'🏆 أعلى منتج', dr_peak_hour:'⏱️ أكثر ساعة',
+            sb_title:'☰ القائمة'
+        },
+        en: {
+            nav_sales:'Today Sales', nav_pos:'POS Screen', nav_contact:'Contact Us',
+            nav_reports:'Reports', nav_inventory:'Inventory',
+            nav_employees:'Employees', nav_accounting:'Accounting',
+            footer_copy:'All rights reserved © Fateen 2026',
+            daily_report:'📅 Daily Report',
+            dr_sales:'💰 Total Sales', dr_returns:'↩️ Returns', dr_net:'📊 Net',
+            dr_invoices:'🧾 Invoices', dr_cash:'💵 Cash', dr_visa:'💳 Visa',
+            dr_top_product:'🏆 Top Product', dr_peak_hour:'⏱️ Peak Hour',
+            sb_title:'☰ Menu'
+        }
+    };
+    let currentLang = localStorage.getItem('fateen_lang') || 'ar';
+
+    function setLang(lang) {
+        currentLang = lang;
+        localStorage.setItem('fateen_lang', lang);
+        const html = document.documentElement;
+        html.setAttribute('lang', lang);
+        html.setAttribute('dir', lang==='ar'?'rtl':'ltr');
+        document.getElementById('lang-ar').classList.toggle('active', lang==='ar');
+        document.getElementById('lang-en').classList.toggle('active', lang==='en');
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if(translations[lang]?.[key]) el.innerText = translations[lang][key];
+        });
+        document.getElementById('sb-title').innerText = translations[lang].sb_title;
+    }
+
+    // ======= DAILY REPORT =======
+    let drData = null;
+
+    async function loadDailyReport() {
+        const dateEl = document.getElementById('report-date');
+        const date = dateEl?.value || new Date().toISOString().split('T')[0];
+        if(dateEl && !dateEl.value) dateEl.value = date;
+        const yesterday = new Date(date); yesterday.setDate(yesterday.getDate()-1);
+        const ystStr = yesterday.toISOString().split('T')[0];
+        try {
+            const [{ data: todaySales }, { data: ystSales }, { data: purchases }] = await Promise.all([
+                _supabase.from('sales').select('*').eq('store_key',storeKey).gte('created_at',date+'T00:00:00').lte('created_at',date+'T23:59:59'),
+                _supabase.from('sales').select('total_amount,type').eq('store_key',storeKey).gte('created_at',ystStr+'T00:00:00').lte('created_at',ystStr+'T23:59:59'),
+                _supabase.from('purchases').select('total_amount').eq('store_key',storeKey).eq('date',date)
+            ]);
+            const sales = (todaySales||[]).filter(s=>s.type==='sale');
+            const returns = (todaySales||[]).filter(s=>s.type==='return');
+            const totalSales = sales.reduce((s,r)=>s+(parseFloat(r.total_amount)||0),0);
+            const totalReturns = returns.reduce((s,r)=>s+(parseFloat(r.total_amount)||0),0);
+            const net = totalSales - totalReturns;
+            const cash = sales.filter(s=>s.payment_method==='كاش'||!s.payment_method).reduce((s,r)=>s+(parseFloat(r.total_amount)||0),0);
+            const visa = sales.filter(s=>s.payment_method==='فيزا').reduce((s,r)=>s+(parseFloat(r.total_amount)||0),0);
+            // أعلى منتج
+            const prodMap = {};
+            sales.forEach(s => {
+                const items = typeof s.items==='string'?JSON.parse(s.items||'[]'):(s.items||[]);
+                items.forEach(i => { prodMap[i.product_name]=(prodMap[i.product_name]||0)+(i.qty||1); });
+            });
+            const topProd = Object.entries(prodMap).sort((a,b)=>b[1]-a[1])[0];
+            // أكثر ساعة
+            const hourMap = {};
+            sales.forEach(s => { const h=new Date(s.created_at).getHours(); hourMap[h]=(hourMap[h]||0)+1; });
+            const peakHour = Object.entries(hourMap).sort((a,b)=>b[1]-a[1])[0];
+            // مقارنة بالأمس
+            const ystTotal = (ystSales||[]).filter(s=>s.type==='sale').reduce((s,r)=>s+(parseFloat(r.total_amount)||0),0);
+            const diff = totalSales - ystTotal;
+            const diffPct = ystTotal>0 ? ((diff/ystTotal)*100).toFixed(1) : null;
+            const cmpClass = diff>0?'up':diff<0?'down':'same';
+            const cmpText = diff===0 ? (currentLang==='ar'?'= نفس الأمس':'= Same as yesterday') :
+                diff>0 ? `▲ ${Math.abs(diff).toLocaleString()} ${currentLang==='ar'?'عن الأمس':'vs yesterday'}${diffPct?` (${diffPct}%)`:''}`
+                       : `▼ ${Math.abs(diff).toLocaleString()} ${currentLang==='ar'?'عن الأمس':'vs yesterday'}${diffPct?` (${diffPct}%)` :''}`;
+            drData = { date, totalSales, totalReturns, net, cash, visa, topProd, peakHour, invoices:sales.length, cmpText };
+            const money = n => Number(n).toLocaleString() + (currentLang==='ar'?' ج.م':' EGP');
+            // desktop
+            const setT = (id,v) => { const el=document.getElementById(id); if(el) el.innerText=v; };
+            setT('dr-sales', money(totalSales));
+            setT('dr-returns', money(totalReturns));
+            setT('dr-net', money(net));
+            setT('dr-count', sales.length);
+            setT('dr-cash', money(cash));
+            setT('dr-visa', money(visa));
+            setT('dr-top-product', topProd ? `${topProd[0]} (${topProd[1]})` : '—');
+            setT('dr-peak-hour', peakHour ? `${peakHour[0]}:00 (${peakHour[1]} ${currentLang==='ar'?'فاتورة':'inv.'})` : '—');
+            const cmpEl = document.getElementById('dr-sales-cmp');
+            if(cmpEl){ cmpEl.className='dr-compare '+cmpClass; cmpEl.innerText=cmpText; }
+            // mobile
+            setT('m-dr-sales', money(totalSales));
+            setT('m-dr-returns', money(totalReturns));
+            setT('m-dr-net', money(net));
+            setT('m-dr-count', sales.length);
+            setT('m-dr-cash', money(cash));
+            setT('m-dr-visa', money(visa));
+            setT('m-dr-top', topProd ? topProd[0] : '—');
+        } catch(e) { showToast('خطأ في التقرير اليومي: '+e.message,'error'); }
+    }
+
+    function printDailyReport() {
+        if(!drData) return showToast('حمّل التقرير أولاً','info');
+        const d = drData;
+        const money = n => Number(n).toLocaleString() + ' ج.م';
+        const w = window.open('','_blank','width=500,height=720');
+        w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+        <style>
+            *{margin:0;padding:0;box-sizing:border-box;}
+            body{width:90mm;margin:0 auto;padding:14px;font-family:'Cairo',sans-serif;color:#000;background:#fff;}
+            .hd{text-align:center;border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:12px;}
+            .store{font-size:18px;font-weight:900;}
+            .title{font-size:13px;color:#444;margin-top:2px;}
+            .date{font-size:11px;color:#777;}
+            .row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #eee;font-size:13px;}
+            .row .lbl{color:#444;}
+            .row .val{font-weight:800;}
+            .sec{font-size:11px;font-weight:800;background:#111;color:#fff;padding:4px 8px;border-radius:4px;margin:10px 0 6px;}
+            .net{background:#f0fdf4;border:1px solid #00875a;border-radius:6px;padding:10px;text-align:center;margin:10px 0;}
+            .net .lbl{font-size:11px;color:#00875a;}
+            .net .val{font-size:22px;font-weight:900;color:#00875a;}
+            .ft{text-align:center;margin-top:12px;font-size:10px;color:#aaa;border-top:1px dashed #ccc;padding-top:8px;}
+            @media print{@page{margin:0;size:90mm auto;}body{padding:10px;}}
+        </style></head><body>
+        <div class="hd">
+            <div class="store" id="pr-store">—</div>
+            <div class="title">التقرير اليومي</div>
+            <div class="date">${new Date(d.date).toLocaleDateString('ar-EG',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</div>
+        </div>
+        <div class="sec">📊 المبيعات</div>
+        <div class="row"><span class="lbl">💰 إجمالي المبيعات</span><span class="val" style="color:#004643;">${money(d.totalSales)}</span></div>
+        <div class="row"><span class="lbl">↩️ المرتجعات</span><span class="val" style="color:#c0392b;">${money(d.totalReturns)}</span></div>
+        <div class="row"><span class="lbl">🧾 عدد الفواتير</span><span class="val">${d.invoices}</span></div>
+        <div class="sec">💳 طرق الدفع</div>
+        <div class="row"><span class="lbl">💵 كاش</span><span class="val">${money(d.cash)}</span></div>
+        <div class="row"><span class="lbl">💳 فيزا</span><span class="val">${money(d.visa)}</span></div>
+        <div class="sec">🏆 الأكثر</div>
+        <div class="row"><span class="lbl">🏆 أعلى منتج</span><span class="val">${d.topProd?d.topProd[0]+'('+d.topProd[1]+')':'—'}</span></div>
+        <div class="row"><span class="lbl">⏱️ أكثر ساعة</span><span class="val">${d.peakHour?d.peakHour[0]+':00':'—'}</span></div>
+        <div class="net"><div class="lbl">📊 صافي اليوم</div><div class="val">${money(d.net)}</div></div>
+        <div class="ft">Fateen OS — ${new Date().toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'})}</div>
+        <script>
+            fetch('').catch(()=>{});
+            const sn=document.getElementById('pr-store');
+            if(sn) sn.innerText=window.opener?.storeName||'المتجر';
+            window.onload=()=>{window.print();setTimeout(()=>window.close(),1400);}
+        <\/script>
+        </body></html>`);
+        w.document.close();
+    }
 
     init();
 </script>
