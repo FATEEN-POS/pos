@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم</title>
+    <title>لوحة المدير</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -209,6 +209,29 @@
         .m-footer .copy { font-size: 10px; color: var(--text-muted); }
         .m-footer .ver  { font-size: 11px; font-weight: 800; color: var(--accent); }
 
+        /* ===== FIT SCREEN ===== */
+        html, body { width:100%; overflow-x:hidden; }
+        .d-wrap { box-sizing:border-box; width:100%; }
+        .m-wrap { box-sizing:border-box; width:100%; }
+        @media(min-width:769px){
+            body { overflow-y:auto; }
+            .d-wrap { max-width:1400px; margin:0 auto; padding:16px 20px; }
+        }
+        @media(max-width:768px){
+            body { overflow-y:auto; }
+            .m-wrap { padding:10px; padding-bottom:30px; }
+            .d-stats { grid-template-columns:1fr 1fr; }
+            .d-nav { grid-template-columns:repeat(3,1fr); }
+            .daily-report-grid { grid-template-columns:repeat(2,1fr); }
+            .table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+        }
+        @media(max-width:480px){
+            .m-stats { grid-template-columns:repeat(2,1fr); }
+            .m-nav { grid-template-columns:repeat(2,1fr); }
+            .modal-box { padding:14px; border-radius:14px; }
+            .daily-report-grid { grid-template-columns:1fr 1fr; gap:8px; }
+        }
+
         /* ===== SIDEBAR ===== */
         .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:500;backdrop-filter:blur(3px);}
         .sidebar-overlay.open{display:block;}
@@ -321,24 +344,24 @@
 <!-- ===== SIDEBAR ===== -->
 <div class="sidebar" id="main-sidebar">
     <div class="sidebar-head">
-        <span class="sidebar-head-title" id="sb-title">☰ القائمة</span>
+        <span class="sidebar-head-title">☰ القائمة</span>
         <span class="sidebar-close" onclick="closeSidebar()">✕</span>
     </div>
     <nav class="sidebar-nav">
-        <a class="sb-item" onclick="scrollToSales();closeSidebar()"><span class="sb-icon">💰</span><span data-i18n="nav_sales">مبيعات اليوم</span></a>
-        <a class="sb-item" onclick="location.href='pos.html'"><span class="sb-icon">🖥️</span><span data-i18n="nav_pos">صفحة الكاشير</span></a>
-        <a class="sb-item" onclick="location.href='about.html'"><span class="sb-icon">📞</span><span data-i18n="nav_contact">تحدث معنا</span></a>
-        <a class="sb-item" onclick="location.href='reports.html'"><span class="sb-icon">📋</span><span data-i18n="nav_reports">إدارة التقارير</span></a>
-        <a class="sb-item" onclick="location.href='inventory.html'"><span class="sb-icon">🏪</span><span data-i18n="nav_inventory">إدارة المخزن</span></a>
-        <a class="sb-item" onclick="openUserModal();closeSidebar()"><span class="sb-icon">👥</span><span data-i18n="nav_employees">إدارة الموظفين</span></a>
-        <a class="sb-item" onclick="location.href='accounting.html'"><span class="sb-icon">📒</span><span data-i18n="nav_accounting">المحاسبة</span></a>
+        <a class="sb-item" onclick="scrollToSales();closeSidebar()"><span class="sb-icon">💰</span>مبيعات اليوم</a>
+        <a class="sb-item" onclick="location.href='pos.html'"><span class="sb-icon">🖥️</span>صفحة الكاشير</a>
+        <a class="sb-item" onclick="location.href='reports.html'"><span class="sb-icon">📋</span>إدارة التقارير</a>
+        <a class="sb-item" onclick="location.href='inventory.html'"><span class="sb-icon">🏪</span>إدارة المخزن</a>
+        <a class="sb-item" onclick="openUserModal();closeSidebar()"><span class="sb-icon">👥</span>إدارة الموظفين</a>
+        <a class="sb-item" onclick="location.href='accounting.html'"><span class="sb-icon">📒</span>المحاسبة</a>
+        <a class="sb-item" onclick="location.href='guide.html'"><span class="sb-icon">📖</span>كيفية الاستخدام</a>
+        <a class="sb-item" onclick="location.href='about.html'"><span class="sb-icon">📞</span>تواصل معنا</a>
+        <a class="sb-item" onclick="location.href='3dadat.html'"><span class="sb-icon">⚙️</span>الإعدادات</a>
+        <a class="sb-item" onclick="toggleTheme();closeSidebar()"><span class="sb-icon" id="sb-theme-icon">🌙</span><span id="sb-theme-label">ثيم فاتح</span></a>
+        <a class="sb-item" onclick="logout()" style="color:var(--red);border-color:transparent;"><span class="sb-icon">🚪</span>تسجيل الخروج</a>
     </nav>
     <div class="sidebar-footer">
-        <span class="copy" data-i18n="footer_copy">جميع الحقوق محفوظة لفطين 2026</span>
-        <div class="lang-toggle">
-            <button class="lang-btn active" id="lang-ar" onclick="setLang('ar')">عربي</button>
-            <button class="lang-btn" id="lang-en" onclick="setLang('en')">EN</button>
-        </div>
+        <span class="copy">جميع الحقوق محفوظة لفطين 2026</span>
     </div>
 </div>
 
@@ -356,8 +379,6 @@
             </div>
             <div class="m-header-right">
                 <span class="version-chip" id="m-version">V0.5</span>
-                <button style="display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:7px 14px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:700;" class="mobile-only" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'" onclick="location.href='3dadat.html'">⚙️ الإعدادات</button>
-                <button style="display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:7px 14px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:700;" class="mobile-only" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'" onclick="location.href='guide.html'">📖 كيفية الاستخدام</button>
                 <button class="theme-btn" onclick="toggleTheme()">
                     <span id="m-theme-icon">🌙</span>
                 </button>
@@ -380,34 +401,15 @@
             </div>
         </div>
 
-        <!-- التقرير اليومي موبايل -->
-        <div class="section-card">
-            <div class="section-header">
-                <h3 class="section-title">📅 التقرير اليومي</h3>
-                <div style="display:flex;gap:6px;">
-                    <button class="btn btn-ghost" onclick="loadDailyReport()" style="font-size:11px;padding:5px 10px;">🔄</button>
-                    <button class="btn btn-primary" onclick="printDailyReport()" style="font-size:11px;padding:5px 10px;">🖨️</button>
-                </div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                <div class="dr-stat green"><div class="dr-lbl">💰 مبيعات</div><div class="dr-val" id="m-dr-sales">—</div></div>
-                <div class="dr-stat red"><div class="dr-lbl">↩️ مرتجعات</div><div class="dr-val" id="m-dr-returns">—</div></div>
-                <div class="dr-stat accent"><div class="dr-lbl">📊 الصافي</div><div class="dr-val" id="m-dr-net">—</div></div>
-                <div class="dr-stat orange"><div class="dr-lbl">🧾 الفواتير</div><div class="dr-val" id="m-dr-count">—</div></div>
-                <div class="dr-stat green"><div class="dr-lbl">💵 كاش</div><div class="dr-val" id="m-dr-cash">—</div></div>
-                <div class="dr-stat purple" style="--purple:#a78bfa;"><div class="dr-lbl">💳 فيزا</div><div class="dr-val" id="m-dr-visa" style="color:#a78bfa;">—</div></div>
-            </div>
-            <div style="margin-top:10px;background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;">
-                <span style="color:var(--text-muted);">🏆 أعلى منتج: </span><span id="m-dr-top" style="font-weight:800;color:var(--accent);">—</span>
-            </div>
-        </div>
+        <!-- التقرير اليومي موبايل - زرار -->
+        <button class="btn btn-primary" onclick="openDailyReportModal()" style="width:100%;justify-content:center;font-size:14px;padding:12px;margin-bottom:14px;">
+            📅 التقرير اليومي
+        </button>
 
         <!-- Quick nav -->
         <div class="m-nav">
             <a class="m-nav-item" onclick="scrollToMSales()"><span class="ni">💰</span>مبيعات اليوم</a>
             <a class="m-nav-item" onclick="location.href='pos.html'"><span class="ni">🖥️</span>الكاشير</a>
-            <a class="m-nav-item" onclick="location.href='guide.html'"><span class="ni">📖</span>كيفية الاستخدام</a>
-            <a class="m-nav-item" onclick="location.href='about.html'"><span class="ni">📞</span>تواصل</a>
             <a class="m-nav-item" onclick="location.href='reports.html'"><span class="ni">📋</span>التقارير</a>
             <a class="m-nav-item" onclick="location.href='inventory.html'"><span class="ni">🏪</span>المخزن</a>
             <a class="m-nav-item" onclick="openUserModal()"><span class="ni">👥</span>الموظفين</a>
@@ -516,14 +518,6 @@
             <div class="d-header-right">
                 <div class="sb-trigger" onclick="openSidebar()">☰</div>
                 <span class="version-chip" id="d-version">V0.5</span>
-                <button class="theme-btn" onclick="toggleTheme()">
-                    <span id="d-theme-icon">🌙</span>
-                    <span id="d-theme-label">ثيم فاتح</span>
-                </button>
-                <button class="btn btn-ghost" onclick="location.href='guide.html'">📖 كيفية الاستخدام</button>
-                <button class="btn btn-ghost" onclick="location.href='3dadat.html'">⚙️ الإعدادات</button>
-                <button class="btn btn-ghost" onclick="location.href='about.html'">📞 تواصل</button>
-                <button class="btn btn-danger" onclick="logout()">خروج</button>
             </div>
         </div>
 
@@ -537,31 +531,9 @@
                 <h4>إجمالي المرتجع</h4>
                 <p id="d-returns">0 ج.م</p>
             </div>
-            <div class="d-stat accent">
-                <h4>عدد الفواتير</h4>
+            <div class="d-stat accent" style="cursor:pointer;" onclick="openDailyReportModal()">
+                <h4>عدد الفواتير — 📅 التقرير اليومي</h4>
                 <p id="d-bill-count">0</p>
-            </div>
-        </div>
-
-        <!-- التقرير اليومي -->
-        <div class="section-card" id="daily-report-section">
-            <div class="section-header">
-                <h3 class="section-title" data-i18n="daily_report">📅 التقرير اليومي</h3>
-                <div style="display:flex;gap:8px;align-items:center;">
-                    <input type="date" class="select-input" id="report-date" onchange="loadDailyReport()">
-                    <button class="btn btn-ghost" onclick="loadDailyReport()" style="font-size:12px;">🔄 تحديث</button>
-                    <button class="btn btn-primary" onclick="printDailyReport()" style="font-size:12px;">🖨️ طباعة</button>
-                </div>
-            </div>
-            <div class="daily-report-grid" id="dr-stats-grid">
-                <div class="dr-stat green"><div class="dr-lbl" data-i18n="dr_sales">💰 إجمالي المبيعات</div><div class="dr-val" id="dr-sales">—</div><div class="dr-compare" id="dr-sales-cmp"></div></div>
-                <div class="dr-stat red"><div class="dr-lbl" data-i18n="dr_returns">↩️ المرتجعات</div><div class="dr-val" id="dr-returns">—</div><div class="dr-compare" id="dr-returns-cmp"></div></div>
-                <div class="dr-stat accent"><div class="dr-lbl" data-i18n="dr_net">📊 الصافي</div><div class="dr-val" id="dr-net">—</div><div class="dr-compare" id="dr-net-cmp"></div></div>
-                <div class="dr-stat orange"><div class="dr-lbl" data-i18n="dr_invoices">🧾 عدد الفواتير</div><div class="dr-val" id="dr-count">—</div></div>
-                <div class="dr-stat green"><div class="dr-lbl" data-i18n="dr_cash">💵 كاش</div><div class="dr-val" id="dr-cash">—</div></div>
-                <div class="dr-stat purple"><div class="dr-lbl" data-i18n="dr_visa">💳 فيزا</div><div class="dr-val" id="dr-visa">—</div></div>
-                <div class="dr-stat accent"><div class="dr-lbl" data-i18n="dr_top_product">🏆 أعلى منتج</div><div class="dr-val" id="dr-top-product" style="font-size:13px;">—</div></div>
-                <div class="dr-stat orange"><div class="dr-lbl" data-i18n="dr_peak_hour">⏱️ أكثر ساعة</div><div class="dr-val" id="dr-peak-hour">—</div></div>
             </div>
         </div>
 
@@ -569,11 +541,11 @@
         <div class="d-nav">
             <a class="d-nav-item" onclick="scrollToSales()"><span class="ni">💰</span>مبيعات اليوم</a>
             <a class="d-nav-item" onclick="location.href='pos.html'"><span class="ni">🖥️</span>صفحة الكاشير</a>
-            <a class="d-nav-item" onclick="location.href='about.html'"><span class="ni">📞</span>تحدث معنا</a>
             <a class="d-nav-item" onclick="location.href='reports.html'"><span class="ni">📋</span>إدارة التقارير</a>
             <a class="d-nav-item" onclick="location.href='inventory.html'"><span class="ni">🏪</span>إدارة المخزن</a>
             <a class="d-nav-item" onclick="openUserModal()"><span class="ni">👥</span>إدارة الموظفين</a>
             <a class="d-nav-item" onclick="location.href='accounting.html'"><span class="ni">📒</span>المحاسبة</a>
+            <a class="d-nav-item" onclick="openDailyReportModal()"><span class="ni">📅</span>التقرير اليومي</a>
         </div>
 
         <!-- Footer bar (right under nav) -->
@@ -680,6 +652,31 @@
      MODALS
 ================================================ -->
 
+<!-- Daily Report Modal -->
+<div id="dailyReportModal" class="modal">
+    <div class="modal-box" style="width:620px;max-width:100%;">
+        <div class="modal-title">
+            <span>📅 التقرير اليومي</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+                <input type="date" class="select-input" id="report-date" onchange="loadDailyReport()" style="font-size:12px;">
+                <button class="btn btn-primary" onclick="printDailyReport()" style="font-size:12px;padding:6px 12px;">🖨️ طباعة</button>
+                <span class="modal-close" onclick="closeModal('dailyReportModal')">✕</span>
+            </div>
+        </div>
+        <div class="daily-report-grid">
+            <div class="dr-stat green"><div class="dr-lbl">💰 إجمالي المبيعات</div><div class="dr-val" id="dr-sales">—</div><div class="dr-compare" id="dr-sales-cmp"></div></div>
+            <div class="dr-stat red"><div class="dr-lbl">↩️ المرتجعات</div><div class="dr-val" id="dr-returns">—</div></div>
+            <div class="dr-stat accent"><div class="dr-lbl">📊 الصافي</div><div class="dr-val" id="dr-net">—</div></div>
+            <div class="dr-stat orange"><div class="dr-lbl">🧾 عدد الفواتير</div><div class="dr-val" id="dr-count">—</div></div>
+            <div class="dr-stat green"><div class="dr-lbl">💵 كاش</div><div class="dr-val" id="dr-cash">—</div></div>
+            <div class="dr-stat" style="border-color:var(--border);"><div class="dr-lbl" style="color:var(--text-muted);">💳 فيزا</div><div class="dr-val" id="dr-visa" style="color:#a78bfa;">—</div></div>
+            <div class="dr-stat accent"><div class="dr-lbl">🏆 أعلى منتج</div><div class="dr-val" id="dr-top-product" style="font-size:12px;">—</div></div>
+            <div class="dr-stat orange"><div class="dr-lbl">⏱️ أكثر ساعة</div><div class="dr-val" id="dr-peak-hour">—</div></div>
+        </div>
+        <div id="dr-loading" style="text-align:center;color:var(--text-muted);padding:20px;display:none;">جاري التحميل...</div>
+    </div>
+</div>
+
 <!-- Receipt Modal -->
 <div id="receiptModal" class="modal">
     <div class="modal-box" style="width:500px;">
@@ -754,13 +751,22 @@
     function updateThemeBtn(isLight) {
         const icon = isLight ? '☀️' : '🌙';
         const label = isLight ? 'ثيم داكن' : 'ثيم فاتح';
-        ['m-theme-icon','d-theme-icon'].forEach(id => { const el = document.getElementById(id); if(el) el.innerText = icon; });
-        const dl = document.getElementById('d-theme-label'); if(dl) dl.innerText = label;
+        ['m-theme-icon'].forEach(id => { const el = document.getElementById(id); if(el) el.innerText = icon; });
+        const sbIcon = document.getElementById('sb-theme-icon'); if(sbIcon) sbIcon.innerText = icon;
+        const sbLabel = document.getElementById('sb-theme-label'); if(sbLabel) sbLabel.innerText = label;
         const logo = document.getElementById('d-logo'); if(logo) logo.src = isLight ? 'لوجو_فطين_اسود.png' : 'لوجو_فطين_ابيض.png';
     }
     function loadTheme() {
         const saved = localStorage.getItem('fateen_theme');
         if(saved === 'light') { document.documentElement.setAttribute('data-theme', 'light'); updateThemeBtn(true); }
+    }
+
+    // ======= DAILY REPORT MODAL =======
+    function openDailyReportModal() {
+        const dateEl = document.getElementById('report-date');
+        if(dateEl && !dateEl.value) dateEl.value = new Date().toISOString().split('T')[0];
+        document.getElementById('dailyReportModal').classList.add('open');
+        loadDailyReport();
     }
 
     // ======= INIT =======
@@ -792,8 +798,6 @@
         await loadUsers();
         await loadLowStock();
         await loadSalesChart();
-        await loadDailyReport();
-        setLang(currentLang);
 
         setInterval(async () => {
             if(document.hidden) return;
@@ -831,32 +835,80 @@
         } catch(e) { showToast('خطأ في تحميل المبيعات: ' + e.message, 'error'); }
     }
 
+    let shownSalesCount = 5;
     function renderSales(sales) {
         const fmt = (dt) => {
             const d = new Date(dt);
             return d.toLocaleDateString('ar-EG',{day:'2-digit',month:'2-digit'}) + ' ' + d.toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'});
         };
-        const tbody = document.getElementById('sales-list');
-        if(tbody) {
-            tbody.innerHTML = sales.map(s => `
-                <tr class="clickable" onclick='showReceipt(${JSON.stringify(s)})'>
-                    <td><span class="badge badge-accent">#${s.id.toString().slice(-6)}</span></td>
-                    <td style="font-size:12px; color:var(--text-muted);">${fmt(s.created_at)}</td>
-                    <td>${s.seller_name||'---'}</td>
-                    <td style="font-weight:800; color:var(--accent);">${s.total_amount} ج.م</td>
-                    <td><span class="badge ${s.type==='sale'?'badge-green':'badge-red'}">${s.type==='sale'?'بيع':'مرتجع'}</span></td>
-                </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px;">لا توجد مبيعات اليوم</td></tr>';
-        }
-        const mtbody = document.getElementById('m-sales-list');
-        if(mtbody) {
-            mtbody.innerHTML = sales.map(s => `
-                <tr class="clickable" onclick='showReceipt(${JSON.stringify(s)})'>
+        const buildRows = (list, isMobile) => {
+            if(!list.length) return `<tr><td colspan="${isMobile?4:5}" style="text-align:center;color:var(--text-muted);padding:20px;">لا توجد مبيعات اليوم</td></tr>`;
+            const visible = list.slice(0, shownSalesCount);
+            let html = visible.map(s => {
+                const actBtns = s.type==='sale'
+                    ? `<button class="btn btn-danger" style="padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();showReceipt(${JSON.stringify(s).replace(/"/g,'&quot;')})">↩️ إرجاع</button>
+                       <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px;margin-right:4px;" onclick="event.stopPropagation();printManagerReceipt(${JSON.stringify(s).replace(/"/g,'&quot;')})">🖨️</button>`
+                    : `<span class="badge badge-red" style="font-size:10px;">مرتجع</span>`;
+                if(isMobile) return `<tr class="clickable" onclick='showReceipt(${JSON.stringify(s)})'>
                     <td style="font-size:11px;"><span class="badge badge-accent">#${s.id.toString().slice(-6)}</span></td>
-                    <td style="font-size:11px; color:var(--text-muted);">${fmt(s.created_at)}</td>
-                    <td style="font-weight:800; color:var(--accent); font-size:12px;">${s.total_amount} ج.م</td>
-                    <td><span class="badge ${s.type==='sale'?'badge-green':'badge-red'}" style="font-size:10px;">${s.type==='sale'?'بيع':'↩'}</span></td>
-                </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:16px;">لا توجد مبيعات</td></tr>';
-        }
+                    <td style="font-size:11px;color:var(--text-muted);">${fmt(s.created_at)}</td>
+                    <td style="font-weight:800;color:var(--accent);font-size:12px;">${s.total_amount} ج.م</td>
+                    <td>${actBtns}</td></tr>`;
+                return `<tr class="clickable" onclick='showReceipt(${JSON.stringify(s)})'>
+                    <td><span class="badge badge-accent">#${s.id.toString().slice(-6)}</span></td>
+                    <td style="font-size:12px;color:var(--text-muted);">${fmt(s.created_at)}</td>
+                    <td>${s.seller_name||'---'}</td>
+                    <td style="font-weight:800;color:var(--accent);">${s.total_amount} ج.م</td>
+                    <td>${actBtns}</td></tr>`;
+            }).join('');
+            if(list.length > shownSalesCount) {
+                const remaining = list.length - shownSalesCount;
+                const colspan = isMobile ? 4 : 5;
+                html += `<tr><td colspan="${colspan}" style="text-align:center;padding:12px;">
+                    <button class="btn btn-ghost" style="font-size:12px;" onclick="showMoreSales()">عرض المزيد (${remaining} فاتورة)</button>
+                </td></tr>`;
+            }
+            return html;
+        };
+        const tbody = document.getElementById('sales-list');
+        if(tbody) tbody.innerHTML = buildRows(sales, false);
+        const mtbody = document.getElementById('m-sales-list');
+        if(mtbody) mtbody.innerHTML = buildRows(sales, true);
+    }
+
+    function showMoreSales() {
+        shownSalesCount += 10;
+        sortSales();
+    }
+
+    function printManagerReceipt(sale) {
+        const items = typeof sale.items==='string' ? JSON.parse(sale.items) : (sale.items||[]);
+        const total = parseFloat(sale.total_amount)||0;
+        const now = new Date(sale.created_at);
+        const w = window.open('','_blank','width=400,height=600');
+        w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+        <style>*{margin:0;padding:0;box-sizing:border-box;}body{width:80mm;margin:0 auto;padding:12px;font-family:'Cairo',sans-serif;color:#000;background:#fff;font-weight:700;}
+        .c{text-align:center;}.sn{font-size:18px;font-weight:900;}.hr{border:none;border-top:1px dashed #999;margin:7px 0;}
+        table{width:100%;border-collapse:collapse;font-size:12px;}th{background:#111;color:#fff;padding:5px;}td{padding:5px;border-bottom:1px solid #eee;}
+        .tot{display:flex;border:2px solid #000;border-radius:6px;overflow:hidden;margin-top:8px;}.tl{flex:1;background:#111;color:#fff;padding:8px;text-align:center;font-size:13px;font-weight:800;}.tv{flex:1;padding:8px;text-align:center;font-size:18px;font-weight:900;}
+        @media print{@page{margin:0;size:80mm auto;}body{padding:8px;}}</style></head><body>
+        <div class="c"><div class="sn" id="sn">—</div><div style="font-size:12px;color:#555;">إعادة طباعة فاتورة</div></div>
+        <hr class="hr">
+        <div style="font-size:11px;display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:5px;">
+            <span>التاريخ: <b>${now.toLocaleDateString('ar-EG')}</b></span>
+            <span>رقم: <b>#${String(sale.id).slice(-6)}</b></span>
+            <span>البائع: <b>${sale.seller_name||'---'}</b></span>
+            <span>الدفع: <b>${sale.payment_method||'كاش'}</b></span>
+        </div>
+        <hr class="hr">
+        <table><thead><tr><th>الصنف</th><th>ك</th><th>سعر</th><th>إجمالي</th></tr></thead>
+        <tbody>${items.map(i=>`<tr><td>${i.product_name}</td><td>${i.qty}</td><td>${i.price}</td><td>${(i.price*i.qty).toFixed(0)}</td></tr>`).join('')}</tbody></table>
+        <div class="tot"><div class="tl">الإجمالي</div><div class="tv">${total.toFixed(0)} ج.م</div></div>
+        <div style="text-align:center;font-size:10px;color:#aaa;margin-top:8px;">Fateen OS</div>
+        <script>document.getElementById('sn').innerText=window.opener?.storeName||'المتجر';window.onload=()=>{window.print();setTimeout(()=>window.close(),1400);}<\/script>
+        </body></html>`);
+        w.document.close();
     }
 
     function sortSales() {
@@ -1142,48 +1194,6 @@
         document.getElementById('sb-overlay').classList.remove('open');
     }
     document.addEventListener('keydown', e => { if(e.key==='Escape') closeSidebar(); });
-
-    // ======= i18n =======
-    const translations = {
-        ar: {
-            nav_sales:'مبيعات اليوم', nav_pos:'صفحة الكاشير', nav_contact:'تحدث معنا',
-            nav_reports:'إدارة التقارير', nav_inventory:'إدارة المخزن',
-            nav_employees:'إدارة الموظفين', nav_accounting:'المحاسبة',
-            footer_copy:'جميع الحقوق محفوظة لفطين 2026',
-            daily_report:'📅 التقرير اليومي',
-            dr_sales:'💰 إجمالي المبيعات', dr_returns:'↩️ المرتجعات', dr_net:'📊 الصافي',
-            dr_invoices:'🧾 عدد الفواتير', dr_cash:'💵 كاش', dr_visa:'💳 فيزا',
-            dr_top_product:'🏆 أعلى منتج', dr_peak_hour:'⏱️ أكثر ساعة',
-            sb_title:'☰ القائمة'
-        },
-        en: {
-            nav_sales:'Today Sales', nav_pos:'POS Screen', nav_contact:'Contact Us',
-            nav_reports:'Reports', nav_inventory:'Inventory',
-            nav_employees:'Employees', nav_accounting:'Accounting',
-            footer_copy:'All rights reserved © Fateen 2026',
-            daily_report:'📅 Daily Report',
-            dr_sales:'💰 Total Sales', dr_returns:'↩️ Returns', dr_net:'📊 Net',
-            dr_invoices:'🧾 Invoices', dr_cash:'💵 Cash', dr_visa:'💳 Visa',
-            dr_top_product:'🏆 Top Product', dr_peak_hour:'⏱️ Peak Hour',
-            sb_title:'☰ Menu'
-        }
-    };
-    let currentLang = localStorage.getItem('fateen_lang') || 'ar';
-
-    function setLang(lang) {
-        currentLang = lang;
-        localStorage.setItem('fateen_lang', lang);
-        const html = document.documentElement;
-        html.setAttribute('lang', lang);
-        html.setAttribute('dir', lang==='ar'?'rtl':'ltr');
-        document.getElementById('lang-ar').classList.toggle('active', lang==='ar');
-        document.getElementById('lang-en').classList.toggle('active', lang==='en');
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-            const key = el.getAttribute('data-i18n');
-            if(translations[lang]?.[key]) el.innerText = translations[lang][key];
-        });
-        document.getElementById('sb-title').innerText = translations[lang].sb_title;
-    }
 
     // ======= DAILY REPORT =======
     let drData = null;
