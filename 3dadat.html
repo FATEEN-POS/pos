@@ -6,6 +6,7 @@
     <title>الإعدادات - Fateen OS</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
             --bg:#080808; --surface:#111111; --surface2:#181818; --surface3:#202020;
@@ -245,10 +246,43 @@
             </div>
             <div class="setting-card">
                 <div class="card-title">💾 النسخ الاحتياطي</div>
-                <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">قم بتحميل نسخة من كافة بياناتك (منتجات، مبيعات، موظفين، إعدادات) في ملف واحد.</p>
-                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <p style="color:var(--text-muted);font-size:13px;margin-bottom:14px;">تحميل نسخة من كافة بياناتك (منتجات، مبيعات، موظفين، إعدادات).</p>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
                     <button class="btn btn-orange" onclick="exportBackup('json')">📥 تحميل JSON</button>
                     <button class="btn btn-ghost" onclick="exportBackup('excel')">📗 تحميل Excel</button>
+                </div>
+                <p style="color:var(--text-muted);font-size:11px;margin:0;">Excel: منتجات / مبيعات / موظفين — كل قسم في شيت منفصل</p>
+            </div>
+            <div class="setting-card">
+                <div class="card-title">📤 استيراد البيانات</div>
+                <div style="display:flex;flex-direction:column;gap:14px;">
+                    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;">
+                        <div style="font-size:13px;font-weight:800;margin-bottom:6px;">🔄 استعادة نسخة احتياطية (JSON)</div>
+                        <p style="color:var(--text-muted);font-size:12px;margin:0 0 10px;">ارفع ملف JSON سبق تحميله — سيتم استيراد المنتجات والموظفين فقط</p>
+                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                            <label class="btn btn-ghost" style="cursor:pointer;">📁 اختر ملف JSON<input type="file" id="json-restore-input" accept=".json" style="display:none;" onchange="handleJsonRestore(this)"></label>
+                            <span id="json-restore-name" style="font-size:12px;color:var(--text-muted);">لم يتم اختيار ملف</span>
+                        </div>
+                        <div id="json-restore-preview" style="display:none;margin-top:12px;"></div>
+                        <div id="json-restore-actions" style="display:none;margin-top:10px;display:flex;gap:8px;">
+                            <button class="btn btn-accent" onclick="confirmJsonRestore()">✅ تأكيد الاستيراد</button>
+                            <button class="btn btn-ghost" onclick="cancelJsonRestore()">إلغاء</button>
+                        </div>
+                    </div>
+                    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;">
+                        <div style="font-size:13px;font-weight:800;margin-bottom:6px;">📗 استيراد منتجات من Excel</div>
+                        <p style="color:var(--text-muted);font-size:12px;margin:0 0 8px;">الأعمدة المطلوبة: <b>name / price / category / quantity</b> (السطر الأول عناوين)</p>
+                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
+                            <label class="btn btn-ghost" style="cursor:pointer;">📁 اختر Excel / CSV<input type="file" id="excel-import-input" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleExcelImport(this)"></label>
+                            <span id="excel-import-name" style="font-size:12px;color:var(--text-muted);">لم يتم اختيار ملف</span>
+                            <button class="btn btn-ghost" onclick="downloadImportTemplate()" style="font-size:11px;">⬇️ نموذج</button>
+                        </div>
+                        <div id="excel-import-preview" style="display:none;margin-top:10px;"></div>
+                        <div id="excel-import-actions" style="display:none;margin-top:10px;display:flex;gap:8px;">
+                            <button class="btn btn-accent" onclick="confirmExcelImport()">✅ استيراد المنتجات</button>
+                            <button class="btn btn-ghost" onclick="cancelExcelImport()">إلغاء</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -766,28 +800,235 @@
         setTimeout(()=>location.href='index.html',1000);
     }
 
+    // ══════════════════════════════
+    // EXPORT BACKUP
+    // ══════════════════════════════
     async function exportBackup(format){
         showToast('جاري تحضير النسخة الاحتياطية...','info');
         try{
             const[{data:products},{data:sales},{data:users},{data:store}]=await Promise.all([
                 _supabase.from('products').select('*').eq('store_key',storeKey),
-                _supabase.from('sales').select('*').eq('store_key',storeKey),
-                _supabase.from('users').select('*').eq('store_key',storeKey),
+                _supabase.from('sales').select('*').eq('store_key',storeKey).order('created_at',{ascending:false}),
+                _supabase.from('users').select('id,username,role,store_key,created_at').eq('store_key',storeKey),
                 _supabase.from('stores').select('*').eq('store_key',storeKey).single()
             ]);
+            const dateStr=new Date().toISOString().split('T')[0];
+
             if(format==='json'){
-                const blob=new Blob([JSON.stringify({products,sales,users,store,export_date:new Date(),store_key:storeKey},null,2)],{type:'application/json'});
+                const blob=new Blob([JSON.stringify({
+                    products:products||[],
+                    sales:sales||[],
+                    users:users||[],
+                    store:store||{},
+                    export_date:new Date().toISOString(),
+                    store_key:storeKey,
+                    version:'FateenOS-Backup-v1'
+                },null,2)],{type:'application/json'});
                 const a=document.createElement('a');
                 a.href=URL.createObjectURL(blob);
-                a.download='FateenOS_Backup_'+storeKey+'_'+new Date().toISOString().split('T')[0]+'.json';
+                a.download='FateenOS_Backup_'+storeKey+'_'+dateStr+'.json';
                 a.click();
+                showToast('تم تحميل النسخة الاحتياطية JSON ✅','success');
+
             } else {
-                // Excel - محتاج XLSX لكن مش محمل هنا - نستخدم JSON كـ fallback
-                showToast('استخدم JSON للنسخ الاحتياطي','info');
-                return;
+                // EXCEL — 3 sheets
+                const wb=XLSX.utils.book_new();
+
+                // Sheet 1 — المنتجات
+                const prodRows=(products||[]).map(p=>({
+                    'الاسم':p.name||'',
+                    'السعر':p.price||0,
+                    'سعر الشراء':p.purchase_price||0,
+                    'الكمية':p.quantity||0,
+                    'الفئة':p.category||'',
+                    'الباركود':p.barcode||'',
+                    'وحدة القياس':p.unit||'',
+                    'الحد الأدنى':p.min_stock||0,
+                    'متاح':p.is_active===false?'لا':'نعم'
+                }));
+                const ws1=XLSX.utils.json_to_sheet(prodRows.length?prodRows:[{'الاسم':'لا توجد منتجات'}]);
+                XLSX.utils.book_append_sheet(wb,ws1,'المنتجات');
+
+                // Sheet 2 — المبيعات
+                const salesRows=(sales||[]).map(s=>({
+                    'رقم الفاتورة':String(s.id).slice(-6),
+                    'التاريخ':s.created_at?new Date(s.created_at).toLocaleDateString('ar-EG'):'',
+                    'البائع':s.seller_name||'',
+                    'المبلغ':s.total_amount||0,
+                    'طريقة الدفع':s.payment_method||'كاش',
+                    'النوع':s.type==='sale'?'بيع':'مرتجع',
+                    'عدد الأصناف':s.items_count||0
+                }));
+                const ws2=XLSX.utils.json_to_sheet(salesRows.length?salesRows:[{'رقم الفاتورة':'لا توجد مبيعات'}]);
+                XLSX.utils.book_append_sheet(wb,ws2,'المبيعات');
+
+                // Sheet 3 — الموظفين
+                const usersRows=(users||[]).map(u=>({
+                    'اسم المستخدم':u.username||'',
+                    'الدور':u.role||'',
+                    'تاريخ الإنشاء':u.created_at?new Date(u.created_at).toLocaleDateString('ar-EG'):''
+                }));
+                const ws3=XLSX.utils.json_to_sheet(usersRows.length?usersRows:[{'اسم المستخدم':'لا يوجد موظفين'}]);
+                XLSX.utils.book_append_sheet(wb,ws3,'الموظفين');
+
+                XLSX.writeFile(wb,'FateenOS_Backup_'+storeKey+'_'+dateStr+'.xlsx');
+                showToast('تم تحميل Excel بنجاح ✅','success');
             }
-            showToast('تم تحميل النسخة الاحتياطية','success');
-        }catch(e){showToast('خطأ في النسخ الاحتياطي','error');}
+        }catch(e){showToast('خطأ في النسخ الاحتياطي: '+e.message,'error');}
+    }
+
+    // ══════════════════════════════
+    // JSON RESTORE
+    // ══════════════════════════════
+    let jsonRestoreData=null;
+
+    function handleJsonRestore(input){
+        const file=input.files[0];
+        if(!file) return;
+        document.getElementById('json-restore-name').innerText=file.name;
+        const reader=new FileReader();
+        reader.onload=function(e){
+            try{
+                const data=JSON.parse(e.target.result);
+                if(!data.version||!data.version.startsWith('FateenOS')){
+                    showToast('الملف غير صالح — تأكد أنه ملف Fateen OS','error');
+                    return;
+                }
+                jsonRestoreData=data;
+                const prods=(data.products||[]).length;
+                const emps=(data.users||[]).length;
+                const expDate=data.export_date?new Date(data.export_date).toLocaleDateString('ar-EG'):'غير معروف';
+                document.getElementById('json-restore-preview').style.display='block';
+                document.getElementById('json-restore-preview').innerHTML=
+                    '<div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;">'
+                    +'<div style="margin-bottom:4px;"><b>📦 منتجات:</b> '+prods+' صنف</div>'
+                    +'<div style="margin-bottom:4px;"><b>👥 موظفين:</b> '+emps+' موظف</div>'
+                    +'<div><b>📅 تاريخ النسخة:</b> '+expDate+'</div>'
+                    +'<div style="margin-top:8px;color:var(--orange);font-size:11px;">⚠️ المنتجات والموظفين الحاليين سيبقوا — سيتم إضافة الناقص فقط</div>'
+                    +'</div>';
+                document.getElementById('json-restore-actions').style.display='flex';
+            }catch(err){
+                showToast('خطأ في قراءة الملف','error');
+                jsonRestoreData=null;
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    async function confirmJsonRestore(){
+        if(!jsonRestoreData) return;
+        if(!confirm('هل أنت متأكد من استيراد البيانات؟')) return;
+        showToast('جاري الاستيراد...','info');
+        let imported=0;
+        try{
+            // استيراد المنتجات — upsert بالاسم
+            const products=(jsonRestoreData.products||[]).map(p=>({...p,store_key:storeKey,id:undefined}));
+            if(products.length){
+                // حذف الـ id عشان Supabase يعمل insert
+                const cleanProds=products.map(({id,...rest})=>({...rest,store_key:storeKey}));
+                const{error}=await _supabase.from('products').upsert(cleanProds,{onConflict:'name,store_key',ignoreDuplicates:true});
+                if(!error) imported+=cleanProds.length;
+            }
+            showToast('تم استيراد '+imported+' منتج بنجاح ✅','success');
+            cancelJsonRestore();
+        }catch(e){showToast('خطأ في الاستيراد: '+e.message,'error');}
+    }
+
+    function cancelJsonRestore(){
+        jsonRestoreData=null;
+        document.getElementById('json-restore-name').innerText='لم يتم اختيار ملف';
+        document.getElementById('json-restore-preview').style.display='none';
+        document.getElementById('json-restore-actions').style.display='none';
+        document.getElementById('json-restore-input').value='';
+    }
+
+    // ══════════════════════════════
+    // EXCEL IMPORT (منتجات)
+    // ══════════════════════════════
+    let excelImportRows=[];
+
+    function downloadImportTemplate(){
+        const wb=XLSX.utils.book_new();
+        const ws=XLSX.utils.json_to_sheet([
+            {name:'صنف تجريبي',price:100,purchase_price:70,category:'عام',quantity:50,barcode:'',unit:'قطعة',min_stock:5}
+        ]);
+        XLSX.utils.book_append_sheet(wb,ws,'منتجات');
+        XLSX.writeFile(wb,'FateenOS_Import_Template.xlsx');
+    }
+
+    function handleExcelImport(input){
+        const file=input.files[0];
+        if(!file) return;
+        document.getElementById('excel-import-name').innerText=file.name;
+        const reader=new FileReader();
+        reader.onload=function(e){
+            try{
+                const wb=XLSX.read(e.target.result,{type:'binary'});
+                const ws=wb.Sheets[wb.SheetNames[0]];
+                const rows=XLSX.utils.sheet_to_json(ws);
+                if(!rows.length) return showToast('الملف فارغ','error');
+
+                // تطبيع الأعمدة — يقبل عربي وإنجليزي
+                excelImportRows=rows.map(r=>({
+                    name: r.name||r['الاسم']||r['اسم المنتج']||'',
+                    price: parseFloat(r.price||r['السعر']||r['سعر البيع']||0),
+                    purchase_price: parseFloat(r.purchase_price||r['سعر الشراء']||0),
+                    category: r.category||r['الفئة']||r['القسم']||'عام',
+                    quantity: parseInt(r.quantity||r['الكمية']||0),
+                    barcode: String(r.barcode||r['الباركود']||''),
+                    unit: r.unit||r['وحدة القياس']||'قطعة',
+                    min_stock: parseInt(r.min_stock||r['الحد الأدنى']||0),
+                    store_key: storeKey,
+                    is_active: true
+                })).filter(r=>r.name);
+
+                if(!excelImportRows.length) return showToast('لم يتم العثور على منتجات — تحقق من أسماء الأعمدة','error');
+
+                document.getElementById('excel-import-preview').style.display='block';
+                document.getElementById('excel-import-preview').innerHTML=
+                    '<div style="background:var(--green-dim);border:1px solid var(--green);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;margin-bottom:8px;">'
+                    +'<b>✅ '+excelImportRows.length+' منتج جاهز للاستيراد</b>'
+                    +'</div>'
+                    +'<div style="max-height:160px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm);">'
+                    +'<table style="width:100%;border-collapse:collapse;font-size:11px;">'
+                    +'<thead><tr style="background:var(--surface3);"><th style="padding:6px 8px;text-align:right;">الاسم</th><th style="padding:6px 8px;">السعر</th><th style="padding:6px 8px;">الكمية</th><th style="padding:6px 8px;">الفئة</th></tr></thead>'
+                    +'<tbody>'+excelImportRows.slice(0,50).map(r=>'<tr><td style="padding:5px 8px;">'+r.name+'</td><td style="padding:5px 8px;text-align:center;">'+r.price+'</td><td style="padding:5px 8px;text-align:center;">'+r.quantity+'</td><td style="padding:5px 8px;text-align:center;">'+r.category+'</td></tr>').join('')
+                    +(excelImportRows.length>50?'<tr><td colspan="4" style="text-align:center;padding:6px;color:var(--text-muted);">... و '+(excelImportRows.length-50)+' منتج آخر</td></tr>':'')
+                    +'</tbody></table></div>';
+                document.getElementById('excel-import-actions').style.display='flex';
+            }catch(err){
+                showToast('خطأ في قراءة Excel: '+err.message,'error');
+                excelImportRows=[];
+            }
+        };
+        reader.readAsBinaryString(file);
+    }
+
+    async function confirmExcelImport(){
+        if(!excelImportRows.length) return;
+        if(!confirm('سيتم إضافة '+excelImportRows.length+' منتج. المنتجات بنفس الاسم ستُحدَّث. هل أنت متأكد؟')) return;
+        showToast('جاري استيراد المنتجات...','info');
+        try{
+            // upsert على دفعات 50
+            const batchSize=50;
+            let done=0;
+            for(let i=0;i<excelImportRows.length;i+=batchSize){
+                const batch=excelImportRows.slice(i,i+batchSize);
+                const{error}=await _supabase.from('products').upsert(batch,{onConflict:'name,store_key'});
+                if(error) throw error;
+                done+=batch.length;
+            }
+            showToast('تم استيراد '+done+' منتج بنجاح ✅','success');
+            cancelExcelImport();
+        }catch(e){showToast('خطأ في الاستيراد: '+e.message,'error');}
+    }
+
+    function cancelExcelImport(){
+        excelImportRows=[];
+        document.getElementById('excel-import-name').innerText='لم يتم اختيار ملف';
+        document.getElementById('excel-import-preview').style.display='none';
+        document.getElementById('excel-import-actions').style.display='none';
+        document.getElementById('excel-import-input').value='';
     }
 
     async function savePermissions(){
