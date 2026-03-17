@@ -183,12 +183,14 @@
         <button class="nav-btn" onclick="showSection('inventory',this)"><span class="nav-icon">📦</span> مراقبة المخزن</button>
         <button class="nav-btn" onclick="showSection('items',this)"><span class="nav-icon">🏷️</span> ملخص أصناف</button>
         <button class="nav-btn" onclick="showSection('waste',this)"><span class="nav-icon">🗑️</span> ملخص الهالك</button>
+        <button class="nav-btn" onclick="showSection('deficit',this)"><span class="nav-icon">⚠️</span> ملخص العجز</button>
         <button class="nav-btn" onclick="showSection('employees',this)"><span class="nav-icon">👥</span> أداء موظفين</button>
         <button class="nav-btn" onclick="showSection('suppliers',this)"><span class="nav-icon">🚚</span> ملخص موردين</button>
         <button class="nav-btn" onclick="showSection('purchases',this)"><span class="nav-icon">🛒</span> ملخص مشتريات</button>
         <button class="nav-btn" onclick="showSection('profit',this)"><span class="nav-icon">📈</span> الأرباح والخسائر</button>
         <button class="nav-btn" onclick="showSection('general',this)"><span class="nav-icon">📊</span> تقارير عامة</button>
         <button class="nav-btn" onclick="showSection('eod',this)"><span class="nav-icon">🌙</span> ملخص نهاية اليوم</button>
+        <button class="nav-btn" onclick="showSection('debt',this)"><span class="nav-icon">💳</span> المديونية <span style="font-size:9px;background:var(--orange);color:#000;padding:1px 5px;border-radius:4px;margin-right:3px;">قريباً</span></button>
     </div>
 
     <!-- MAIN -->
@@ -205,8 +207,12 @@
                 </div>
                 <span class="filter-label">من:</span><input type="date" id="sales-from" class="filter-input">
                 <span class="filter-label">إلى:</span><input type="date" id="sales-to" class="filter-input">
+                <input type="text" id="sales-search" class="filter-input" placeholder="🔍 رقم فاتورة أو بائع..." oninput="filterSalesTable()" style="min-width:170px;">
                 <div class="f-spacer"></div>
                 <button class="btn btn-accent" onclick="loadSales()">🔄 تحديث</button>
+                <button class="btn btn-green" onclick="doExcel('sales')">📗 Excel</button>
+                <button class="btn btn-orange" onclick="doPDF('sales')">📕 PDF</button>
+                <button class="btn btn-ghost" onclick="doPrint('sales')">🖨️ طباعة</button>
             </div>
             <div class="kpi-grid">
                 <div class="kpi" style="--kc:var(--green)"><div class="kpi-label">💰 إجمالي المبيعات</div><div class="kpi-val" id="s-total">0</div><div class="kpi-sub">ج.م</div></div>
@@ -218,7 +224,7 @@
             <div class="chart-card"><h3>📈 المبيعات اليومية</h3><div class="chart-wrap"><canvas id="sales-chart"></canvas></div></div>
             <div class="table-card">
                 <div class="table-card-header"><h3>سجل الفواتير</h3><span id="s-count-lbl" style="font-size:11px;color:var(--text-muted);">0 عملية</span></div>
-                <div class="table-wrap"><table><thead><tr><th>رقم</th><th>التاريخ</th><th>البائع</th><th>الدفع</th><th>المبلغ</th></tr></thead><tbody id="s-tbody"></tbody></table></div>
+                <div class="table-wrap"><table><thead><tr><th>رقم</th><th>التاريخ</th><th>البائع</th><th>الدفع</th><th>المبلغ</th><th>طباعة</th></tr></thead><tbody id="s-tbody"></tbody></table></div>
             </div>
         </div>
 
@@ -235,6 +241,9 @@
                 <span class="filter-label">إلى:</span><input type="date" id="ret-to" class="filter-input">
                 <div class="f-spacer"></div>
                 <button class="btn btn-accent" onclick="loadReturns()">🔄 تحديث</button>
+                <button class="btn btn-green" onclick="doExcel('returns')">📗 Excel</button>
+                <button class="btn btn-orange" onclick="doPDF('returns')">📕 PDF</button>
+                <button class="btn btn-ghost" onclick="doPrint('returns')">🖨️ طباعة</button>
             </div>
             <div class="kpi-grid">
                 <div class="kpi" style="--kc:var(--red)"><div class="kpi-label">↩️ إجمالي المرتجعات</div><div class="kpi-val" id="r-total">0</div><div class="kpi-sub">ج.م</div></div>
@@ -251,7 +260,11 @@
         <div id="sec-inventory" class="section">
             <div class="page-header"><h2>📦 مراقبة وحركة المخزن</h2><p>حالة المخزون والمنتجات المنتهية الصلاحية</p></div>
             <div class="filter-bar">
+                <div class="f-spacer"></div>
                 <button class="btn btn-accent" onclick="loadInventory()">🔄 تحديث</button>
+                <button class="btn btn-green" onclick="doExcel('inventory')">📗 Excel</button>
+                <button class="btn btn-orange" onclick="doPDF('inventory')">📕 PDF</button>
+                <button class="btn btn-ghost" onclick="doPrint('inventory')">🖨️ طباعة</button>
             </div>
             <div class="kpi-grid">
                 <div class="kpi" style="--kc:var(--accent)"><div class="kpi-label">📦 إجمالي الأصناف</div><div class="kpi-val" id="inv-total">0</div><div class="kpi-sub">صنف</div></div>
@@ -281,6 +294,9 @@
                 <span class="filter-label">إلى:</span><input type="date" id="items-to" class="filter-input">
                 <div class="f-spacer"></div>
                 <button class="btn btn-accent" onclick="loadItems()">🔄 تحديث</button>
+                <button class="btn btn-green" onclick="doExcel('items')">📗 Excel</button>
+                <button class="btn btn-orange" onclick="doPDF('items')">📕 PDF</button>
+                <button class="btn btn-ghost" onclick="doPrint('items')">🖨️ طباعة</button>
             </div>
             <div class="chart-card"><h3>🏆 أكثر 10 أصناف مبيعاً</h3><div class="chart-wrap"><canvas id="items-chart"></canvas></div></div>
             <div class="table-card">
@@ -293,7 +309,11 @@
         <div id="sec-waste" class="section">
             <div class="page-header"><h2>🗑️ ملخص الهالك</h2><p>تتبع الخسائر من البضاعة التالفة</p></div>
             <div class="filter-bar">
+                <div class="f-spacer"></div>
                 <button class="btn btn-accent" onclick="loadWaste()">🔄 تحديث</button>
+                <button class="btn btn-green" onclick="doExcel('waste')">📗 Excel</button>
+                <button class="btn btn-orange" onclick="doPDF('waste')">📕 PDF</button>
+                <button class="btn btn-ghost" onclick="doPrint('waste')">🖨️ طباعة</button>
             </div>
             <div class="kpi-grid">
                 <div class="kpi" style="--kc:var(--red)"><div class="kpi-label">🗑️ إجمالي الهالك</div><div class="kpi-val" id="w-total-qty">0</div><div class="kpi-sub">قطعة</div></div>
@@ -306,7 +326,28 @@
             </div>
         </div>
 
-        <!-- ══════ 6. أداء موظفين ══════ -->
+        <!-- ══════ 6. ملخص العجز ══════ -->
+        <div id="sec-deficit" class="section">
+            <div class="page-header"><h2>⚠️ ملخص العجز</h2><p>المنتجات المفقودة بدون سبب واضح</p></div>
+            <div class="filter-bar">
+                <div class="f-spacer"></div>
+                <button class="btn btn-accent" onclick="loadDeficit()">🔄 تحديث</button>
+                <button class="btn btn-green" onclick="doExcel('deficit')">📗 Excel</button>
+                <button class="btn btn-orange" onclick="doPDF('deficit')">📕 PDF</button>
+                <button class="btn btn-ghost" onclick="doPrint('deficit')">🖨️ طباعة</button>
+            </div>
+            <div class="kpi-grid">
+                <div class="kpi" style="--kc:var(--red)"><div class="kpi-label">⚠️ إجمالي العجز</div><div class="kpi-val" id="def-total-qty">0</div><div class="kpi-sub">قطعة</div></div>
+                <div class="kpi" style="--kc:var(--orange)"><div class="kpi-label">💰 قيمة العجز</div><div class="kpi-val" id="def-total-val">0</div><div class="kpi-sub">ج.م</div></div>
+                <div class="kpi" style="--kc:var(--accent)"><div class="kpi-label">📦 أصناف بها عجز</div><div class="kpi-val" id="def-count">0</div><div class="kpi-sub">صنف</div></div>
+            </div>
+            <div class="table-card">
+                <div class="table-card-header"><h3>تفاصيل العجز</h3></div>
+                <div class="table-wrap"><table><thead><tr><th>المنتج</th><th>القسم</th><th>كمية العجز</th><th>سعر الشراء</th><th>قيمة العجز</th></tr></thead><tbody id="def-tbody"></tbody></table></div>
+            </div>
+        </div>
+
+        <!-- ══════ 7. أداء موظفين ══════ -->
         <div id="sec-employees" class="section">
             <div class="page-header"><h2>👥 أداء الموظفين</h2><p>تحليل كفاءة الفريق وتقارير الوردية</p></div>
             <div class="filter-bar">
@@ -319,6 +360,9 @@
                 <span class="filter-label">إلى:</span><input type="date" id="emp-to" class="filter-input">
                 <div class="f-spacer"></div>
                 <button class="btn btn-accent" onclick="loadEmployees()">🔄 تحديث</button>
+                <button class="btn btn-green" onclick="doExcel('employees')">📗 Excel</button>
+                <button class="btn btn-orange" onclick="doPDF('employees')">📕 PDF</button>
+                <button class="btn btn-ghost" onclick="doPrint('employees')">🖨️ طباعة</button>
             </div>
             <div id="emp-kpis" class="kpi-grid"></div>
             <div class="table-card">
@@ -327,23 +371,28 @@
             </div>
         </div>
 
-        <!-- ══════ 7. ملخص موردين ══════ -->
+        <!-- ══════ 8. ملخص موردين ══════ -->
         <div id="sec-suppliers" class="section">
             <div class="page-header"><h2>🚚 ملخص الموردين</h2><p>تحليل التوريدات ومصادر البضاعة</p></div>
             <div class="filter-bar">
+                <div class="f-spacer"></div>
                 <button class="btn btn-accent" onclick="loadSuppliers()">🔄 تحديث</button>
+                <button class="btn btn-green" onclick="doExcel('suppliers')">📗 Excel</button>
+                <button class="btn btn-orange" onclick="doPDF('suppliers')">📕 PDF</button>
+                <button class="btn btn-ghost" onclick="doPrint('suppliers')">🖨️ طباعة</button>
             </div>
             <div class="kpi-grid">
                 <div class="kpi" style="--kc:var(--accent)"><div class="kpi-label">🚚 عدد الموردين</div><div class="kpi-val" id="sup-count">0</div><div class="kpi-sub">مورد</div></div>
                 <div class="kpi" style="--kc:var(--green)"><div class="kpi-label">📦 إجمالي التوريدات</div><div class="kpi-val" id="sup-orders">0</div><div class="kpi-sub">توريد</div></div>
+                <div class="kpi" style="--kc:var(--orange)"><div class="kpi-label">💰 إجمالي المبالغ</div><div class="kpi-val" id="sup-total-val">0</div><div class="kpi-sub">ج.م</div></div>
             </div>
             <div class="table-card">
                 <div class="table-card-header"><h3>قائمة الموردين</h3></div>
-                <div class="table-wrap"><table><thead><tr><th>المورد</th><th>الهاتف</th><th>عدد التوريدات</th><th>آخر توريد</th></tr></thead><tbody id="sup-tbody"></tbody></table></div>
+                <div class="table-wrap"><table><thead><tr><th>المورد</th><th>الهاتف</th><th>عدد التوريدات</th><th>إجمالي الأصناف</th><th>آخر توريد</th></tr></thead><tbody id="sup-tbody"></tbody></table></div>
             </div>
         </div>
 
-        <!-- ══════ 8. ملخص مشتريات ══════ -->
+        <!-- ══════ 9. ملخص مشتريات ══════ -->
         <div id="sec-purchases" class="section">
             <div class="page-header"><h2>🛒 ملخص المشتريات</h2><p>فواتير الشراء والتكاليف</p></div>
             <div class="filter-bar">
@@ -355,6 +404,9 @@
                 <span class="filter-label">إلى:</span><input type="date" id="pur-to" class="filter-input">
                 <div class="f-spacer"></div>
                 <button class="btn btn-accent" onclick="loadPurchases()">🔄 تحديث</button>
+                <button class="btn btn-green" onclick="doExcel('purchases')">📗 Excel</button>
+                <button class="btn btn-orange" onclick="doPDF('purchases')">📕 PDF</button>
+                <button class="btn btn-ghost" onclick="doPrint('purchases')">🖨️ طباعة</button>
             </div>
             <div class="kpi-grid">
                 <div class="kpi" style="--kc:var(--red)"><div class="kpi-label">🛒 إجمالي المشتريات</div><div class="kpi-val" id="pur-total">0</div><div class="kpi-sub">ج.م</div></div>
@@ -367,7 +419,7 @@
             </div>
         </div>
 
-        <!-- ══════ 9. الأرباح والخسائر ══════ -->
+        <!-- ══════ 10. الأرباح والخسائر ══════ -->
         <div id="sec-profit" class="section">
             <div class="page-header"><h2>📈 الأرباح والخسائر</h2><p>صافي الربح = مبيعات - مشتريات - هالك - مرتجعات</p></div>
             <div class="filter-bar">
@@ -379,6 +431,7 @@
                 <span class="filter-label">إلى:</span><input type="date" id="prof-to" class="filter-input">
                 <div class="f-spacer"></div>
                 <button class="btn btn-accent" onclick="loadProfit()">🔄 تحديث</button>
+                <button class="btn btn-ghost" onclick="doPrint('profit')">🖨️ طباعة</button>
             </div>
             <div class="kpi-grid">
                 <div class="kpi" style="--kc:var(--green)"><div class="kpi-label">💰 إيرادات المبيعات</div><div class="kpi-val" id="pr-revenue">0</div><div class="kpi-sub">ج.م</div></div>
@@ -391,7 +444,7 @@
             <div id="profit-breakdown" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;"></div>
         </div>
 
-        <!-- ══════ 10. تقارير عامة ══════ -->
+        <!-- ══════ 11. تقارير عامة ══════ -->
         <div id="sec-general" class="section">
             <div class="page-header"><h2>📊 تقارير عامة</h2><p>نظرة شاملة على أداء المتجر</p></div>
             <div class="filter-bar">
@@ -403,6 +456,7 @@
                 <span class="filter-label">إلى:</span><input type="date" id="gen-to" class="filter-input">
                 <div class="f-spacer"></div>
                 <button class="btn btn-accent" onclick="loadGeneral()">🔄 تحديث</button>
+                <button class="btn btn-ghost" onclick="doPrint('general')">🖨️ طباعة</button>
             </div>
             <div class="kpi-grid">
                 <div class="kpi" style="--kc:var(--green)"><div class="kpi-label">💰 المبيعات</div><div class="kpi-val" id="gen-sales">0</div><div class="kpi-sub">ج.م</div></div>
@@ -417,14 +471,16 @@
             </div>
         </div>
 
-        <!-- ══════ 11. ملخص نهاية اليوم ══════ -->
+        <!-- ══════ 12. ملخص نهاية اليوم ══════ -->
         <div id="sec-eod" class="section">
             <div class="page-header"><h2>🌙 ملخص نهاية اليوم</h2><p>تقرير يومي شامل مع حالة الخزنة</p></div>
             <div class="filter-bar">
                 <span class="filter-label">التاريخ:</span><input type="date" id="eod-date" class="filter-input">
                 <div class="f-spacer"></div>
                 <button class="btn btn-accent" onclick="loadEOD()">🔄 تحديث</button>
-                <button class="btn btn-orange" onclick="printEOD()">🖨️ طباعة</button>
+                <button class="btn btn-green" onclick="doExcel('eod')">📗 Excel</button>
+                <button class="btn btn-orange" onclick="doPDF('eod')">📕 PDF</button>
+                <button class="btn btn-ghost" onclick="printEOD()">🖨️ طباعة</button>
             </div>
             <div id="eod-content">
                 <div class="kpi-grid">
@@ -435,7 +491,6 @@
                     <div class="kpi" style="--kc:var(--purple)"><div class="kpi-label">💳 فيزا اليوم</div><div class="kpi-val" id="eod-visa">0</div><div class="kpi-sub">ج.م</div></div>
                     <div class="kpi" style="--kc:var(--orange)"><div class="kpi-label">📊 صافي اليوم</div><div class="kpi-val" id="eod-net">0</div><div class="kpi-sub">ج.م</div></div>
                 </div>
-                <!-- خزنة -->
                 <div class="table-card">
                     <div class="table-card-header"><h3>🏦 حالة الخزنة (كاش في الدرج)</h3></div>
                     <div style="padding:16px;">
@@ -459,11 +514,20 @@
                         </div>
                     </div>
                 </div>
-                <!-- أداء الموظفين اليوم -->
                 <div class="table-card">
                     <div class="table-card-header"><h3>👥 أداء الموظفين اليوم</h3></div>
                     <div class="table-wrap"><table><thead><tr><th>الموظف</th><th>الفواتير</th><th>المبيعات</th><th>المرتجعات</th></tr></thead><tbody id="eod-emp-tbody"></tbody></table></div>
                 </div>
+            </div>
+        </div>
+
+        <!-- ══════ 13. المديونية ══════ -->
+        <div id="sec-debt" class="section">
+            <div class="page-header"><h2>💳 تقرير المديونية</h2><p>هذا التقرير سيكون متاحاً بعد تفعيل نظام الأجل</p></div>
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:40px;text-align:center;margin-top:20px;">
+                <div style="font-size:48px;margin-bottom:16px;">💳</div>
+                <h3 style="margin:0 0 8px;font-size:18px;">نظام المديونية قريباً</h3>
+                <p style="color:var(--text-muted);font-size:13px;margin:0;">بعد تفعيل نظام الأجل هيظهر هنا تقرير كامل بالمديونيات والمبالغ المستحقة لكل عميل</p>
             </div>
         </div>
 
@@ -552,43 +616,93 @@
         document.getElementById('sec-'+id).classList.add('active');
         if(btn) btn.classList.add('active');
         currentSectionName=id;
-        const loaders={sales:loadSales,returns:loadReturns,inventory:loadInventory,items:loadItems,waste:loadWaste,employees:loadEmployees,suppliers:loadSuppliers,purchases:loadPurchases,profit:loadProfit,general:loadGeneral,eod:loadEOD};
+        const loaders={sales:loadSales,returns:loadReturns,inventory:loadInventory,items:loadItems,waste:loadWaste,deficit:loadDeficit,employees:loadEmployees,suppliers:loadSuppliers,purchases:loadPurchases,profit:loadProfit,general:loadGeneral,eod:loadEOD};
         if(loaders[id]) loaders[id]();
     }
 
     // ══════════════════════════════
     // 1. SALES
     // ══════════════════════════════
+    let allSalesData=[];
     async function loadSales(){
         const from=document.getElementById('sales-from')?.value||today();
         const to=document.getElementById('sales-to')?.value||today();
         try{
             const{data}=await _supabase.from('sales').select('*').eq('store_key',storeKey).eq('type','sale').gte('created_at',from+'T00:00:00').lte('created_at',to+'T23:59:59').order('created_at',{ascending:false});
-            currentSectionData=data||[];
-            const total=currentSectionData.reduce((s,r)=>s+(parseFloat(r.total_amount)||0),0);
-            const cash=currentSectionData.filter(r=>r.payment_method==='كاش'||!r.payment_method).reduce((s,r)=>s+(parseFloat(r.total_amount)||0),0);
-            const visa=currentSectionData.filter(r=>r.payment_method==='فيزا').reduce((s,r)=>s+(parseFloat(r.total_amount)||0),0);
+            allSalesData=data||[];
+            currentSectionData=allSalesData;
+            renderSalesTable(allSalesData);
+            const total=allSalesData.reduce((s,r)=>s+(parseFloat(r.total_amount)||0),0);
+            const cash=allSalesData.filter(r=>r.payment_method==='كاش'||!r.payment_method).reduce((s,r)=>s+(parseFloat(r.total_amount)||0),0);
+            const visa=allSalesData.filter(r=>r.payment_method==='فيزا').reduce((s,r)=>s+(parseFloat(r.total_amount)||0),0);
             setText('s-total',money(total));
-            setText('s-count',currentSectionData.length);
-            setText('s-avg',money(currentSectionData.length?total/currentSectionData.length:0));
+            setText('s-count',allSalesData.length);
+            setText('s-avg',money(allSalesData.length?total/allSalesData.length:0));
             setText('s-cash',money(cash));
             setText('s-visa',money(visa));
-            setText('s-count-lbl',currentSectionData.length+' عملية');
-            // chart
+            setText('s-count-lbl',allSalesData.length+' عملية');
             const dailyMap={};
-            currentSectionData.forEach(s=>{const d=s.created_at.split('T')[0];dailyMap[d]=(dailyMap[d]||0)+(parseFloat(s.total_amount)||0);});
+            allSalesData.forEach(s=>{const d=s.created_at.split('T')[0];dailyMap[d]=(dailyMap[d]||0)+(parseFloat(s.total_amount)||0);});
             const labels=Object.keys(dailyMap).sort();
-            renderLineChart('sales-chart',labels,Object.values(labels.map(l=>dailyMap[l])),'المبيعات','#00f2fe');
-            // table
-            document.getElementById('s-tbody').innerHTML=currentSectionData.map(s=>`
-                <tr>
-                    <td><span class="badge badge-accent">#${String(s.id).slice(-6)}</span></td>
-                    <td style="font-size:11px;color:var(--text-muted);">${fmt(s.created_at)}</td>
-                    <td style="font-weight:700;">${s.seller_name||'---'}</td>
-                    <td><span class="badge ${s.payment_method==='فيزا'?'badge-purple':'badge-green'}">${s.payment_method||'كاش'}</span></td>
-                    <td style="font-weight:800;color:var(--accent);">${money(s.total_amount)}</td>
-                </tr>`).join('')||emptyRow(5);
+            renderLineChart('sales-chart',labels,labels.map(l=>dailyMap[l]),'المبيعات','#00f2fe');
         }catch(e){showToast('خطأ في تحميل المبيعات','error');}
+    }
+
+    function filterSalesTable(){
+        const q=(document.getElementById('sales-search')?.value||'').toLowerCase();
+        if(!q){renderSalesTable(allSalesData);return;}
+        renderSalesTable(allSalesData.filter(s=>String(s.id).slice(-6).includes(q)||(s.seller_name||'').toLowerCase().includes(q)));
+    }
+
+    function renderSalesTable(data){
+        document.getElementById('s-tbody').innerHTML=data.map(s=>`
+            <tr>
+                <td><span class="badge badge-accent">#${String(s.id).slice(-6)}</span></td>
+                <td style="font-size:11px;color:var(--text-muted);">${fmt(s.created_at)}</td>
+                <td style="font-weight:700;">${s.seller_name||'---'}</td>
+                <td><span class="badge ${s.payment_method==='فيزا'?'badge-purple':'badge-green'}">${s.payment_method||'كاش'}</span></td>
+                <td style="font-weight:800;color:var(--accent);">${money(s.total_amount)}</td>
+                <td><button onclick='printInvoice(${JSON.stringify(s).replace(/'/g,"&#39;")})' style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:3px 8px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;">🖨️</button></td>
+            </tr>`).join('')||emptyRow(6);
+        setText('s-count-lbl',data.length+' عملية');
+    }
+
+    function printInvoice(s){
+        const items=typeof s.items==='string'?JSON.parse(s.items):(s.items||[]);
+        const w=window.open('','_blank','width=400,height=600');
+        w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+        <style>
+            *{margin:0;padding:0;box-sizing:border-box;}
+            body{width:80mm;margin:0 auto;padding:12px;font-family:'Cairo',sans-serif;color:#000;background:#fff;}
+            .center{text-align:center;}
+            .store{font-size:20px;font-weight:900;text-align:center;}
+            .sub{font-size:12px;text-align:center;color:#555;}
+            hr{border:none;border-top:1px dashed #000;margin:8px 0;}
+            .info{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;}
+            table{width:100%;border-collapse:collapse;margin:6px 0;}
+            th{background:#111;color:#fff;padding:5px;font-size:11px;text-align:center;}
+            td{padding:5px;font-size:12px;text-align:center;border-bottom:1px solid #eee;}
+            td.name{text-align:right;}
+            .total{display:flex;border:2px solid #000;border-radius:4px;overflow:hidden;margin-top:8px;}
+            .total-lbl{flex:1;background:#111;color:#fff;padding:8px;text-align:center;font-size:13px;font-weight:800;}
+            .total-val{flex:1;padding:8px;text-align:center;font-size:18px;font-weight:900;}
+            .footer{text-align:center;margin-top:10px;font-size:11px;color:#777;border-top:1px dashed #ccc;padding-top:6px;}
+            @media print{@page{margin:0;size:80mm auto;}body{padding:8px;}}
+        </style></head><body>
+        <div class="store">${storeName}</div>
+        <div class="sub">فاتورة مبيعات</div>
+        <hr>
+        <div class="info"><span>رقم: #${String(s.id).slice(-6)}</span><span>${fmt(s.created_at)}</span></div>
+        <div class="info"><span>البائع: ${s.seller_name||'---'}</span><span>الدفع: ${s.payment_method||'كاش'}</span></div>
+        <hr>
+        <table><thead><tr><th>الصنف</th><th>ك</th><th>سعر</th><th>إجمالي</th></tr></thead>
+        <tbody>${items.map(i=>`<tr><td class="name">${i.product_name}</td><td>${i.qty}</td><td>${i.price}</td><td>${(i.qty*i.price).toFixed(0)}</td></tr>`).join('')}</tbody></table>
+        <div class="total"><div class="total-lbl">الإجمالي</div><div class="total-val">${parseFloat(s.total_amount).toFixed(0)} ج.م</div></div>
+        <div class="footer">شكراً لزيارتكم 🌟 — Fateen OS</div>
+        <script>window.onload=()=>{window.print();setTimeout(()=>window.close(),1200);}<\/script>
+        </body></html>`);
+        w.document.close();
     }
 
     // ══════════════════════════════
@@ -747,31 +861,79 @@
     }
 
     // ══════════════════════════════
-    // 7. SUPPLIERS
+    // 7. SUPPLIERS - مصلحة
     // ══════════════════════════════
     async function loadSuppliers(){
         try{
-            const[{data:suppliers},{data:records}]=await Promise.all([
+            const[{data:suppliers},{data:records},{data:purchases}]=await Promise.all([
                 _supabase.from('suppliers').select('*').eq('store_key',storeKey),
-                _supabase.from('supply_records').select('*').eq('store_key',storeKey).order('created_at',{ascending:false})
+                _supabase.from('supply_records').select('*').eq('store_key',storeKey).order('created_at',{ascending:false}),
+                _supabase.from('purchases').select('supplier,total_amount,items_count').eq('store_key',storeKey)
             ]);
-            setText('sup-count',(suppliers||[]).length);
-            setText('sup-orders',(records||[]).length);
+            const supList=suppliers||[];
+            const recList=records||[];
+            const purList=purchases||[];
+
+            setText('sup-count',supList.length);
+            setText('sup-orders',recList.length);
+
+            // حساب إجمالي المبالغ من جدول purchases
+            const totalVal=purList.reduce((s,r)=>s+(parseFloat(r.total_amount)||0),0);
+            setText('sup-total-val',money(totalVal));
+
             // count per supplier
             const countMap={};
+            const itemsMap={};
             const lastMap={};
-            (records||[]).forEach(r=>{
-                countMap[r.supplier]=(countMap[r.supplier]||0)+1;
-                if(!lastMap[r.supplier]) lastMap[r.supplier]=r.created_at;
+            recList.forEach(r=>{
+                const key=r.supplier||'غير محدد';
+                countMap[key]=(countMap[key]||0)+1;
+                itemsMap[key]=(itemsMap[key]||0)+(r.total_items||0);
+                if(!lastMap[key]) lastMap[key]=r.created_at;
             });
-            document.getElementById('sup-tbody').innerHTML=(suppliers||[]).map(s=>`
+            // دمج من purchases كمان
+            purList.forEach(p=>{
+                const key=p.supplier||'غير محدد';
+                if(!countMap[key]) countMap[key]=0;
+                itemsMap[key]=(itemsMap[key]||0)+(p.items_count||0);
+            });
+
+            // لو مفيش موردين في جدول suppliers - اعرض من الـ records
+            let displayList=supList.length>0?supList:Object.keys({...countMap}).map(name=>({name,phone:'---'}));
+
+            document.getElementById('sup-tbody').innerHTML=displayList.length?displayList.map(s=>`
                 <tr>
-                    <td style="font-weight:700;">${s.name}</td>
+                    <td style="font-weight:700;">${s.name||s}</td>
                     <td>${s.phone||'---'}</td>
-                    <td style="color:var(--accent);font-weight:700;">${countMap[s.name]||0}</td>
-                    <td style="font-size:11px;color:var(--text-muted);">${lastMap[s.name]?fmt(lastMap[s.name]):'---'}</td>
-                </tr>`).join('')||emptyRow(4);
-        }catch(e){showToast('خطأ في تحميل الموردين','error');}
+                    <td style="color:var(--accent);font-weight:700;">${countMap[s.name||s]||0}</td>
+                    <td style="color:var(--text-muted);">${itemsMap[s.name||s]||0} صنف</td>
+                    <td style="font-size:11px;color:var(--text-muted);">${lastMap[s.name||s]?fmt(lastMap[s.name||s]):'---'}</td>
+                </tr>`).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px;">لا يوجد موردين مسجلين — أضف موردين من صفحة المخزن</td></tr>';
+        }catch(e){showToast('خطأ في تحميل الموردين: '+e.message,'error');}
+    }
+
+    // ══════════════════════════════
+    // DEFICIT - العجز (جديد)
+    // ══════════════════════════════
+    async function loadDeficit(){
+        try{
+            const{data}=await _supabase.from('products').select('*').eq('store_key',storeKey).gt('deficit_qty',0);
+            const defList=data||[];
+            const totalQty=defList.reduce((s,p)=>s+(p.deficit_qty||0),0);
+            const totalVal=defList.reduce((s,p)=>s+((p.deficit_qty||0)*(p.cost_price||0)),0);
+            setText('def-total-qty',totalQty);
+            setText('def-total-val',money(totalVal));
+            setText('def-count',defList.length);
+            currentSectionData=defList.map(p=>({'المنتج':p.product_name,'القسم':p.category||'---','كمية العجز':p.deficit_qty,'سعر الشراء':p.cost_price||0,'قيمة العجز':(p.deficit_qty||0)*(p.cost_price||0)}));
+            document.getElementById('def-tbody').innerHTML=defList.length?defList.sort((a,b)=>(b.deficit_qty||0)-(a.deficit_qty||0)).map(p=>`
+                <tr>
+                    <td style="font-weight:700;">${p.product_name}</td>
+                    <td>${p.category||'---'}</td>
+                    <td style="color:var(--red);font-weight:800;">${p.deficit_qty}</td>
+                    <td>${money(p.cost_price||0)}</td>
+                    <td style="color:var(--red);font-weight:800;">${money((p.deficit_qty||0)*(p.cost_price||0))}</td>
+                </tr>`).join(''):emptyRow(5);
+        }catch(e){showToast('خطأ في تحميل العجز','error');}
     }
 
     // ══════════════════════════════
@@ -919,21 +1081,141 @@
         }catch(e){showToast('خطأ في تحميل ملخص اليوم','error');}
     }
 
-    function printEOD(){
-        const w=window.open('','_blank','width=600,height=800');
-        const content=document.getElementById('eod-content').innerHTML;
-        w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><style>
-            body{font-family:Cairo,sans-serif;padding:20px;background:#fff;color:#000;}
-            table{width:100%;border-collapse:collapse;}
-            th,td{padding:8px;border:1px solid #ddd;font-size:12px;}
-            th{background:#f0f0f0;}
-            h3{color:#004643;margin:12px 0 6px;}
-        </style></head><body><h2>ملخص نهاية اليوم — ${storeName}</h2>${content}<script>window.onload=()=>{window.print();setTimeout(()=>window.close(),1200);}<\/script></body></html>`);
+    // EXPORT FUNCTIONS
+    function doExcel(section){
+        let data=[];
+        if(section==='sales') data=allSalesData.map(s=>({'رقم':'#'+String(s.id).slice(-6),'التاريخ':fmt(s.created_at),'البائع':s.seller_name||'','الدفع':s.payment_method||'كاش','المبلغ':s.total_amount}));
+        else if(section==='returns') data=currentSectionData;
+        else if(section==='inventory'||section==='waste'||section==='deficit'||section==='employees'||section==='suppliers'||section==='purchases'||section==='eod') data=currentSectionData;
+        else if(section==='items') data=currentSectionData;
+        if(!data.length) return showToast('لا توجد بيانات للتصدير','info');
+        const ws=XLSX.utils.json_to_sheet(data);
+        const wb=XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb,ws,'تقرير');
+        XLSX.writeFile(wb,`تقرير_${section}_${today()}.xlsx`);
+        showToast('تم تصدير Excel بنجاح','success');
+    }
+
+    function doPDF(section){
+        try{
+            const{jsPDF}=window.jspdf;
+            const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+            doc.setFillColor(17,17,17);doc.rect(0,0,297,22,'F');
+            doc.setTextColor(0,242,254);doc.setFontSize(14);doc.setFont('helvetica','bold');
+            doc.text(`Fateen OS — ${storeName}`,148,10,{align:'center'});
+            doc.setFontSize(9);doc.setTextColor(180,180,180);
+            doc.text(`${section} Report — ${new Date().toLocaleDateString('en-EG')}`,148,18,{align:'center'});
+            // جمع بيانات من الجدول الحالي
+            const activeSection=document.getElementById('sec-'+section);
+            const table=activeSection?.querySelector('table');
+            if(table){
+                const head=[],body=[];
+                table.querySelectorAll('thead tr th').forEach(th=>head.push(th.innerText));
+                table.querySelectorAll('tbody tr').forEach(tr=>{
+                    const row=[];
+                    tr.querySelectorAll('td').forEach(td=>row.push(td.innerText.trim()));
+                    if(row.length) body.push(row);
+                });
+                doc.autoTable({startY:26,head:[head],body,styles:{fontSize:8,halign:'center'},headStyles:{fillColor:[0,70,67],textColor:[255,255,255]},alternateRowStyles:{fillColor:[245,245,245]},margin:{left:8,right:8}});
+            }
+            doc.save(`تقرير_${section}_${today()}.pdf`);
+            showToast('تم تصدير PDF بنجاح','success');
+        }catch(e){showToast('خطأ في PDF: '+e.message,'error');}
+    }
+
+    function doPrint(section){
+        const activeSection=document.getElementById('sec-'+section);
+        if(!activeSection) return;
+        const w=window.open('','_blank','width=900,height=700');
+        w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+        <style>
+            body{font-family:'Cairo',sans-serif;padding:20px;background:#fff;color:#000;direction:rtl;}
+            h1{font-size:18px;font-weight:900;margin-bottom:4px;}
+            .sub{font-size:12px;color:#555;margin-bottom:16px;}
+            table{width:100%;border-collapse:collapse;margin-bottom:16px;}
+            th{background:#004643;color:#fff;padding:8px;font-size:12px;}
+            td{padding:7px 8px;border-bottom:1px solid #ddd;font-size:12px;}
+            .kpi-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+            .kpi-box{background:#f5f5f5;border:1px solid #ddd;border-radius:8px;padding:10px 14px;min-width:120px;}
+            .kpi-box .lbl{font-size:11px;color:#777;margin-bottom:4px;}
+            .kpi-box .val{font-size:18px;font-weight:900;}
+            @media print{@page{margin:10mm;}}
+        </style></head><body>
+        <h1>${storeName} — تقرير ${section}</h1>
+        <div class="sub">${new Date().toLocaleDateString('ar-EG',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</div>
+        ${activeSection.innerHTML}
+        <script>
+            document.querySelectorAll('.filter-bar,.btn,.page-header p,.chart-card').forEach(el=>el.style.display='none');
+            window.onload=()=>{window.print();setTimeout(()=>window.close(),1500);}
+        <\/script></body></html>`);
         w.document.close();
     }
 
-    // CHARTS
-    function renderLineChart(canvasId,labels,data,label,color){
+    function exportExcel(){ doExcel(currentSectionName); }
+    function exportPDF(){ doPDF(currentSectionName); }
+
+    function printEOD(){
+        const date=document.getElementById('eod-date')?.value||today();
+        const salesVal=document.getElementById('eod-sales')?.innerText||'0';
+        const returnsVal=document.getElementById('eod-returns')?.innerText||'0';
+        const countVal=document.getElementById('eod-count')?.innerText||'0';
+        const cashVal=document.getElementById('eod-cash')?.innerText||'0';
+        const visaVal=document.getElementById('eod-visa')?.innerText||'0';
+        const netVal=document.getElementById('eod-net')?.innerText||'0';
+        const expectedCash=document.getElementById('eod-expected-cash')?.innerText||'0';
+        const empTable=document.getElementById('eod-emp-tbody')?.innerHTML||'';
+        const w=window.open('','_blank','width=500,height=700');
+        w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+        <style>
+            *{margin:0;padding:0;box-sizing:border-box;}
+            body{width:90mm;margin:0 auto;padding:14px;font-family:'Cairo',sans-serif;color:#000;background:#fff;}
+            .header{text-align:center;border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:12px;}
+            .store{font-size:20px;font-weight:900;}
+            .title{font-size:13px;color:#444;margin-top:2px;}
+            .date{font-size:11px;color:#777;margin-top:2px;}
+            .section-title{font-size:12px;font-weight:800;background:#004643;color:#fff;padding:4px 8px;border-radius:4px;margin:12px 0 6px;}
+            .row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eee;font-size:13px;}
+            .row .lbl{color:#444;}
+            .row .val{font-weight:800;}
+            .highlight{background:#f0fdf4;border:1px solid #004643;border-radius:6px;padding:10px;text-align:center;margin:10px 0;}
+            .highlight .lbl{font-size:11px;color:#004643;margin-bottom:4px;}
+            .highlight .val{font-size:22px;font-weight:900;color:#004643;}
+            table{width:100%;border-collapse:collapse;margin-top:6px;}
+            th{background:#333;color:#fff;padding:5px;font-size:11px;text-align:center;}
+            td{padding:5px;font-size:11px;text-align:center;border-bottom:1px solid #eee;}
+            .footer{text-align:center;margin-top:14px;font-size:11px;color:#777;border-top:1px dashed #ccc;padding-top:8px;}
+            @media print{@page{margin:0;size:90mm auto;}body{padding:10px;}}
+        </style></head><body>
+        <div class="header">
+            <div class="store">${storeName}</div>
+            <div class="title">ملخص نهاية اليوم</div>
+            <div class="date">${new Date(date).toLocaleDateString('ar-EG',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</div>
+        </div>
+        <div class="section-title">📊 ملخص المبيعات</div>
+        <div class="row"><span class="lbl">💰 إجمالي المبيعات</span><span class="val" style="color:#004643;">${salesVal}</span></div>
+        <div class="row"><span class="lbl">↩️ المرتجعات</span><span class="val" style="color:#c0392b;">${returnsVal}</span></div>
+        <div class="row"><span class="lbl">🧾 عدد الفواتير</span><span class="val">${countVal}</span></div>
+        <div class="row"><span class="lbl">💵 كاش</span><span class="val" style="color:#00875a;">${cashVal}</span></div>
+        <div class="row"><span class="lbl">💳 فيزا</span><span class="val" style="color:#7c3aed;">${visaVal}</span></div>
+        <div class="highlight">
+            <div class="lbl">📊 صافي اليوم</div>
+            <div class="val">${netVal}</div>
+        </div>
+        <div class="section-title">🏦 حالة الخزنة</div>
+        <div class="row"><span class="lbl">كاش وارد</span><span class="val">${cashVal}</span></div>
+        <div class="highlight" style="background:#f0f9ff;border-color:#004643;">
+            <div class="lbl">💵 الكاش المتوقع في الدرج</div>
+            <div class="val">${expectedCash}</div>
+        </div>
+        <div class="section-title">👥 أداء الموظفين</div>
+        <table><thead><tr><th>الموظف</th><th>الفواتير</th><th>المبيعات</th><th>المرتجعات</th></tr></thead><tbody>${empTable}</tbody></table>
+        <div class="footer">Fateen OS — ${new Date().toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'})}</div>
+        <script>window.onload=()=>{window.print();setTimeout(()=>window.close(),1500);}<\/script>
+        </body></html>`);
+        w.document.close();
+    }(canvasId,labels,data,label,color){
         const canvas=document.getElementById(canvasId);
         if(!canvas) return;
         const isDark=document.documentElement.getAttribute('data-theme')!=='light';
