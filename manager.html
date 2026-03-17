@@ -386,34 +386,23 @@
         </div>
 
         <!-- Stats -->
-        <div class="m-stats">
+        <div class="m-stats" style="grid-template-columns:repeat(2,1fr);">
             <div class="m-stat">
-                <p class="lbl">مبيعات اليوم</p>
+                <p class="lbl">💰 مبيعات اليوم</p>
                 <p class="val" id="m-total-sales" style="color:var(--green);">0 ج.م</p>
             </div>
             <div class="m-stat">
-                <p class="lbl">مرتجع</p>
+                <p class="lbl">↩️ مرتجع</p>
                 <p class="val" id="m-returns" style="color:var(--red);">0 ج.م</p>
             </div>
             <div class="m-stat">
-                <p class="lbl">الفواتير</p>
+                <p class="lbl">🧾 الفواتير</p>
                 <p class="val" id="m-bill-count" style="color:var(--accent);">0</p>
             </div>
-        </div>
-
-        <!-- التقرير اليومي موبايل - زرار -->
-        <button class="btn btn-primary" onclick="openDailyReportModal()" style="width:100%;justify-content:center;font-size:14px;padding:12px;margin-bottom:14px;">
-            📅 التقرير اليومي
-        </button>
-
-        <!-- Quick nav -->
-        <div class="m-nav">
-            <a class="m-nav-item" onclick="scrollToMSales()"><span class="ni">💰</span>مبيعات اليوم</a>
-            <a class="m-nav-item" onclick="location.href='pos.html'"><span class="ni">🖥️</span>الكاشير</a>
-            <a class="m-nav-item" onclick="location.href='reports.html'"><span class="ni">📋</span>التقارير</a>
-            <a class="m-nav-item" onclick="location.href='inventory.html'"><span class="ni">🏪</span>المخزن</a>
-            <a class="m-nav-item" onclick="openUserModal()"><span class="ni">👥</span>الموظفين</a>
-            <a class="m-nav-item" onclick="location.href='accounting.html'"><span class="ni">📒</span>المحاسبة</a>
+            <div class="m-stat" style="cursor:pointer;border-color:var(--accent);background:var(--accent-dim);" onclick="openDailyReportModal()">
+                <p class="lbl" style="color:var(--accent);">📅 التقرير اليومي</p>
+                <p class="val" style="color:var(--accent);font-size:12px;">اضغط للعرض</p>
+            </div>
         </div>
 
         <!-- مبيعات اليوم -->
@@ -522,18 +511,23 @@
         </div>
 
         <!-- Stats -->
-        <div class="d-stats">
+        <div class="d-stats" style="grid-template-columns:repeat(4,1fr);">
             <div class="d-stat green">
-                <h4>مبيعات اليوم</h4>
+                <h4>💰 مبيعات اليوم</h4>
                 <p id="d-total-sales">0 ج.م</p>
             </div>
             <div class="d-stat red">
-                <h4>إجمالي المرتجع</h4>
+                <h4>↩️ إجمالي المرتجع</h4>
                 <p id="d-returns">0 ج.م</p>
             </div>
-            <div class="d-stat accent" style="cursor:pointer;" onclick="openDailyReportModal()">
-                <h4>عدد الفواتير — 📅 التقرير اليومي</h4>
+            <div class="d-stat accent">
+                <h4>🧾 عدد الفواتير</h4>
                 <p id="d-bill-count">0</p>
+            </div>
+            <div class="d-stat" style="cursor:pointer;border-color:var(--border);background:var(--surface2);" onclick="openDailyReportModal()"
+                onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+                <h4 style="color:var(--text-muted);">📅 التقرير اليومي</h4>
+                <p style="font-size:14px;color:var(--accent);font-weight:800;">اضغط للعرض</p>
             </div>
         </div>
 
