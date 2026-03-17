@@ -1062,7 +1062,7 @@
                 updated_at:new Date().toISOString()
             }).eq('id',id);
             if(error) throw error;
-            showToast(`تم تسجيل عجز ${qty} قطعة${reason?' — '+reason:''}','success');
+            showToast(`تم تسجيل عجز ${qty} قطعة${reason?' — '+reason:''}`, 'success');
             closeModal('deficitModal');
             loadInventory();
         }catch(e){showToast('خطأ: '+e.message,'error');}
@@ -1123,7 +1123,7 @@
                 updated_at:new Date().toISOString()
             }).eq('id',id);
             if(error) throw error;
-            showToast(`تمت التسوية — الكمية الجديدة: ${newQty}${reason?' — '+reason:''}','success');
+            showToast(`تمت التسوية — الكمية الجديدة: ${newQty}${reason?' — '+reason:''}`, 'success');
             closeModal('settlementModal');
             loadInventory();
         }catch(e){showToast('خطأ: '+e.message,'error');}
