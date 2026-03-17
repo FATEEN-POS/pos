@@ -85,7 +85,7 @@
 
         /* موبايل: إخفاء أعمدة غير ضرورية */
         @media(max-width:768px){
-            .col-barcode,.col-cost{display:none;}
+            .col-barcode,.col-cost,.col-hide-sm{display:none;}
             th,td{padding:8px 7px;font-size:11px;}
         }
 
@@ -156,10 +156,14 @@
 <div class="action-bar">
     <button class="btn btn-accent" onclick="openAddModal()">✨ صنف جديد</button>
     <button class="btn btn-green"  onclick="openOrderModal()">📦 توريد فاتورة</button>
-    <button class="btn btn-orange" onclick="openExportChoice()">📊 جرد المخزن</button>
+    <button class="btn btn-orange" onclick="openExportChoice()">📊 جرد مفصل</button>
     <button class="btn btn-purple" onclick="exportBackup()">💾 Back-Up</button>
     <button class="btn" id="fav-filter-btn" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);" onclick="toggleFavFilter()">⭐ المفضلة</button>
     <button class="btn btn-white"  onclick="openImportChoice()">📥 Back-In</button>
+    <button class="btn" style="background:var(--red-dim);border:1px solid var(--red);color:var(--red);" onclick="openDeficitModal()">⚠️ عجز</button>
+    <button class="btn" style="background:var(--accent-dim);border:1px solid var(--accent);color:var(--accent);" onclick="openSettlementModal()">🔧 تسوية</button>
+    <button class="btn" style="background:var(--orange-dim);border:1px solid var(--orange);color:var(--orange);" onclick="openDiscountModal()">🏷️ خصومات</button>
+    <button class="btn" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);" onclick="openTransferModal()">🔄 تحويل <span style="font-size:9px;background:var(--orange);color:#000;padding:1px 5px;border-radius:4px;margin-right:2px;">تجريبي</span></button>
 </div>
 
 <div class="page">
@@ -190,6 +194,9 @@
                         <th>المخزون</th>
                         <th class="col-cost">التكلفة</th>
                         <th>البيع</th>
+                        <th class="col-hide-sm">الخصم</th>
+                        <th class="col-hide-sm">آخر توريد</th>
+                        <th class="col-hide-sm">آخر تعديل</th>
                         <th>الصلاحية</th>
                         <th>إجراءات</th>
                     </tr>
@@ -354,6 +361,160 @@
     </div>
 </div>
 
+<!-- Deficit Modal - عجز -->
+<div id="deficitModal" class="modal">
+    <div class="modal-box" style="width:400px;">
+        <div class="modal-title">
+            <span>⚠️ تسجيل عجز</span>
+            <span class="modal-close" onclick="closeModal('deficitModal')">✕</span>
+        </div>
+        <p style="font-size:12px;color:var(--text-muted);margin:0 0 16px;">العجز = منتجات مفقودة بدون سبب واضح (سرقة، ضياع)</p>
+        <div class="field-group">
+            <label>ابحث عن المنتج</label>
+            <div style="position:relative;">
+                <input type="text" id="deficit-search" placeholder="اسم أو باركود..." oninput="deficitSearchProducts()" autocomplete="off" style="width:100%;background:var(--input-bg);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:var(--radius-sm);font-family:'Cairo',sans-serif;font-size:13px;outline:none;">
+                <div id="deficit-search-results" style="display:none;position:absolute;top:100%;right:0;left:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);z-index:10;max-height:180px;overflow-y:auto;box-shadow:var(--shadow);"></div>
+            </div>
+        </div>
+        <input type="hidden" id="deficit-product-id">
+        <p id="deficit-product-name" style="font-weight:800;font-size:14px;margin:0 0 4px;color:var(--accent);"></p>
+        <p id="deficit-current-stock" style="font-size:12px;color:var(--text-muted);margin:0 0 14px;"></p>
+        <div class="field-group"><label>الكمية المفقودة</label><input type="number" id="deficit-qty" value="1" min="1"></div>
+        <div class="field-group"><label>السبب (اختياري)</label><input type="text" id="deficit-reason" placeholder="سرقة / ضياع / خطأ في العد..."></div>
+        <div style="display:flex;gap:10px;margin-top:6px;">
+            <button class="btn btn-red" style="flex:1;justify-content:center;" onclick="submitDeficit()">⚠️ تأكيد العجز</button>
+            <button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="closeModal('deficitModal')">إلغاء</button>
+        </div>
+    </div>
+</div>
+
+<!-- Settlement Modal - تسوية -->
+<div id="settlementModal" class="modal">
+    <div class="modal-box" style="width:400px;">
+        <div class="modal-title">
+            <span>🔧 تسوية مخزون</span>
+            <span class="modal-close" onclick="closeModal('settlementModal')">✕</span>
+        </div>
+        <p style="font-size:12px;color:var(--text-muted);margin:0 0 16px;">التسوية = تصحيح الكمية في النظام لتطابق الواقع الفعلي</p>
+        <div class="field-group">
+            <label>ابحث عن المنتج</label>
+            <div style="position:relative;">
+                <input type="text" id="settlement-search" placeholder="اسم أو باركود..." oninput="settlementSearchProducts()" autocomplete="off" style="width:100%;background:var(--input-bg);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:var(--radius-sm);font-family:'Cairo',sans-serif;font-size:13px;outline:none;">
+                <div id="settlement-search-results" style="display:none;position:absolute;top:100%;right:0;left:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);z-index:10;max-height:180px;overflow-y:auto;box-shadow:var(--shadow);"></div>
+            </div>
+        </div>
+        <input type="hidden" id="settlement-product-id">
+        <p id="settlement-product-name" style="font-weight:800;font-size:14px;margin:0 0 4px;color:var(--accent);"></p>
+        <p id="settlement-current-stock" style="font-size:12px;color:var(--text-muted);margin:0 0 14px;"></p>
+        <div class="field-group"><label>الكمية الفعلية (اللي في الواقع)</label><input type="number" id="settlement-qty" value="0" min="0"></div>
+        <div class="field-group"><label>سبب التسوية</label><input type="text" id="settlement-reason" placeholder="خطأ في الإدخال / فرق جرد..."></div>
+        <div id="settlement-diff" style="background:var(--surface2);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px;display:none;">
+            <span style="font-size:12px;color:var(--text-muted);">الفرق: </span>
+            <span id="settlement-diff-val" style="font-weight:800;"></span>
+        </div>
+        <div style="display:flex;gap:10px;">
+            <button class="btn btn-accent" style="flex:1;justify-content:center;" onclick="submitSettlement()">🔧 تأكيد التسوية</button>
+            <button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="closeModal('settlementModal')">إلغاء</button>
+        </div>
+    </div>
+</div>
+
+<!-- Discount Modal - خصومات -->
+<div id="discountModal" class="modal">
+    <div class="modal-box" style="width:480px;">
+        <div class="modal-title">
+            <span>🏷️ إدارة الخصومات</span>
+            <span class="modal-close" onclick="closeModal('discountModal')">✕</span>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:14px;">
+            <button class="btn btn-accent" style="flex:1;justify-content:center;font-size:12px;" onclick="switchDiscountMode('single')">خصم على منتج</button>
+            <button class="btn btn-ghost" style="flex:1;justify-content:center;font-size:12px;" onclick="switchDiscountMode('bulk')">خصم على قسم كامل</button>
+        </div>
+        <!-- Single product -->
+        <div id="discount-single">
+            <div class="field-group">
+                <label>ابحث عن المنتج</label>
+                <div style="position:relative;">
+                    <input type="text" id="discount-search" placeholder="اسم أو باركود..." oninput="discountSearchProducts()" autocomplete="off" style="width:100%;background:var(--input-bg);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:var(--radius-sm);font-family:'Cairo',sans-serif;font-size:13px;outline:none;">
+                    <div id="discount-search-results" style="display:none;position:absolute;top:100%;right:0;left:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);z-index:10;max-height:180px;overflow-y:auto;box-shadow:var(--shadow);"></div>
+                </div>
+            </div>
+            <input type="hidden" id="discount-product-id">
+            <p id="discount-product-name" style="font-weight:800;font-size:14px;margin:0 0 4px;color:var(--accent);"></p>
+            <p id="discount-product-price" style="font-size:12px;color:var(--text-muted);margin:0 0 14px;"></p>
+            <div class="field-row">
+                <div class="field-group">
+                    <label>نوع الخصم</label>
+                    <select id="discount-type" onchange="calcDiscountPreview()" style="width:100%;background:var(--input-bg);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:var(--radius-sm);font-family:'Cairo',sans-serif;font-size:13px;outline:none;">
+                        <option value="percent">نسبة مئوية %</option>
+                        <option value="fixed">مبلغ ثابت ج.م</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label>قيمة الخصم</label>
+                    <input type="number" id="discount-value" value="0" min="0" oninput="calcDiscountPreview()">
+                </div>
+            </div>
+            <div id="discount-preview" style="background:var(--surface2);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px;display:none;text-align:center;">
+                <span style="font-size:12px;color:var(--text-muted);">السعر بعد الخصم: </span>
+                <span id="discount-new-price" style="font-size:18px;font-weight:900;color:var(--green);"></span>
+            </div>
+        </div>
+        <!-- Bulk discount -->
+        <div id="discount-bulk" style="display:none;">
+            <div class="field-group">
+                <label>اختر القسم</label>
+                <select id="discount-bulk-cat" style="width:100%;background:var(--input-bg);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:var(--radius-sm);font-family:'Cairo',sans-serif;font-size:13px;outline:none;"></select>
+            </div>
+            <div class="field-row">
+                <div class="field-group">
+                    <label>نوع الخصم</label>
+                    <select id="discount-bulk-type" style="width:100%;background:var(--input-bg);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:var(--radius-sm);font-family:'Cairo',sans-serif;font-size:13px;outline:none;">
+                        <option value="percent">نسبة مئوية %</option>
+                        <option value="fixed">مبلغ ثابت ج.م</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label>قيمة الخصم</label>
+                    <input type="number" id="discount-bulk-value" value="0" min="0">
+                </div>
+            </div>
+            <p id="discount-bulk-count" style="font-size:12px;color:var(--text-muted);margin-bottom:12px;"></p>
+        </div>
+        <div style="display:flex;gap:10px;">
+            <button class="btn btn-orange" style="flex:1;justify-content:center;" onclick="applyDiscount()">🏷️ تطبيق الخصم</button>
+            <button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="closeModal('discountModal')">إلغاء</button>
+        </div>
+    </div>
+</div>
+
+<!-- Transfer Modal - تحويل (تجريبي) -->
+<div id="transferModal" class="modal">
+    <div class="modal-box" style="width:420px;">
+        <div class="modal-title">
+            <span>🔄 تحويل مخزون <span style="font-size:11px;background:var(--orange);color:#000;padding:2px 8px;border-radius:6px;">تجريبي</span></span>
+            <span class="modal-close" onclick="closeModal('transferModal')">✕</span>
+        </div>
+        <p style="font-size:12px;color:var(--text-muted);margin:0 0 16px;">⚠️ هذه الخاصية تجريبية — تحويل منتج من هذا المتجر لمتجر آخر</p>
+        <div class="field-group">
+            <label>ابحث عن المنتج</label>
+            <div style="position:relative;">
+                <input type="text" id="transfer-search" placeholder="اسم أو باركود..." oninput="transferSearchProducts()" autocomplete="off" style="width:100%;background:var(--input-bg);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:var(--radius-sm);font-family:'Cairo',sans-serif;font-size:13px;outline:none;">
+                <div id="transfer-search-results" style="display:none;position:absolute;top:100%;right:0;left:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);z-index:10;max-height:180px;overflow-y:auto;box-shadow:var(--shadow);"></div>
+            </div>
+        </div>
+        <input type="hidden" id="transfer-product-id">
+        <p id="transfer-product-name" style="font-weight:800;font-size:14px;margin:0 0 4px;color:var(--accent);"></p>
+        <p id="transfer-current-stock" style="font-size:12px;color:var(--text-muted);margin:0 0 14px;"></p>
+        <div class="field-group"><label>كود المتجر المستلم</label><input type="text" id="transfer-target-store" placeholder="مثال: FS1234"></div>
+        <div class="field-group"><label>الكمية المحولة</label><input type="number" id="transfer-qty" value="1" min="1"></div>
+        <div style="display:flex;gap:10px;margin-top:6px;">
+            <button class="btn btn-accent" style="flex:1;justify-content:center;" onclick="submitTransfer()">🔄 تأكيد التحويل</button>
+            <button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="closeModal('transferModal')">إلغاء</button>
+        </div>
+    </div>
+</div>
+
 <div id="print-area">
     <div id="pr-store" style="font-size:8pt;font-weight:bold;"></div>
     <div id="pr-name"  style="font-size:9pt;font-weight:bold;"></div>
@@ -463,12 +624,17 @@
 
     function renderTable(products){
         const tbody=document.getElementById('inventory-table');
-        if(!products.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:24px;">لا توجد منتجات</td></tr>';return;}
+        if(!products.length){tbody.innerHTML='<tr><td colspan="11" style="text-align:center;color:var(--text-muted);padding:24px;">لا توجد منتجات</td></tr>';return;}
+        const favIds=getFavoriteIds();
         tbody.innerHTML=products.map(p=>{
             const stockBadge=p.stock===0?`<span class="badge badge-red">نفد</span>`:p.stock<=5?`<span class="badge badge-orange">${p.stock}</span>`:`<span class="badge badge-green">${p.stock}</span>`;
             const catBadge=p.category?`<span class="badge badge-purple">${p.category}</span>`:`<span style="color:var(--text-muted);font-size:10px;">---</span>`;
             const expiry=p.expiry_date?`<span style="font-size:11px;color:var(--text-muted);">${p.expiry_date}</span>`:`<span style="color:var(--text-muted);font-size:10px;">---</span>`;
             const safeN=p.product_name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+            const discountBadge=p.discount_price&&p.discount_price<p.price?`<span class="badge badge-orange">${p.discount_price} ج.م</span>`:`<span style="color:var(--text-muted);font-size:10px;">---</span>`;
+            const lastSupply=p.last_supply_date?`<span style="font-size:10px;color:var(--text-muted);">${p.last_supply_date}</span>`:`<span style="color:var(--text-muted);font-size:10px;">---</span>`;
+            const lastUpdate=p.updated_at?`<span style="font-size:10px;color:var(--text-muted);">${new Date(p.updated_at).toLocaleDateString('ar-EG')}</span>`:`<span style="color:var(--text-muted);font-size:10px;">---</span>`;
+            const isFav=favIds.includes(String(p.id));
             return`<tr>
                 <td class="col-barcode" style="font-family:monospace;font-size:11px;color:var(--accent);">${p.barcode||'---'}</td>
                 <td style="font-weight:700;">${p.product_name}</td>
@@ -476,9 +642,12 @@
                 <td>${stockBadge}</td>
                 <td class="col-cost" style="color:var(--text-muted);">${p.cost_price||0} ج.م</td>
                 <td style="font-weight:800;color:var(--accent);">${p.price} ج.م</td>
+                <td class="col-hide-sm">${discountBadge}</td>
+                <td class="col-hide-sm">${lastSupply}</td>
+                <td class="col-hide-sm">${lastUpdate}</td>
                 <td>${expiry}</td>
                 <td style="white-space:nowrap;">
-                    <span class="action-icon" title="مفضلة" onclick="toggleFavorite('${p.id}')" id="fav-${p.id}" style="color:${getFavoriteIds().includes(String(p.id))?'#ffd700':'var(--text-muted)'}">⭐</span>
+                    <span class="action-icon" title="مفضلة" onclick="toggleFavorite('${p.id}')" id="fav-${p.id}" style="color:${isFav?'#ffd700':'var(--text-muted)'}">⭐</span>
                     <span class="action-icon" title="هالك" onclick="openWastedModal('${p.id}','${safeN}',${p.stock})">🗑️</span>
                     <span class="action-icon" title="طباعة" onclick="printLabel('${p.barcode||''}','${safeN}','${p.price}')">🖨️</span>
                     <span class="action-icon" title="تعديل" onclick="openEditModal('${p.id}')">⚙️</span>
@@ -835,13 +1004,291 @@
             btn.style.borderColor = '#ffd700';
             const ids = getFavoriteIds();
             const favProducts = allProducts.filter(p => ids.includes(String(p.id)));
-            renderProducts(favProducts);
+            renderTable(favProducts);
         } else {
             btn.style.background = 'var(--surface2)';
             btn.style.color = 'var(--text)';
             btn.style.borderColor = 'var(--border)';
-            renderProducts(allProducts);
+            renderTable(allProducts);
         }
+    }
+
+    // ======= DEFICIT - عجز =======
+    function openDeficitModal(){
+        document.getElementById('deficit-search').value='';
+        document.getElementById('deficit-product-id').value='';
+        document.getElementById('deficit-product-name').innerText='';
+        document.getElementById('deficit-current-stock').innerText='';
+        document.getElementById('deficit-qty').value='1';
+        document.getElementById('deficit-reason').value='';
+        document.getElementById('deficit-search-results').style.display='none';
+        document.getElementById('deficitModal').classList.add('open');
+    }
+    function deficitSearchProducts(){
+        const q=document.getElementById('deficit-search').value.toLowerCase().trim();
+        const res=document.getElementById('deficit-search-results');
+        if(!q){res.style.display='none';return;}
+        const matches=allProducts.filter(p=>p.product_name.toLowerCase().includes(q)||(p.barcode&&p.barcode.includes(q))).slice(0,6);
+        if(!matches.length){res.style.display='none';return;}
+        res.innerHTML=matches.map(p=>`<div onclick="selectDeficitProduct('${p.id}')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+            <div style="font-weight:700;font-size:13px;">${p.product_name}</div>
+            <div style="font-size:11px;color:var(--text-muted);">مخزون: ${p.stock}</div>
+        </div>`).join('');
+        res.style.display='block';
+    }
+    function selectDeficitProduct(id){
+        const p=allProducts.find(x=>x.id==id);
+        if(!p) return;
+        document.getElementById('deficit-product-id').value=p.id;
+        document.getElementById('deficit-product-name').innerText=p.product_name;
+        document.getElementById('deficit-current-stock').innerText='المخزون الحالي: '+p.stock+' قطعة';
+        document.getElementById('deficit-search').value=p.product_name;
+        document.getElementById('deficit-search-results').style.display='none';
+        document.getElementById('deficit-qty').max=p.stock;
+    }
+    async function submitDeficit(){
+        const id=document.getElementById('deficit-product-id').value;
+        const qty=parseInt(document.getElementById('deficit-qty').value)||0;
+        const reason=document.getElementById('deficit-reason').value.trim();
+        if(!id) return showToast('اختر المنتج أولاً','error');
+        if(qty<=0) return showToast('أدخل كمية صحيحة','error');
+        const p=allProducts.find(x=>x.id==id);
+        if(!p) return;
+        if(qty>p.stock) return showToast('الكمية أكبر من المخزون','error');
+        try{
+            const{error}=await _supabase.from('products').update({
+                stock:p.stock-qty,
+                deficit_qty:(p.deficit_qty||0)+qty,
+                updated_at:new Date().toISOString()
+            }).eq('id',id);
+            if(error) throw error;
+            showToast(`تم تسجيل عجز ${qty} قطعة${reason?' — '+reason:''}','success');
+            closeModal('deficitModal');
+            loadInventory();
+        }catch(e){showToast('خطأ: '+e.message,'error');}
+    }
+
+    // ======= SETTLEMENT - تسوية =======
+    function openSettlementModal(){
+        document.getElementById('settlement-search').value='';
+        document.getElementById('settlement-product-id').value='';
+        document.getElementById('settlement-product-name').innerText='';
+        document.getElementById('settlement-current-stock').innerText='';
+        document.getElementById('settlement-qty').value='0';
+        document.getElementById('settlement-reason').value='';
+        document.getElementById('settlement-search-results').style.display='none';
+        document.getElementById('settlement-diff').style.display='none';
+        document.getElementById('settlementModal').classList.add('open');
+    }
+    function settlementSearchProducts(){
+        const q=document.getElementById('settlement-search').value.toLowerCase().trim();
+        const res=document.getElementById('settlement-search-results');
+        if(!q){res.style.display='none';return;}
+        const matches=allProducts.filter(p=>p.product_name.toLowerCase().includes(q)||(p.barcode&&p.barcode.includes(q))).slice(0,6);
+        if(!matches.length){res.style.display='none';return;}
+        res.innerHTML=matches.map(p=>`<div onclick="selectSettlementProduct('${p.id}')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+            <div style="font-weight:700;font-size:13px;">${p.product_name}</div>
+            <div style="font-size:11px;color:var(--text-muted);">مخزون النظام: ${p.stock}</div>
+        </div>`).join('');
+        res.style.display='block';
+    }
+    function selectSettlementProduct(id){
+        const p=allProducts.find(x=>x.id==id);
+        if(!p) return;
+        document.getElementById('settlement-product-id').value=p.id;
+        document.getElementById('settlement-product-name').innerText=p.product_name;
+        document.getElementById('settlement-current-stock').innerText='الكمية في النظام: '+p.stock+' قطعة';
+        document.getElementById('settlement-search').value=p.product_name;
+        document.getElementById('settlement-search-results').style.display='none';
+        document.getElementById('settlement-qty').value=p.stock;
+        document.getElementById('settlement-qty').oninput=function(){
+            const newQty=parseInt(this.value)||0;
+            const diff=newQty-p.stock;
+            const diffEl=document.getElementById('settlement-diff');
+            const diffValEl=document.getElementById('settlement-diff-val');
+            diffEl.style.display='block';
+            diffValEl.innerText=(diff>0?'+':'')+diff+' قطعة';
+            diffValEl.style.color=diff>0?'var(--green)':diff<0?'var(--red)':'var(--text-muted)';
+        };
+    }
+    async function submitSettlement(){
+        const id=document.getElementById('settlement-product-id').value;
+        const newQty=parseInt(document.getElementById('settlement-qty').value)||0;
+        const reason=document.getElementById('settlement-reason').value.trim();
+        if(!id) return showToast('اختر المنتج أولاً','error');
+        if(newQty<0) return showToast('الكمية لا تكون سالبة','error');
+        try{
+            const{error}=await _supabase.from('products').update({
+                stock:newQty,
+                updated_at:new Date().toISOString()
+            }).eq('id',id);
+            if(error) throw error;
+            showToast(`تمت التسوية — الكمية الجديدة: ${newQty}${reason?' — '+reason:''}','success');
+            closeModal('settlementModal');
+            loadInventory();
+        }catch(e){showToast('خطأ: '+e.message,'error');}
+    }
+
+    // ======= DISCOUNT - خصومات =======
+    let discountMode='single';
+    function openDiscountModal(){
+        discountMode='single';
+        document.getElementById('discount-search').value='';
+        document.getElementById('discount-product-id').value='';
+        document.getElementById('discount-product-name').innerText='';
+        document.getElementById('discount-product-price').innerText='';
+        document.getElementById('discount-value').value='0';
+        document.getElementById('discount-preview').style.display='none';
+        document.getElementById('discount-search-results').style.display='none';
+        // fill bulk categories
+        const cats=[...new Set(allProducts.map(p=>p.category).filter(Boolean))];
+        const sel=document.getElementById('discount-bulk-cat');
+        sel.innerHTML='<option value="">-- كل الأقسام --</option>';
+        cats.forEach(c=>sel.innerHTML+=`<option value="${c}">${c}</option>`);
+        document.getElementById('discountModal').classList.add('open');
+    }
+    function switchDiscountMode(mode){
+        discountMode=mode;
+        document.getElementById('discount-single').style.display=mode==='single'?'block':'none';
+        document.getElementById('discount-bulk').style.display=mode==='bulk'?'block':'none';
+        const btns=document.querySelectorAll('#discountModal .btn');
+        btns[0].className=mode==='single'?'btn btn-accent':'btn btn-ghost';
+        btns[0].style.flex='1';btns[0].style.justifyContent='center';btns[0].style.fontSize='12px';
+        btns[1].className=mode==='bulk'?'btn btn-accent':'btn btn-ghost';
+        btns[1].style.flex='1';btns[1].style.justifyContent='center';btns[1].style.fontSize='12px';
+    }
+    function discountSearchProducts(){
+        const q=document.getElementById('discount-search').value.toLowerCase().trim();
+        const res=document.getElementById('discount-search-results');
+        if(!q){res.style.display='none';return;}
+        const matches=allProducts.filter(p=>p.product_name.toLowerCase().includes(q)||(p.barcode&&p.barcode.includes(q))).slice(0,6);
+        if(!matches.length){res.style.display='none';return;}
+        res.innerHTML=matches.map(p=>`<div onclick="selectDiscountProduct('${p.id}')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+            <div style="font-weight:700;font-size:13px;">${p.product_name}</div>
+            <div style="font-size:11px;color:var(--text-muted);">السعر: ${p.price} ج.م</div>
+        </div>`).join('');
+        res.style.display='block';
+    }
+    function selectDiscountProduct(id){
+        const p=allProducts.find(x=>x.id==id);
+        if(!p) return;
+        document.getElementById('discount-product-id').value=p.id;
+        document.getElementById('discount-product-name').innerText=p.product_name;
+        document.getElementById('discount-product-price').innerText='السعر الأصلي: '+p.price+' ج.م';
+        document.getElementById('discount-search').value=p.product_name;
+        document.getElementById('discount-search-results').style.display='none';
+        calcDiscountPreview();
+    }
+    function calcDiscountPreview(){
+        const id=document.getElementById('discount-product-id').value;
+        if(!id) return;
+        const p=allProducts.find(x=>x.id==id);
+        if(!p) return;
+        const type=document.getElementById('discount-type').value;
+        const val=parseFloat(document.getElementById('discount-value').value)||0;
+        let newPrice=p.price;
+        if(type==='percent') newPrice=p.price*(1-val/100);
+        else newPrice=p.price-val;
+        newPrice=Math.max(0,newPrice);
+        document.getElementById('discount-preview').style.display='block';
+        document.getElementById('discount-new-price').innerText=newPrice.toFixed(2)+' ج.م';
+    }
+    async function applyDiscount(){
+        if(discountMode==='single'){
+            const id=document.getElementById('discount-product-id').value;
+            if(!id) return showToast('اختر المنتج أولاً','error');
+            const p=allProducts.find(x=>x.id==id);
+            const type=document.getElementById('discount-type').value;
+            const val=parseFloat(document.getElementById('discount-value').value)||0;
+            let newPrice=p.price;
+            if(type==='percent') newPrice=p.price*(1-val/100);
+            else newPrice=p.price-val;
+            newPrice=Math.max(0,parseFloat(newPrice.toFixed(2)));
+            try{
+                const{error}=await _supabase.from('products').update({discount_price:newPrice,updated_at:new Date().toISOString()}).eq('id',id);
+                if(error) throw error;
+                showToast(`تم تطبيق الخصم — السعر الجديد: ${newPrice} ج.م`,'success');
+                closeModal('discountModal');loadInventory();
+            }catch(e){showToast('خطأ: '+e.message,'error');}
+        } else {
+            const cat=document.getElementById('discount-bulk-cat').value;
+            const type=document.getElementById('discount-bulk-type').value;
+            const val=parseFloat(document.getElementById('discount-bulk-value').value)||0;
+            const targets=cat?allProducts.filter(p=>p.category===cat):allProducts;
+            if(!targets.length) return showToast('لا توجد منتجات','error');
+            if(!confirm(`هتطبق خصم على ${targets.length} منتج. متأكد؟`)) return;
+            try{
+                for(const p of targets){
+                    let newPrice=type==='percent'?p.price*(1-val/100):p.price-val;
+                    newPrice=Math.max(0,parseFloat(newPrice.toFixed(2)));
+                    await _supabase.from('products').update({discount_price:newPrice,updated_at:new Date().toISOString()}).eq('id',p.id);
+                }
+                showToast(`تم تطبيق الخصم على ${targets.length} منتج`,'success');
+                closeModal('discountModal');loadInventory();
+            }catch(e){showToast('خطأ: '+e.message,'error');}
+        }
+    }
+
+    // ======= TRANSFER - تحويل تجريبي =======
+    function openTransferModal(){
+        document.getElementById('transfer-search').value='';
+        document.getElementById('transfer-product-id').value='';
+        document.getElementById('transfer-product-name').innerText='';
+        document.getElementById('transfer-current-stock').innerText='';
+        document.getElementById('transfer-target-store').value='';
+        document.getElementById('transfer-qty').value='1';
+        document.getElementById('transfer-search-results').style.display='none';
+        document.getElementById('transferModal').classList.add('open');
+    }
+    function transferSearchProducts(){
+        const q=document.getElementById('transfer-search').value.toLowerCase().trim();
+        const res=document.getElementById('transfer-search-results');
+        if(!q){res.style.display='none';return;}
+        const matches=allProducts.filter(p=>p.product_name.toLowerCase().includes(q)||(p.barcode&&p.barcode.includes(q))).slice(0,6);
+        if(!matches.length){res.style.display='none';return;}
+        res.innerHTML=matches.map(p=>`<div onclick="selectTransferProduct('${p.id}')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+            <div style="font-weight:700;font-size:13px;">${p.product_name}</div>
+            <div style="font-size:11px;color:var(--text-muted);">مخزون: ${p.stock}</div>
+        </div>`).join('');
+        res.style.display='block';
+    }
+    function selectTransferProduct(id){
+        const p=allProducts.find(x=>x.id==id);
+        if(!p) return;
+        document.getElementById('transfer-product-id').value=p.id;
+        document.getElementById('transfer-product-name').innerText=p.product_name;
+        document.getElementById('transfer-current-stock').innerText='المخزون الحالي: '+p.stock+' قطعة';
+        document.getElementById('transfer-search').value=p.product_name;
+        document.getElementById('transfer-search-results').style.display='none';
+    }
+    async function submitTransfer(){
+        const id=document.getElementById('transfer-product-id').value;
+        const targetStore=document.getElementById('transfer-target-store').value.trim();
+        const qty=parseInt(document.getElementById('transfer-qty').value)||0;
+        if(!id) return showToast('اختر المنتج أولاً','error');
+        if(!targetStore) return showToast('أدخل كود المتجر المستلم','error');
+        if(qty<=0) return showToast('أدخل كمية صحيحة','error');
+        const p=allProducts.find(x=>x.id==id);
+        if(qty>p.stock) return showToast('الكمية أكبر من المخزون','error');
+        if(targetStore===storeKey) return showToast('لا يمكن التحويل لنفس المتجر','error');
+        try{
+            // تحقق من وجود المتجر المستلم
+            const{data:targetStoreData}=await _supabase.from('stores').select('store_key,store_name').eq('store_key',targetStore).single();
+            if(!targetStoreData) return showToast('كود المتجر غير موجود','error');
+            // نقص من المتجر الحالي
+            await _supabase.from('products').update({stock:p.stock-qty,updated_at:new Date().toISOString()}).eq('id',id);
+            // ابحث عن المنتج في المتجر المستلم
+            const{data:targetProduct}=await _supabase.from('products').select('*').eq('store_key',targetStore).eq('product_name',p.product_name).single();
+            if(targetProduct){
+                // إضافة للمخزون الموجود
+                await _supabase.from('products').update({stock:targetProduct.stock+qty,updated_at:new Date().toISOString()}).eq('id',targetProduct.id);
+            } else {
+                // إنشاء منتج جديد في المتجر المستلم
+                await _supabase.from('products').insert([{...p,id:undefined,store_key:targetStore,stock:qty,created_at:new Date().toISOString(),updated_at:new Date().toISOString()}]);
+            }
+            showToast(`تم تحويل ${qty} قطعة إلى ${targetStoreData.store_name}`,'success');
+            closeModal('transferModal');loadInventory();
+        }catch(e){showToast('خطأ في التحويل: '+e.message,'error');}
     }
 
     init();
