@@ -210,6 +210,17 @@
             <span class="total-lbl">الإجمالي</span>
             <span class="total-val" id="total-price">0.00 ج.م</span>
         </div>
+        <!-- خصم -->
+        <div id="discount-row" style="display:flex;align-items:center;gap:8px;margin-bottom:7px;background:var(--surface2);border-radius:var(--radius-sm);padding:6px 10px;border:1px solid var(--border);">
+            <span style="font-size:12px;font-weight:700;color:var(--text-muted);white-space:nowrap;">🏷️ خصم</span>
+            <input type="number" id="discount-val" min="0" placeholder="0" oninput="renderCart()"
+                style="flex:1;background:var(--input-bg);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:6px;font-family:'Cairo',sans-serif;font-size:13px;outline:none;">
+            <select id="discount-type" onchange="renderCart()"
+                style="background:var(--input-bg);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:6px;font-family:'Cairo',sans-serif;font-size:12px;outline:none;">
+                <option value="amount">ج.م</option>
+                <option value="percent">%</option>
+            </select>
+        </div>
         <div class="pay-row">
             <div class="pay-btn active" id="pay-cash" onclick="setPayment('كاش')">💵 كاش</div>
             <div class="pay-btn" id="pay-visa" onclick="setPayment('فيزا')">💳 فيزا</div>
@@ -335,6 +346,14 @@
             const b=document.getElementById('btn-return');
             if(b) b.style.display='none';
         }
+        if(store.perm_discounts===false){
+            const d=document.getElementById('discount-row');
+            if(d) d.style.display='none';
+        }
+        if(store.perm_show_stats===false){
+            // مفيش target box في الموبايل — بس منع الـ overlay
+            targetReached=true; // منع الـ celebration
+        }
     }
 
     // LOAD PRODUCTS
@@ -425,6 +444,13 @@
 
     function removeItem(idx){cart.splice(idx,1);renderCart();}
 
+    function getDiscount(subtotal){
+        const val=parseFloat(document.getElementById('discount-val')?.value)||0;
+        const type=document.getElementById('discount-type')?.value||'amount';
+        if(!val) return 0;
+        return type==='percent' ? Math.min(subtotal*(val/100),subtotal) : Math.min(val,subtotal);
+    }
+
     function renderCart(){
         const el=document.getElementById('cart-list');
         if(!cart.length){
@@ -446,8 +472,15 @@
                 <div class="ci-total">${(item.price*item.qty).toFixed(2)}</div>
                 <span class="ci-del" onclick="removeItem(${idx})">✕</span>
             </div>`).join('');
-        const total=cart.reduce((s,i)=>s+(i.price*i.qty),0);
-        document.getElementById('total-price').innerText=total.toFixed(2)+' ج.م';
+        const subtotal=cart.reduce((s,i)=>s+(i.price*i.qty),0);
+        const discount=getDiscount(subtotal);
+        const total=subtotal-discount;
+        const el2=document.getElementById('total-price');
+        if(discount>0){
+            el2.innerHTML=`<span style="font-size:14px;color:var(--red);text-decoration:line-through;">${subtotal.toFixed(2)}</span><br>${total.toFixed(2)} ج.م`;
+        } else {
+            el2.innerText=total.toFixed(2)+' ج.م';
+        }
     }
 
     function setPayment(m){
@@ -464,7 +497,9 @@
         checkoutInProgress=true;
         const btn=document.getElementById('btn-sell');
         if(btn){btn.disabled=true;btn.innerText='⏳ جاري الحفظ...';}
-        const total=cart.reduce((s,i)=>s+(i.price*i.qty),0);
+        const subtotal=cart.reduce((s,i)=>s+(i.price*i.qty),0);
+        const discount=getDiscount(subtotal);
+        const total=subtotal-discount;
         try{
             const slimItems=cart.map(i=>({id:i.id,product_name:i.product_name,price:i.price,qty:i.qty}));
             const{data:saleData,error}=await _supabase.from('sales').insert([{
@@ -477,8 +512,7 @@
                 if(p) await _supabase.from('products').update({stock:p.stock-item.qty}).eq('id',item.id);
             }
             showToast('تم البيع بنجاح ✅','success');
-            if(document.getElementById('print-chk').checked) printReceipt(saleData,cart,total);
-            // تحديث cache
+            if(document.getElementById('print-chk').checked) printReceipt(saleData,cart,total,discount,subtotal);
             const cacheKey='fateen_products_'+storeKey;
             cart.forEach(item=>{
                 const p=allProducts.find(x=>x.id===item.id);
@@ -487,6 +521,9 @@
             allProducts=allProducts.filter(p=>p.stock>0);
             sessionStorage.setItem(cacheKey,JSON.stringify(allProducts));
             cart=[];
+            // reset خصم
+            const dv=document.getElementById('discount-val');
+            if(dv) dv.value='';
             renderCart();
             updateTargetDisplay();
         }catch(e){showToast('خطأ: '+e.message,'error');}
@@ -497,7 +534,7 @@
     }
 
     // PRINT
-    function printReceipt(saleData,items,total){
+    function printReceipt(saleData,items,total,discount,subtotal){
         const s=storeSettings;
         const paperW=s.invoice_size==='58mm'?'58mm':s.invoice_size==='A4'?'210mm':'80mm';
         const showEmployee=s.invoice_show_employee!==false;
@@ -542,6 +579,13 @@
                 </tr>`).join('')}</tbody>
             </table>
             <hr style="border:none;border-top:1px dashed #aaa;margin:5px 0;">
+            ${discount>0?`
+            <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;">
+                <span>المجموع:</span><span>${(subtotal||total+discount).toFixed(0)} ج.م</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:#c0392b;">
+                <span>الخصم:</span><span>- ${discount.toFixed(0)} ج.م</span>
+            </div>`:''}
             <div style="display:flex;border:2px solid #000;border-radius:5px;overflow:hidden;margin-top:6px;">
                 <div style="flex:1;background:#111;color:#fff;padding:8px;text-align:center;font-size:13px;font-weight:800;">الإجمالي</div>
                 <div style="flex:1;padding:8px;text-align:center;font-size:18px;font-weight:900;">${total.toFixed(0)} ج.م</div>
