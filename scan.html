@@ -425,12 +425,13 @@
 
     // CART
     function addToCart(p){
+        const effectivePrice=getEffectivePrice(p);
         const exist=cart.find(i=>i.id===p.id);
         if(exist){
             if(exist.qty>=p.stock){showToast('وصلت للحد الأقصى','error');return;}
             exist.qty++;
         } else {
-            cart.push({...p,qty:1});
+            cart.push({...p,price:effectivePrice,originalPrice:p.price,qty:1});
         }
         renderCart();
     }
@@ -443,6 +444,16 @@
     }
 
     function removeItem(idx){cart.splice(idx,1);renderCart();}
+
+    // EFFECTIVE PRICE - تطبيق الخصم التلقائي
+    function getEffectivePrice(p){
+        if(!p.discount_price||p.discount_price>=p.price) return p.price;
+        if(p.discount_end_date){
+            const today=new Date().toISOString().split('T')[0];
+            if(today>p.discount_end_date){p.discount_price=null;p.discount_end_date=null;return p.price;}
+        }
+        return p.discount_price;
+    }
 
     function getDiscount(subtotal){
         const val=parseFloat(document.getElementById('discount-val')?.value)||0;
@@ -603,10 +614,28 @@
         <style>*{box-sizing:border-box;margin:0;padding:0;}body{width:${paperW};margin:0 auto;padding:10px;color:#000;background:#fff;font-family:'Cairo',sans-serif;font-weight:700;}
         @media print{@page{margin:0;size:${paperW} auto;}body{padding:8px;}}</style></head><body>
         ${allCopies}
-        <script>window.onload=()=>{window.print();setTimeout(()=>window.close(),1400);}<\/script>
         </body></html>`;
-        const w=window.open('','_blank',`width=${paperW==='210mm'?700:380},height=600`);
-        if(w){w.document.write(html);w.document.close();}
+
+        // موبايل — Blob URL يتجنب مشكلة popup blocker
+        const blob=new Blob([html],{type:'text/html'});
+        const blobUrl=URL.createObjectURL(blob);
+        const printFrame=document.createElement('iframe');
+        printFrame.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none;';
+        printFrame.src=blobUrl;
+        document.body.appendChild(printFrame);
+        printFrame.onload=function(){
+            try{
+                printFrame.contentWindow.focus();
+                printFrame.contentWindow.print();
+            }catch(e){
+                // fallback — فتح tab جديد
+                window.open(blobUrl,'_blank');
+            }
+            setTimeout(()=>{
+                document.body.removeChild(printFrame);
+                URL.revokeObjectURL(blobUrl);
+            },3000);
+        };
     }
 
     // RETURN
