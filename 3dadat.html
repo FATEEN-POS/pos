@@ -228,7 +228,7 @@
                 <div class="card-title">🔒 تغيير كلمة المرور</div>
                 <div class="form-group">
                     <label>كلمة المرور الجديدة</label>
-                    <input type="password" id="m-pass" placeholder="أدخل كلمة المرور الجديدة (8 أحرف على الأقل)">
+                    <input type="password" id="m-pass" placeholder="أدخل كلمة المرور الجديدة (6 أحرف على الأقل)">
                 </div>
                 <div class="form-group">
                     <label>تأكيد كلمة المرور</label>
@@ -318,16 +318,7 @@
                     </label>
                 </div>
 
-                <div class="toggle-row">
-                    <div class="toggle-row-info">
-                        <span class="toggle-row-label">👁️ إظهار الأسعار للموظف</span>
-                        <span class="toggle-row-sub">عرض سعر الشراء / التكلفة في شاشة الكاشير</span>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="perm-show-prices">
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
+
 
                 <div class="toggle-row">
                     <div class="toggle-row-info">
@@ -602,7 +593,7 @@
                 // صلاحيات
                 setCheck('perm-returns',store.perm_returns!==false);
                 setCheck('perm-discounts',store.perm_discounts!==false);
-                setCheck('perm-show-prices',store.perm_show_prices===true);
+
                 setCheck('perm-show-stats',store.perm_show_stats!==false);
                 // وردية
                 if(store.shift_start) setVal('shift-start',store.shift_start);
@@ -695,9 +686,9 @@
         if(!indicator) return;
         if(!pass&&!confirm){indicator.style.display='none';return;}
         indicator.style.display='block';
-        if(pass.length<8){
+        if(pass.length<6){
             indicator.style.color='var(--orange)';
-            indicator.innerText='⚠️ كلمة المرور أقل من 8 أحرف';
+            indicator.innerText='⚠️ كلمة المرور أقل من 6 أحرف';
         } else if(pass===confirm){
             indicator.style.color='var(--green)';
             indicator.innerText='✅ كلمات المرور متطابقة';
@@ -769,7 +760,7 @@
         const confirmPass=document.getElementById('m-pass-confirm').value;
         const newKey=document.getElementById('m-key').value;
         if(newPass){
-            if(newPass.length<8) return showToast('كلمة المرور أقل من 8 أحرف','error');
+            if(newPass.length<6) return showToast('كلمة المرور أقل من 6 أحرف','error');
             if(newPass!==confirmPass) return showToast('كلمات المرور غير متطابقة','error');
         }
         try{
@@ -1036,7 +1027,6 @@
             const{error}=await _supabase.from('stores').update({
                 perm_returns:document.getElementById('perm-returns').checked,
                 perm_discounts:document.getElementById('perm-discounts').checked,
-                perm_show_prices:document.getElementById('perm-show-prices').checked,
                 perm_show_stats:document.getElementById('perm-show-stats').checked
             }).eq('store_key',storeKey);
             if(error) throw error;

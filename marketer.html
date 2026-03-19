@@ -207,6 +207,11 @@
                 <option value="12">سنة كاملة</option>
             </select>
         </div>
+        <div style="border-top:1px solid var(--border);margin:14px 0;padding-top:14px;">
+            <div style="font-size:12px;color:var(--text-muted);font-weight:700;margin-bottom:10px;">👤 بيانات المدير (اختياري)</div>
+            <div class="field-group"><label>اسم مستخدم المدير</label><input class="text-input" type="text" id="st-mgr-user" placeholder="manager_name"></div>
+            <div class="field-group"><label>كلمة مرور المدير</label><input class="text-input" type="password" id="st-mgr-pass" placeholder="6 أحرف على الأقل"></div>
+        </div>
         <div style="display:flex; gap:10px; margin-top:20px;">
             <button class="btn btn-primary" style="flex:1; justify-content:center;" onclick="saveNewStore()">✅ حفظ المتجر</button>
             <button class="btn btn-ghost" style="flex:1; justify-content:center;" onclick="closeModal('addStoreModal')">إلغاء</button>
@@ -330,7 +335,10 @@
         const phone = document.getElementById('st-phone').value.trim();
         const price = document.getElementById('st-price').value;
         const duration = parseInt(document.getElementById('st-duration').value);
+        const mgrUser = document.getElementById('st-mgr-user')?.value.trim();
+        const mgrPass = document.getElementById('st-mgr-pass')?.value.trim();
         if(!name) return showToast('اسم المتجر مطلوب','error');
+        if(mgrUser && mgrPass && mgrPass.length < 6) return showToast('كلمة مرور المدير أقل من 6 أحرف','error');
 
         const expiry = new Date();
         expiry.setMonth(expiry.getMonth() + duration);
@@ -347,6 +355,15 @@
                 marketer_id: currentUser
             }]);
             if(error) throw error;
+            // إضافة مدير تلقائي لو أدخل بياناته
+            if(mgrUser && mgrPass) {
+                await _supabase.from('users').insert([{
+                    username: mgrUser,
+                    password: mgrPass,
+                    store_key: key,
+                    role: 'manager'
+                }]);
+            }
             showToast(`تم إضافة المتجر بنجاح — الكود: ${key}`, 'success');
             closeModal('addStoreModal');
             loadStores();
