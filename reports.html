@@ -1098,27 +1098,52 @@
 
     function doPDF(section){
         try{
-            const{jsPDF}=window.jspdf;
-            const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
-            doc.setFillColor(17,17,17);doc.rect(0,0,297,22,'F');
-            doc.setTextColor(0,242,254);doc.setFontSize(14);doc.setFont('helvetica','bold');
-            doc.text(`Fateen OS — ${storeName}`,148,10,{align:'center'});
-            doc.setFontSize(9);doc.setTextColor(180,180,180);
-            doc.text(`${section} Report — ${new Date().toLocaleDateString('en-EG')}`,148,18,{align:'center'});
-            // جمع بيانات من الجدول الحالي
             const activeSection=document.getElementById('sec-'+section);
             const table=activeSection?.querySelector('table');
-            if(table){
-                const head=[],body=[];
-                table.querySelectorAll('thead tr th').forEach(th=>head.push(th.innerText));
-                table.querySelectorAll('tbody tr').forEach(tr=>{
-                    const row=[];
-                    tr.querySelectorAll('td').forEach(td=>row.push(td.innerText.trim()));
-                    if(row.length) body.push(row);
-                });
-                doc.autoTable({startY:26,head:[head],body,styles:{fontSize:8,halign:'center'},headStyles:{fillColor:[0,70,67],textColor:[255,255,255]},alternateRowStyles:{fillColor:[245,245,245]},margin:{left:8,right:8}});
-            }
-            doc.save(`تقرير_${section}_${today()}.pdf`);
+            if(!table) return showToast('لا توجد بيانات للتصدير','error');
+
+            const headCells=[]; const bodyRows=[];
+            table.querySelectorAll('thead tr th').forEach(th=>headCells.push(th.innerText.trim()));
+            table.querySelectorAll('tbody tr').forEach(tr=>{
+                const row=[];
+                tr.querySelectorAll('td').forEach(td=>row.push(td.innerText.trim()));
+                if(row.length) bodyRows.push(row);
+            });
+
+            const headHTML=headCells.map(h=>`<th>${h}</th>`).join('');
+            const bodyHTML=bodyRows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('');
+            const sectionNames={sales:'المبيعات',returns:'المرتجعات',inventory:'المخزون',items:'الأصناف',waste:'الهالك',deficit:'العجز',employees:'الموظفين',suppliers:'الموردين',purchases:'المشتريات',profit:'الأرباح',general:'التقرير العام'};
+            const sectionLabel=sectionNames[section]||section;
+
+            const html=`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+            <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+            <style>
+                *{margin:0;padding:0;box-sizing:border-box;}
+                body{font-family:'Cairo',sans-serif;padding:20px;color:#000;background:#fff;}
+                .header{background:#004643;color:#fff;padding:14px 18px;border-radius:8px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;}
+                .header h1{font-size:18px;font-weight:900;}
+                .header .meta{font-size:11px;color:#ccc;text-align:left;}
+                table{width:100%;border-collapse:collapse;font-size:12px;}
+                th{background:#004643;color:#fff;padding:8px 6px;text-align:center;}
+                td{padding:7px 6px;border-bottom:1px solid #eee;text-align:center;}
+                tr:nth-child(even){background:#f9f9f9;}
+                .footer{text-align:center;margin-top:12px;font-size:10px;color:#aaa;border-top:1px solid #eee;padding-top:6px;}
+                @media print{@page{margin:10mm;size:A4 landscape;}body{padding:0;}}
+            </style></head><body>
+            <div class="header">
+                <h1>📊 تقرير ${sectionLabel} — ${storeName}</h1>
+                <div class="meta">${new Date().toLocaleDateString('ar-EG',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</div>
+            </div>
+            <table>
+                <thead><tr>${headHTML}</tr></thead>
+                <tbody>${bodyHTML}</tbody>
+            </table>
+            <div class="footer">Fateen OS — إجمالي السجلات: ${bodyRows.length}</div>
+            <script>window.onload=()=>{window.print();setTimeout(()=>window.close(),1500);}<\/script>
+            </body></html>`;
+
+            const w=window.open('','_blank','width=1000,height=700');
+            if(w){w.document.write(html);w.document.close();}
             showToast('تم تصدير PDF بنجاح','success');
         }catch(e){showToast('خطأ في PDF: '+e.message,'error');}
     }

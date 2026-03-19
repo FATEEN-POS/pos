@@ -287,9 +287,25 @@
             <div class="field-group"><label>سعر الشراء</label><input type="number" id="p-cost" value="0"></div>
             <div class="field-group"><label>سعر البيع</label><input type="number" id="p-price" value="0"></div>
         </div>
-        <div class="field-group">
-            <label>تاريخ الصلاحية</label>
-            <input type="date" id="p-expiry">
+        <div class="field-row">
+            <div class="field-group">
+                <label>وحدة القياس</label>
+                <select id="p-unit" style="width:100%;background:var(--input-bg);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:var(--radius-sm);font-family:'Cairo',sans-serif;font-size:13px;outline:none;">
+                    <option value="قطعة">قطعة</option>
+                    <option value="كيلو">كيلو</option>
+                    <option value="جرام">جرام</option>
+                    <option value="لتر">لتر</option>
+                    <option value="متر">متر</option>
+                    <option value="علبة">علبة</option>
+                    <option value="كرتونة">كرتونة</option>
+                    <option value="دزينة">دزينة</option>
+                    <option value="زجاجة">زجاجة</option>
+                </select>
+            </div>
+            <div class="field-group">
+                <label>تاريخ الصلاحية</label>
+                <input type="date" id="p-expiry">
+            </div>
         </div>
         <div style="display:flex;gap:10px;margin-top:6px;">
             <button class="btn btn-accent" style="flex:1;justify-content:center;" onclick="saveProduct()">💾 حفظ</button>
@@ -656,7 +672,7 @@
                 <td class="col-barcode" style="font-family:monospace;font-size:11px;color:var(--accent);">${p.barcode||'---'}</td>
                 <td style="font-weight:700;">${p.product_name}</td>
                 <td>${catBadge}</td>
-                <td>${stockBadge}</td>
+                <td>${stockBadge} <span style="font-size:10px;color:var(--text-muted);">${p.unit||'قطعة'}</span></td>
                 <td class="col-cost" style="color:var(--text-muted);">${p.cost_price||0} ج.م</td>
                 <td style="font-weight:800;color:var(--accent);">${p.price} ج.م</td>
                 <td class="col-hide-sm">${discountBadge}</td>
@@ -709,6 +725,8 @@
         document.getElementById('p-cost').value=p.cost_price||0;
         document.getElementById('p-price').value=p.price;
         document.getElementById('p-expiry').value=p.expiry_date||'';
+        const unitEl=document.getElementById('p-unit');
+        if(unitEl) unitEl.value=p.unit||'قطعة';
         document.getElementById('modal-title').innerText='تعديل صنف';
         buildProductCategorySelect();
         document.getElementById('p-category-select').value=p.category||'';
@@ -722,7 +740,7 @@
         const category=newCat||selCat||null;
         const pName=document.getElementById('p-name').value.trim();
         if(!pName){showToast('اسم المنتج مطلوب','error');return;}
-        const data={store_key:storeKey,barcode:document.getElementById('p-barcode').value,product_name:pName,category,stock:parseInt(document.getElementById('p-stock').value)||0,cost_price:parseFloat(document.getElementById('p-cost').value)||0,price:parseFloat(document.getElementById('p-price').value)||0,expiry_date:document.getElementById('p-expiry').value||null};
+        const data={store_key:storeKey,barcode:document.getElementById('p-barcode').value,product_name:pName,category,stock:parseInt(document.getElementById('p-stock').value)||0,cost_price:parseFloat(document.getElementById('p-cost').value)||0,price:parseFloat(document.getElementById('p-price').value)||0,expiry_date:document.getElementById('p-expiry').value||null,unit:document.getElementById('p-unit')?.value||'قطعة'};
         try{
             // تحقق من تكرار الاسم عند الإضافة فقط
             if(!id){
@@ -958,24 +976,74 @@
 
     function exportToPDF(){
         try{
-            const{jsPDF}=window.jspdf;
-            const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
-            doc.setFillColor(17,17,17);doc.rect(0,0,297,30,'F');
-            doc.setTextColor(0,242,254);doc.setFontSize(18);doc.setFont('helvetica','bold');doc.text('Inventory Report',148,12,{align:'center'});
-            doc.setFontSize(11);doc.setTextColor(180,180,180);doc.text(`Store: ${storeName}`,148,20,{align:'center'});doc.text(`Date: ${new Date().toLocaleDateString('en-EG')}`,148,26,{align:'center'});
-            const totalQty=allProducts.reduce((s,p)=>s+(p.stock||0),0);
-            const totalVal=allProducts.reduce((s,p)=>s+((p.stock||0)*(p.price||0)),0);
-            const lowCount=allProducts.filter(p=>p.stock<=5).length;
-            doc.setFontSize(9);doc.setTextColor(100,100,100);
-            doc.text(`Total: ${allProducts.length} products  |  Qty: ${totalQty}  |  Value: ${totalVal.toLocaleString()} EGP  |  Low: ${lowCount}`,148,34,{align:'center'});
-            const body=allProducts.map(p=>[p.barcode||'---',p.product_name,p.category||'---',p.stock,(p.cost_price||0)+' EGP',p.price+' EGP',p.expiry_date||'---',((p.stock||0)*(p.price||0)).toLocaleString()+' EGP']);
-            doc.autoTable({startY:38,head:[['Barcode','Product','Category','Stock','Cost','Price','Expiry','Value']],body,styles:{fontSize:8,cellPadding:3,halign:'center'},headStyles:{fillColor:[0,70,67],textColor:[255,255,255],fontStyle:'bold'},alternateRowStyles:{fillColor:[245,245,245]},columnStyles:{1:{halign:'right',fontStyle:'bold'}},
-                didParseCell:function(d){if(d.section==='body'&&d.column.index===3){const s=parseInt(d.cell.raw);if(s===0)d.cell.styles.textColor=[192,57,43];else if(s<=5)d.cell.styles.textColor=[211,84,0];else d.cell.styles.textColor=[0,135,90];}},
-                foot:[['','الإجمالي','',totalQty,'','','',totalVal.toLocaleString()+' EGP']],footStyles:{fillColor:[17,17,17],textColor:[0,242,254],fontStyle:'bold'},margin:{left:8,right:8}});
-            const pc=doc.internal.getNumberOfPages();
-            for(let i=1;i<=pc;i++){doc.setPage(i);doc.setFontSize(7);doc.setTextColor(150,150,150);doc.text(`Fateen OS  |  Page ${i} of ${pc}`,148,doc.internal.pageSize.height-4,{align:'center'});}
-            doc.save(`جرد_${storeName}_${new Date().toISOString().split('T')[0]}.pdf`);
-            closeModal('exportChoiceModal');showToast('تم تصدير الجرد بصيغة PDF','success');
+            const today = new Date().toLocaleDateString('ar-EG');
+            const totalQty = allProducts.reduce((s,p)=>s+(p.stock||0),0);
+            const totalVal = allProducts.reduce((s,p)=>s+((p.stock||0)*(p.price||0)),0);
+            const lowCount = allProducts.filter(p=>p.stock<=5).length;
+
+            const rows = allProducts.map(p=>`
+                <tr>
+                    <td>${p.barcode||'---'}</td>
+                    <td style="font-weight:700;text-align:right;">${p.product_name}</td>
+                    <td>${p.category||'---'}</td>
+                    <td style="color:${p.stock===0?'#c0392b':p.stock<=5?'#d35400':'#00875a'};font-weight:800;">${p.stock} ${p.unit||'قطعة'}</td>
+                    <td>${p.cost_price||0} ج.م</td>
+                    <td style="font-weight:800;">${p.price} ج.م</td>
+                    <td>${p.expiry_date||'---'}</td>
+                    <td style="font-weight:800;">${((p.stock||0)*(p.price||0)).toLocaleString()} ج.م</td>
+                </tr>`).join('');
+
+            const html=`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+            <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+            <style>
+                *{margin:0;padding:0;box-sizing:border-box;}
+                body{font-family:'Cairo',sans-serif;padding:20px;color:#000;background:#fff;font-size:12px;}
+                .header{background:#111;color:#fff;padding:16px 20px;border-radius:8px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;}
+                .header h1{font-size:20px;font-weight:900;}
+                .header .meta{font-size:11px;color:#aaa;text-align:left;}
+                .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+                .kpi{background:#f5f5f5;border-radius:6px;padding:10px;text-align:center;}
+                .kpi .val{font-size:18px;font-weight:900;color:#004643;}
+                .kpi .lbl{font-size:10px;color:#666;margin-top:2px;}
+                table{width:100%;border-collapse:collapse;}
+                th{background:#004643;color:#fff;padding:8px 6px;font-size:11px;text-align:center;}
+                td{padding:7px 6px;border-bottom:1px solid #eee;text-align:center;font-size:11px;}
+                tr:nth-child(even){background:#fafafa;}
+                .footer{text-align:center;margin-top:14px;font-size:10px;color:#aaa;border-top:1px solid #eee;padding-top:8px;}
+                .foot-row td{background:#111;color:#fff;font-weight:900;font-size:12px;}
+                @media print{@page{margin:10mm;size:A4 landscape;}body{padding:0;}}
+            </style></head><body>
+            <div class="header">
+                <h1>📋 كشف الجرد — ${storeName}</h1>
+                <div class="meta">التاريخ: ${today}<br>عدد الأصناف: ${allProducts.length}</div>
+            </div>
+            <div class="kpis">
+                <div class="kpi"><div class="val">${allProducts.length}</div><div class="lbl">إجمالي الأصناف</div></div>
+                <div class="kpi"><div class="val">${totalQty.toLocaleString()}</div><div class="lbl">إجمالي الكميات</div></div>
+                <div class="kpi"><div class="val">${totalVal.toLocaleString()} ج.م</div><div class="lbl">إجمالي القيمة</div></div>
+                <div class="kpi"><div class="val" style="color:#c0392b;">${lowCount}</div><div class="lbl">أصناف تحت الحد</div></div>
+            </div>
+            <table>
+                <thead><tr>
+                    <th>الباركود</th><th>اسم الصنف</th><th>القسم</th><th>الكمية</th>
+                    <th>سعر الشراء</th><th>سعر البيع</th><th>الصلاحية</th><th>إجمالي القيمة</th>
+                </tr></thead>
+                <tbody>${rows}</tbody>
+                <tfoot><tr class="foot-row">
+                    <td colspan="3">الإجمالي</td>
+                    <td>${totalQty.toLocaleString()}</td>
+                    <td>---</td><td>---</td><td>---</td>
+                    <td>${totalVal.toLocaleString()} ج.م</td>
+                </tr></tfoot>
+            </table>
+            <div class="footer">Fateen OS — تم الإنشاء: ${today}</div>
+            <script>window.onload=()=>{window.print();setTimeout(()=>window.close(),1500);}<\/script>
+            </body></html>`;
+
+            const w=window.open('','_blank','width=1000,height=700');
+            if(w){w.document.write(html);w.document.close();}
+            closeModal('exportChoiceModal');
+            showToast('تم تصدير الجرد بصيغة PDF','success');
         }catch(e){showToast('خطأ في PDF: '+e.message,'error');}
     }
 
