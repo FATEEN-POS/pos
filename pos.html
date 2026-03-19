@@ -234,14 +234,46 @@
             .target-box{display:none;}
             main{flex-direction:column;}
         }
+        .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:500;backdrop-filter:blur(3px);}
+        .sidebar-overlay.open{display:block;}
+        .sidebar{position:fixed;right:-300px;top:0;bottom:0;width:280px;background:var(--surface);border-left:1px solid var(--border);z-index:600;display:flex;flex-direction:column;transition:right 0.3s cubic-bezier(0.4,0,0.2,1);box-shadow:-8px 0 40px rgba(0,0,0,0.4);}
+        .sidebar.open{right:0;}
+        .sidebar-head{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+        .sidebar-head-title{font-size:15px;font-weight:800;color:var(--accent);}
+        .sidebar-close{cursor:pointer;color:var(--text-muted);font-size:20px;line-height:1;padding:4px;}
+        .sidebar-close:hover{color:var(--red);}
+        .sidebar-nav{flex:1;overflow-y:auto;padding:12px 10px;}
+        .sb-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--radius-sm);border:1px solid transparent;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;margin-bottom:4px;transition:all 0.2s;text-decoration:none;user-select:none;}
+        .sb-item:hover{border-color:var(--accent);background:var(--accent-dim);color:var(--accent);}
+        .sb-item .sb-icon{font-size:20px;width:26px;text-align:center;flex-shrink:0;}
+        .sidebar-footer{padding:14px 16px;border-top:1px solid var(--border);flex-shrink:0;}
+        .sidebar-footer .copy{font-size:11px;color:var(--text-muted);text-align:center;display:block;}
     </style>
 </head>
 <body>
 
+<div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+<div class="sidebar" id="main-sidebar">
+    <div class="sidebar-head">
+        <span class="sidebar-head-title">☰ القائمة</span>
+        <span class="sidebar-close" onclick="closeSidebar()">✕</span>
+    </div>
+    <nav class="sidebar-nav">
+        <a class="sb-item" onclick="location.href='pos.html'" style="border-color:var(--accent);background:var(--accent-dim);color:var(--accent);"><span class="sb-icon">🖥️</span>الكاشير</a>
+        <a class="sb-item" onclick="location.href='employeesite.html'"><span class="sb-icon">👤</span>ملفي الشخصي</a>
+        <a class="sb-item" onclick="openReturnModal();closeSidebar()"><span class="sb-icon">↩️</span>مرتجع</a>
+        <a class="sb-item" onclick="openShiftModal();closeSidebar()"><span class="sb-icon">⏹️</span>إنهاء الوردية</a>
+        <a class="sb-item" onclick="toggleTheme();closeSidebar()"><span class="sb-icon">🌙</span>تغيير الثيم</a>
+        <a class="sb-item" onclick="location.href='about.html'"><span class="sb-icon">📞</span>تواصل معنا</a>
+        <a class="sb-item" onclick="endShift()" style="color:var(--red);"><span class="sb-icon">🚪</span>تسجيل الخروج</a>
+    </nav>
+    <div class="sidebar-footer"><span class="copy">Fateen OS © 2026</span></div>
+</div>
+
 <!-- HEADER -->
 <header>
     <div class="user-info">
-        <div style="width:36px;height:36px;border-radius:50%;background:var(--accent-dim);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:16px;">👤</div>
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--accent-dim);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;" onclick="openSidebar()">☰</div>
         <div>
             <div class="user-name" id="display-emp-name">الموظف</div>
             <div class="user-role" id="display-store-name">المتجر</div>
@@ -261,13 +293,9 @@
     </div>
 
     <div class="header-btns">
-        <!-- زر الإرجاع -->
         <button class="hbtn" onclick="openReturnModal()">↩️ مرتجع</button>
-        <!-- انهاء الوردية -->
         <button class="hbtn hbtn-red" onclick="openShiftModal()">⏹️ إنهاء الوردية</button>
-        <!-- ثيم -->
         <button class="hbtn" onclick="toggleTheme()"><span id="theme-icon">🌙</span></button>
-        <!-- الملف الشخصي -->
         <button class="hbtn" onclick="location.href='employeesite.html'">⚙️</button>
     </div>
 </header>
@@ -404,6 +432,11 @@
         c.appendChild(t);
         setTimeout(()=>t.remove(),3500);
     }
+
+    // ===== SIDEBAR =====
+    function openSidebar(){document.getElementById('main-sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open');}
+    function closeSidebar(){document.getElementById('main-sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open');}
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!e.target.matches('input')) closeSidebar();});
 
     // ===== THEME =====
     function toggleTheme(){
@@ -658,10 +691,12 @@
                 payment_method:paymentMethod,seller_name:currentUser,type:'sale'
             }]).select().single();
             if(error) throw error;
-            for(let item of cart){
-                const{data:p}=await _supabase.from('products').select('stock').eq('id',item.id).single();
-                if(p) await _supabase.from('products').update({stock:p.stock-item.qty}).eq('id',item.id);
-            }
+            // تحديث المخزون بـ Promise.all بدل sequential loop
+            await Promise.all(cart.map(async item=>{
+                const cached=allProducts.find(p=>p.id===item.id);
+                const currentStock=cached?cached.stock:item.stock;
+                await _supabase.from('products').update({stock:Math.max(0,currentStock-item.qty)}).eq('id',item.id);
+            }));
             shiftSalesData.push({...saleData,type:'sale'});
             showToast('تم البيع بنجاح ✅','success');
             if(document.getElementById('print-check').checked) printReceipt(saleData,cart,total,discount,subtotal);
@@ -760,6 +795,26 @@
 
         const w=window.open('','_blank',`width=${paperW==='210mm'?700:400},height=650`);
         if(w){w.document.write(receiptHTML);w.document.close();}
+        // فتح درج الخزنة عبر ESC/POS
+        openCashDrawer();
+    }
+
+    // ===== درج الخزنة ESC/POS =====
+    function openCashDrawer(){
+        try{
+            // أمر ESC/POS لفتح الدرج: ESC p 0 25 250
+            const escPos=[0x1B,0x70,0x00,0x19,0xFA];
+            // محاولة عبر Web Serial API (Chrome/Edge)
+            if('serial' in navigator){
+                navigator.serial.requestPort().then(port=>{
+                    port.open({baudRate:9600}).then(()=>{
+                        const writer=port.writable.getWriter();
+                        writer.write(new Uint8Array(escPos));
+                        writer.releaseLock();
+                    });
+                }).catch(()=>{});
+            }
+        }catch(e){}
     }
 
     // ===== RETURN =====
