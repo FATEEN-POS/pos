@@ -669,15 +669,20 @@
 
     function printInvoice(s){
         const items=typeof s.items==='string'?JSON.parse(s.items):(s.items||[]);
-        const w=window.open('','_blank','width=400,height=600');
+        const st=storeSettings;
+        const paperW=st.invoice_size==='58mm'?'58mm':st.invoice_size==='A4'?'210mm':'80mm';
+        const showEmp=st.invoice_show_employee!==false;
+        const showUnit=st.invoice_show_unit_price!==false;
+        const showTax=st.invoice_show_tax===true&&st.tax_id;
+        const footer=st.invoice_footer||'شكراً لزيارتكم 🌟';
+        const welcome=st.invoice_welcome||'';
+        const w=window.open('','_blank',`width=${paperW==='210mm'?700:400},height=650`);
         w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
         <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
         <style>
             *{margin:0;padding:0;box-sizing:border-box;}
-            body{width:80mm;margin:0 auto;padding:12px;font-family:'Cairo',sans-serif;color:#000;background:#fff;}
-            .center{text-align:center;}
+            body{width:${paperW};margin:0 auto;padding:12px;font-family:'Cairo',sans-serif;color:#000;background:#fff;}
             .store{font-size:20px;font-weight:900;text-align:center;}
-            .sub{font-size:12px;text-align:center;color:#555;}
             hr{border:none;border-top:1px dashed #000;margin:8px 0;}
             .info{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;}
             table{width:100%;border-collapse:collapse;margin:6px 0;}
@@ -688,18 +693,22 @@
             .total-lbl{flex:1;background:#111;color:#fff;padding:8px;text-align:center;font-size:13px;font-weight:800;}
             .total-val{flex:1;padding:8px;text-align:center;font-size:18px;font-weight:900;}
             .footer{text-align:center;margin-top:10px;font-size:11px;color:#777;border-top:1px dashed #ccc;padding-top:6px;}
-            @media print{@page{margin:0;size:80mm auto;}body{padding:8px;}}
+            @media print{@page{margin:0;size:${paperW} auto;}body{padding:8px;}}
         </style></head><body>
+        ${welcome?`<div style="text-align:center;font-size:11px;color:#666;padding:4px 0 6px;font-style:italic;">${welcome}</div>`:''}
         <div class="store">${storeName}</div>
-        <div class="sub">فاتورة مبيعات</div>
+        ${st.address?`<div style="font-size:11px;color:#555;text-align:center;">${st.address}</div>`:''}
+        ${st.phone?`<div style="font-size:11px;text-align:center;">${st.phone}</div>`:''}
+        <div style="font-size:11px;text-align:center;color:#888;">فاتورة مبيعات</div>
         <hr>
         <div class="info"><span>رقم: #${String(s.id).slice(-6)}</span><span>${fmt(s.created_at)}</span></div>
-        <div class="info"><span>البائع: ${s.seller_name||'---'}</span><span>الدفع: ${s.payment_method||'كاش'}</span></div>
+        ${showEmp?`<div class="info"><span>البائع: ${s.seller_name||'---'}</span><span>الدفع: ${s.payment_method||'كاش'}</span></div>`:`<div class="info"><span>الدفع: ${s.payment_method||'كاش'}</span></div>`}
         <hr>
-        <table><thead><tr><th>الصنف</th><th>ك</th><th>سعر</th><th>إجمالي</th></tr></thead>
-        <tbody>${items.map(i=>`<tr><td class="name">${i.product_name}</td><td>${i.qty}</td><td>${i.price}</td><td>${(i.qty*i.price).toFixed(0)}</td></tr>`).join('')}</tbody></table>
+        <table><thead><tr><th>الصنف</th><th>ك</th>${showUnit?'<th>سعر</th>':''}<th>إجمالي</th></tr></thead>
+        <tbody>${items.map(i=>`<tr><td class="name">${i.product_name}</td><td>${i.qty}</td>${showUnit?`<td>${i.price}</td>`:''}<td>${(i.qty*i.price).toFixed(0)}</td></tr>`).join('')}</tbody></table>
         <div class="total"><div class="total-lbl">الإجمالي</div><div class="total-val">${parseFloat(s.total_amount).toFixed(0)} ج.م</div></div>
-        <div class="footer">شكراً لزيارتكم 🌟 — Fateen OS</div>
+        ${showTax?`<div style="font-size:10px;color:#777;text-align:center;margin-top:5px;">الرقم الضريبي: ${st.tax_id}</div>`:''}
+        <div class="footer">${footer}</div>
         <script>window.onload=()=>{window.print();setTimeout(()=>window.close(),1200);}<\/script>
         </body></html>`);
         w.document.close();
@@ -1279,11 +1288,13 @@
     // MISC
     function emptyRow(cols){return`<tr><td colspan="${cols}" style="text-align:center;color:var(--text-muted);padding:20px;">لا توجد بيانات</td></tr>`;}
 
+    let storeSettings = {};
+
     // INIT
     async function init(){
         try{
-            const{data:store}=await _supabase.from('stores').select('store_name').eq('store_key',storeKey).single();
-            if(store){storeName=store.store_name;setText('store-name-display',storeName+' — التقارير');}
+            const{data:store}=await _supabase.from('stores').select('*').eq('store_key',storeKey).single();
+            if(store){storeName=store.store_name;storeSettings=store;setText('store-name-display',storeName+' — التقارير');}
             const{data:ver}=await _supabase.from('system_settings').select('value').eq('key','sys_version').single();
             if(ver) setText('version-chip',ver.value);
         }catch(e){}
