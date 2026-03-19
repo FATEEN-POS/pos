@@ -482,7 +482,14 @@
                 const roleLabel = emp.role === 'manager' ? 'مدير' : 'موظف';
                 document.getElementById('header-role').innerText = roleLabel;
 
-                await loadStats(emp.monthly_target || 0);
+                // جلب إعدادات المتجر للصلاحيات
+                const { data: store } = await _supabase.from('stores').select('perm_show_stats').eq('store_key', storeKey).single();
+                if(store && store.perm_show_stats === false) {
+                    const statsRow = document.querySelector('.stats-row');
+                    if(statsRow) statsRow.style.display = 'none';
+                } else {
+                    await loadStats(emp.monthly_target || 0);
+                }
                 await loadAllSales();
             }
         } catch(e) { showToast('خطأ في تحميل البيانات: ' + e.message, 'error'); }
