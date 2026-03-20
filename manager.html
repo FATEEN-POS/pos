@@ -533,8 +533,7 @@
 
         <!-- Footer bar (right under nav) -->
         <div class="d-footer">
-            <span class="copy">جميع الحقوق محفوظة لفطين 2026</span>
-            <span class="ver" id="d-version-footer">V0.5</span>
+            <span class="copy">جميع الحقوق محفوظة لفطين 2026 &nbsp;|&nbsp; V <span id="d-version-footer2">1.0.0</span></span>
         </div>
 
         <!-- مبيعات اليوم -->
@@ -796,7 +795,7 @@
             const { data, error } = await _supabase.from('system_settings').select('value').eq('key', 'sys_version').single();
             if(error) throw error;
             if(data) {
-                ['m-version','d-version','d-version-footer','m-version-footer'].forEach(id => { const el = document.getElementById(id); if(el) el.innerText = data.value; });
+                ['m-version','d-version','d-version-footer','m-version-footer','d-version-footer2'].forEach(id => { const el = document.getElementById(id); if(el) el.innerText = data.value; });
             }
         } catch(e) { showToast('خطأ في تحميل الإصدار: ' + e.message, 'error'); }
     }
@@ -865,7 +864,13 @@
     }
 
     async function printManagerReceipt(sale) {
-        const items = typeof sale.items==='string' ? JSON.parse(sale.items) : (sale.items||[]);
+        const rawItems = typeof sale.items==='string' ? JSON.parse(sale.items) : (sale.items||[]);
+        // دعم الـ keys القديمة والجديدة
+        const items = rawItems.map(i=>({
+            product_name: i.n||i.product_name||'—',
+            price: i.p||i.price||0,
+            qty: i.q||i.qty||1
+        }));
         const total = parseFloat(sale.total_amount)||0;
         const now = new Date(sale.created_at);
         // جلب إعدادات المتجر

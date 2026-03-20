@@ -296,46 +296,54 @@
         </div>
 
         <!-- موبايل: الداتابيز -->
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:15px;margin-top:15px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                <h3 style="margin:0;color:var(--accent);font-size:14px;">🗄️ حالة الداتابيز</h3>
-                <button onclick="loadDbStats()" style="background:var(--accent);color:#000;border:none;padding:6px 12px;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px;">🔄</button>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:15px;margin-top:15px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <span style="font-weight:800;font-size:14px;color:var(--accent);">🗄️ حالة الداتابيز</span>
+                <button onclick="loadDbStats()" style="background:var(--accent);color:#000;border:none;padding:5px 12px;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px;font-family:'Cairo',sans-serif;">🔄</button>
             </div>
             <div style="margin-bottom:10px;">
-                <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                    <span style="font-size:12px;color:var(--text-muted);">التخزين</span>
-                    <span style="font-size:12px;font-weight:800;" id="m-db-size-text">جاري...</span>
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+                    <span style="color:var(--text-muted);">التخزين</span>
+                    <span id="m-db-size-text" style="font-weight:800;">جاري...</span>
                 </div>
                 <div style="background:var(--card2);border-radius:20px;height:10px;overflow:hidden;">
-                    <div id="m-db-size-bar" style="height:100%;width:0%;border-radius:20px;background:var(--green);transition:width 0.6s;"></div>
+                    <div id="m-db-size-bar" style="height:100%;width:0%;background:var(--green);border-radius:20px;transition:width 0.6s;"></div>
                 </div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
                 <div style="background:var(--card2);border-radius:8px;padding:8px;text-align:center;">
                     <div style="font-size:10px;color:var(--text-muted);">مبيعات نشطة</div>
                     <div style="font-size:16px;font-weight:800;color:var(--accent);" id="m-db-sales">—</div>
                 </div>
                 <div style="background:var(--card2);border-radius:8px;padding:8px;text-align:center;">
+                    <div style="font-size:10px;color:var(--text-muted);">إجمالي الفواتير</div>
+                    <div style="font-size:16px;font-weight:800;color:var(--orange);" id="m-db-invoices">—</div>
+                </div>
+                <div style="background:var(--card2);border-radius:8px;padding:8px;text-align:center;">
+                    <div style="font-size:10px;color:var(--text-muted);">المنتجات</div>
+                    <div style="font-size:16px;font-weight:800;color:var(--green);" id="m-db-products">—</div>
+                </div>
+                <div style="background:var(--card2);border-radius:8px;padding:8px;text-align:center;">
                     <div style="font-size:10px;color:var(--text-muted);">مؤرشفة</div>
-                    <div style="font-size:16px;font-weight:800;color:var(--orange);" id="m-db-archive">—</div>
+                    <div style="font-size:16px;font-weight:800;color:var(--text-muted);" id="m-db-archive">—</div>
                 </div>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;background:var(--card2);border-radius:8px;padding:10px;">
                 <div>
-                    <div style="font-size:12px;font-weight:700;">الأرشفة</div>
-                    <div style="font-size:11px;color:var(--text-muted);" id="m-db-days">—</div>
+                    <div style="font-size:12px;font-weight:700;">الأرشفة التلقائية</div>
+                    <div style="font-size:11px;color:var(--text-muted);" id="m-db-days">فاضل 80 يوم</div>
                 </div>
                 <button onclick="runArchive()" style="background:var(--orange);color:#000;border:none;padding:8px 14px;border-radius:8px;font-weight:800;cursor:pointer;font-size:12px;font-family:'Cairo',sans-serif;">⚡ الآن</button>
             </div>
         </div>
 
         <!-- موبايل: الماركترز -->
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:15px;margin-top:15px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                <h3 style="margin:0;color:var(--accent);font-size:14px;">📢 الماركترز</h3>
-                <button onclick="openModal('addMarketerModal')" style="background:var(--accent);color:#000;border:none;padding:6px 12px;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px;">+ جديد</button>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:15px;margin-top:15px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <span style="font-weight:800;font-size:14px;color:var(--accent);">📢 الماركترز</span>
+                <button onclick="openModal('addMarketerModal')" style="background:var(--accent);color:#000;border:none;padding:5px 12px;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px;font-family:'Cairo',sans-serif;">+ جديد</button>
             </div>
-            <div id="m-marketers-list" style="font-size:13px;color:var(--text-muted);text-align:center;padding:10px;">جاري التحميل...</div>
+            <div id="m-marketers-list" style="color:var(--text-muted);font-size:13px;text-align:center;padding:10px;">جاري التحميل...</div>
         </div>
 
         <div class="footer-bar" style="border-radius:12px; margin-top:15px;">
@@ -367,9 +375,9 @@
 
         <div class="stats-grid stats-grid-desktop" style="margin-bottom:20px;">
             <div class="stat-card" style="border-bottom:3px solid var(--accent);"><h4>إجمالي الأرباح المتوقعة</h4><p id="d-revenue">0 ج.م</p></div>
-            <div class="stat-card" style="border-bottom:3px solid var(--green);"><h4>المتاجر المشتركة</h4><p id="d-stores">0</p></div>
-            <div class="stat-card" style="border-bottom:3px solid var(--orange);"><h4>إجمالي الموظفين</h4><p id="d-emps">0</p></div>
-            <div class="stat-card" style="border-bottom:3px solid var(--red);"><h4>إجمالي المديرين</h4><p id="d-mgrs">0</p></div>
+            <div class="stat-card" style="border-bottom:3px solid var(--green);"><h4>✅ إيرادات مؤكدة</h4><p id="d-confirmed-revenue" style="color:var(--green);">0 ج.م</p></div>
+            <div class="stat-card" style="border-bottom:3px solid var(--orange);"><h4>المتاجر المشتركة</h4><p id="d-stores">0</p></div>
+            <div class="stat-card" style="border-bottom:3px solid var(--red);"><h4>إجمالي الموظفين</h4><p id="d-emps">0</p></div>
         </div>
 
         <div style="display:flex; gap:12px; margin-bottom:18px; align-items:center;">
@@ -461,6 +469,10 @@
                 <div style="background:var(--card2); border:1px solid var(--border); border-radius:10px; padding:12px; text-align:center;">
                     <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">المشتريات</div>
                     <div style="font-size:20px; font-weight:800; color:var(--text);" id="db-purchases-count">—</div>
+                </div>
+                <div style="background:var(--card2); border:1px solid var(--border); border-radius:10px; padding:12px; text-align:center;">
+                    <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">إجمالي الفواتير</div>
+                    <div style="font-size:20px; font-weight:800; color:var(--accent);" id="db-invoices-count">—</div>
                 </div>
             </div>
 
@@ -615,9 +627,14 @@
                 ['m-v-input','d-v-input'].forEach(id => { const el=document.getElementById(id); if(el && !el.value) el.value=vData.value; });
             }
 
-            const { data: stores } = await _supabase.from('stores').select('*');
+            // جلب المتاجر باستثناء حسابات المطور والماركتر
+            const { data: allUsers } = await _supabase.from('users').select('store_key,role');
+            const excludeKeys = (allUsers||[]).filter(u=>u.role==='developer'||u.role==='marketer').map(u=>u.store_key).filter(Boolean);
+            let storesQuery = _supabase.from('stores').select('*');
+            const { data: stores } = await storesQuery;
+            const filteredStores = (stores||[]).filter(st => !excludeKeys.includes(st.store_key) || st.store_key === 'DEVELOPER');
             const { data: users } = await _supabase.from('users').select('*');
-            allStores = stores || [];
+            allStores = filteredStores || [];
 
             let totalRev = 0;
             stores?.forEach(st => totalRev += Number(st.subscription_price || 0));
@@ -630,6 +647,13 @@
             setStats('mgrs', mgrsCount);
 
             renderStores(allStores);
+            // إيرادات مؤكدة من الماركترز
+            try {
+                const {data:revData} = await _supabase.from('system_settings').select('value').eq('key','total_revenue').single();
+                const rev = parseFloat(revData?.value||0);
+                const el = document.getElementById('d-confirmed-revenue');
+                if(el) el.innerText = rev.toLocaleString() + ' ج.م';
+            } catch(e) {}
         }
 
         function setStats(key, dVal, mVal) {
@@ -637,19 +661,19 @@
             const m = document.getElementById('m-'+key); if(m) m.innerText = mVal || dVal;
         }
 
-        let storesDisplayCount = 5;
-        let lastFilteredStores = [];
+        let _displayCount = 5;
+        let _filteredList = [];
 
         function renderStores(list) {
-            storesDisplayCount = 5;
-            lastFilteredStores = list;
-            renderStoresPaginated();
+            _displayCount = 5;
+            _filteredList = list || [];
+            _renderPaged();
         }
 
-        function renderStoresPaginated() {
-            const visible = lastFilteredStores.slice(0, storesDisplayCount);
-            const remaining = lastFilteredStores.length - storesDisplayCount;
-            const html = visible.map(st => {
+        function _renderPaged() {
+            const visible = _filteredList.slice(0, _displayCount);
+            const rem = _filteredList.length - _displayCount;
+            const cards = visible.map(st => {
                 const diff = Math.ceil((new Date(st.expiry_date) - new Date()) / 86400000);
                 const daysText = diff > 0 ? `باقي ${diff} يوم` : 'منتهي';
                 const daysColor = diff > 5 ? 'var(--green)' : 'var(--red)';
@@ -664,12 +688,11 @@
                     </div>
                 </div>`;
             }).join('') || `<div style="color:var(--text-muted); text-align:center; padding:30px;">لا توجد متاجر</div>`;
-            const loadMore = remaining > 0 ? `<div style="text-align:center;margin-top:14px;"><button onclick="loadMoreStores()" style="background:var(--card2);border:1px solid var(--border);color:var(--text);padding:10px 24px;border-radius:10px;cursor:pointer;font-family:'Cairo',sans-serif;font-weight:700;font-size:13px;">عرض المزيد (${remaining} متجر)</button></div>` : '';
-            const mg = document.getElementById('m-stores-grid'); if(mg) mg.innerHTML = html + loadMore;
-            const dg = document.getElementById('d-stores-grid'); if(dg) dg.innerHTML = html + loadMore;
+            const more = rem > 0 ? `<div style="text-align:center;margin-top:14px;"><button onclick="_displayCount+=5;_renderPaged()" style="background:var(--card2);border:1px solid var(--border);color:var(--text);padding:10px 24px;border-radius:10px;cursor:pointer;font-family:'Cairo',sans-serif;font-weight:700;font-size:13px;">عرض المزيد (${rem} متجر)</button></div>` : '';
+            const html = cards + more;
+            const mg = document.getElementById('m-stores-grid'); if(mg) mg.innerHTML = html;
+            const dg = document.getElementById('d-stores-grid'); if(dg) dg.innerHTML = html;
         }
-
-        function loadMoreStores() { storesDisplayCount += 5; renderStoresPaginated(); }
 
         function filterStores() {
             const term = (document.getElementById('d-search')?.value || document.getElementById('m-search')?.value || '').toLowerCase();
@@ -716,7 +739,7 @@
             const p = document.getElementById('q-pass').value;
             const r = document.getElementById('q-role').value;
             if(!u || !p) return alert("أدخل البيانات");
-            if(p.length < 6) return alert("كلمة المرور لازم تكون 6 أحرف على الأقل");
+            if(p.length < 8) return alert("كلمة المرور أقل من 8 أحرف");
             await _supabase.from('users').insert([{ username:u, password:p, store_key:activeStoreKey, role:r }]);
             document.getElementById('q-name').value='';
             document.getElementById('q-pass').value='';
@@ -914,22 +937,26 @@
                         <td style="color:var(--green); font-weight:800;">${commAmt.toLocaleString()} ج.م</td>
                         <td>
                             <button onclick="editMarketerCommission('${m.username}', ${commRate})" style="background:var(--accent-dim); color:var(--accent); border:1px solid var(--accent); padding:4px 10px; border-radius:6px; font-size:12px; cursor:pointer; font-weight:700;">تعديل العمولة</button>
+                            <button onclick="changeMarketerPassword('${m.username}')" style="background:var(--card2); color:var(--text); border:1px solid var(--border); padding:4px 10px; border-radius:6px; font-size:12px; cursor:pointer; font-weight:700; margin-right:4px;">🔑 باسورد</button>
                             <button onclick="deleteMarketer('${m.username}')" style="background:var(--red-dim); color:var(--red); border:1px solid var(--red); padding:4px 10px; border-radius:6px; font-size:12px; cursor:pointer; font-weight:700; margin-right:4px;">حذف</button>
                         </td>
                     </tr>`;
                 }
                 tbody.innerHTML = rows;
-                // موبايل render
-                const mList2 = document.getElementById('m-marketers-list');
-                if(mList2) {
-                    mList2.innerHTML = mList.length ? mList.map(m => `
+                // موبايل
+                const _ml=document.getElementById('m-marketers-list');
+                if(_ml){
+                    _ml.innerHTML=mList.length?mList.map(m=>`
                         <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
                             <div>
                                 <div style="font-weight:800;font-size:13px;">${m.username}</div>
                                 <div style="font-size:11px;color:var(--text-muted);">عمولة: ${m.commission_rate||0}%</div>
                             </div>
-                            <button onclick="deleteMarketer('${m.username}')" style="background:var(--red-dim);color:var(--red);border:1px solid var(--red);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:'Cairo',sans-serif;font-weight:700;">حذف</button>
-                        </div>`).join('') : '<div style="text-align:center;color:var(--text-muted);padding:10px;">لا يوجد ماركترز</div>';
+                            <div style="display:flex;gap:6px;">
+                                <button onclick="changeMarketerPassword('${m.username}')" style="background:var(--card);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-size:11px;cursor:pointer;font-family:'Cairo',sans-serif;">🔑</button>
+                                <button onclick="deleteMarketer('${m.username}')" style="background:var(--red-dim);color:var(--red);border:1px solid var(--red);padding:4px 8px;border-radius:6px;font-size:11px;cursor:pointer;font-family:'Cairo',sans-serif;">حذف</button>
+                            </div>
+                        </div>`).join(''):'<div style="text-align:center;color:var(--text-muted);padding:10px;">لا يوجد ماركترز</div>';
                 }
             } catch(e) { console.error('خطأ في تحميل الماركترز:', e); }
         }
@@ -940,7 +967,7 @@
             const ph = document.getElementById('mkt-phone').value.trim();
             const comm = parseFloat(document.getElementById('mkt-commission').value) || 10;
             if(!u || !p) return alert('اسم المستخدم وكلمة المرور مطلوبين');
-            if(p.length < 6) return alert('كلمة المرور لازم تكون 6 أحرف على الأقل');
+            if(p.length < 8) return alert('كلمة المرور أقل من 8 أحرف');
             const { error } = await _supabase.from('users').insert([{
                 username: u, password: p, phone: ph,
                 role: 'marketer', commission_rate: comm,
@@ -955,6 +982,15 @@
             if(newRate === null) return;
             const { error } = await _supabase.from('users').update({ commission_rate: parseFloat(newRate) }).eq('username', username);
             if(!error) { alert('تم تحديث العمولة'); loadMarketers(); }
+        }
+
+        async function changeMarketerPassword(username) {
+            const newPass = prompt(`تغيير باسورد الماركتر: ${username}\nأدخل الباسورد الجديد (8 أحرف على الأقل):`);
+            if(!newPass) return;
+            if(newPass.length < 8) { alert('الباسورد أقل من 8 أحرف'); return; }
+            const { error } = await _supabase.from('users').update({ password: newPass }).eq('username', username);
+            if(!error) alert('✅ تم تغيير الباسورد');
+            else alert('خطأ: ' + error.message);
         }
 
         async function deleteMarketer(username) {
@@ -994,13 +1030,16 @@
                         _supabase.from('purchases').select('id', {count:'exact', head:true}),
                     ]);
                     document.getElementById('db-sales-count').innerText = (s.count||0).toLocaleString();
-                    const mds=document.getElementById('m-db-sales');if(mds)mds.innerText=(s.count||0).toLocaleString();
                     document.getElementById('db-archive-count').innerText = (sa.count||0).toLocaleString();
-                    const mda=document.getElementById('m-db-archive');if(mda)mda.innerText=(sa.count||0).toLocaleString();
                     document.getElementById('db-products-count').innerText = (p.count||0).toLocaleString();
                     document.getElementById('db-purchases-count').innerText = (pu.count||0).toLocaleString();
+                    document.getElementById('db-invoices-count').innerText = ((s.count||0)+(sa.count||0)).toLocaleString();
                     document.getElementById('db-size-text').innerText = 'لا يمكن حساب الحجم تلقائياً';
-                    const mst=document.getElementById('m-db-size-text');if(mst)mst.innerText='لا يمكن الحساب';
+                    const mst=document.getElementById('m-db-size-text');if(mst)mst.innerText='غير متاح';
+                    const mds=document.getElementById('m-db-sales');if(mds)mds.innerText=(s.count||0).toLocaleString();
+                    const mdi=document.getElementById('m-db-invoices');if(mdi)mdi.innerText=((s.count||0)+(sa.count||0)).toLocaleString();
+                    const mdp=document.getElementById('m-db-products');if(mdp)mdp.innerText=(p.count||0).toLocaleString();
+                    const mda=document.getElementById('m-db-archive');if(mda)mda.innerText=(sa.count||0).toLocaleString();
                     return;
                 }
 
@@ -1018,11 +1057,15 @@
                      (${(maxMB - sizeMB).toFixed(1)} MB متبقي)</span>`;
 
                 document.getElementById('db-sales-count').innerText = (data.sales_rows||0).toLocaleString();
-                const mds2=document.getElementById('m-db-sales');if(mds2)mds2.innerText=(data.sales_rows||0).toLocaleString();
                 document.getElementById('db-archive-count').innerText = (data.sales_archive_rows||0).toLocaleString();
-                const mda2=document.getElementById('m-db-archive');if(mda2)mda2.innerText=(data.sales_archive_rows||0).toLocaleString();
                 document.getElementById('db-products-count').innerText = (data.products_rows||0).toLocaleString();
                 document.getElementById('db-purchases-count').innerText = (data.purchases_rows||0).toLocaleString();
+                // موبايل sync
+                const _mds=document.getElementById('m-db-sales');if(_mds)_mds.innerText=(data.sales_rows||0).toLocaleString();
+                const _mdi=document.getElementById('m-db-invoices');if(_mdi)_mdi.innerText=((data.sales_rows||0)+(data.sales_archive_rows||0)).toLocaleString();
+                const _mdp=document.getElementById('m-db-products');if(_mdp)_mdp.innerText=(data.products_rows||0).toLocaleString();
+                const _mda=document.getElementById('m-db-archive');if(_mda)_mda.innerText=(data.sales_archive_rows||0).toLocaleString();
+                const _mst=document.getElementById('m-db-size-text');if(_mst)_mst.innerText=(data.total_size_mb||0)+' MB / 500 MB';
 
                 // حساب فاضل على الأرشفة (آخر أرشفة)
                 const { data: lastSale } = await _supabase
@@ -1041,19 +1084,18 @@
                     if(daysLeft <= 0) {
                         daysEl.innerText = 'الآن!';
                         daysEl.style.color = 'var(--red)';
-                        const mdd=document.getElementById('m-db-days');if(mdd){mdd.innerText='جاهزة للأرشفة الآن!';mdd.style.color='var(--red)';}
+                        const _mdd=document.getElementById('m-db-days');if(_mdd){_mdd.innerText='جاهزة للأرشفة!';_mdd.style.color='var(--red)';}
                         document.getElementById('db-archive-status').innerText =
                             '⚠️ يوجد سجلات جاهزة للأرشفة';
                     } else {
                         daysEl.innerText = daysLeft + ' يوم';
                         daysEl.style.color = daysLeft < 15 ? 'var(--orange)' : 'var(--green)';
-                        const mdd2=document.getElementById('m-db-days');if(mdd2){mdd2.innerText='فاضل '+daysLeft+' يوم';}
+                        const _mdd2=document.getElementById('m-db-days');if(_mdd2)_mdd2.innerText='فاضل '+daysLeft+' يوم';
                         document.getElementById('db-archive-status').innerText =
                             `تنقل السجلات الأقدم من 90 يوم — أقدم سجل: ${oldest.toLocaleDateString('ar-EG')}`;
                     }
                 } else {
                     document.getElementById('db-days-to-archive').innerText = 'لا يوجد';
-                    const mdd3=document.getElementById('m-db-days');if(mdd3)mdd3.innerText='لا يوجد سجلات';
                 }
 
             } catch(e) {
@@ -1073,10 +1115,12 @@
                 if(error) throw error;
                 const r = data;
                 resultEl.style.display = 'block';
-                resultEl.innerHTML = `✅ تمت الأرشفة بنجاح —
-                    مبيعات: ${r.sales_archived || 0} سجل |
-                    مشتريات: ${r.purchases_archived || 0} سجل |
-                    مصروفات: ${r.expenses_archived || 0} سجل`;
+                resultEl.innerHTML = `✅ تمت الأرشفة بنجاح — مبيعات: ${r.sales_archived||0} | مشتريات: ${r.purchases_archived||0} | مصروفات: ${r.expenses_archived||0}`;
+                // إعادة العد من 80 يوم من الآن
+                const daysEl = document.getElementById('db-days-to-archive');
+                if(daysEl) { daysEl.innerText = '80 يوم'; daysEl.style.color = 'var(--green)'; }
+                const statusEl = document.getElementById('db-archive-status');
+                if(statusEl) statusEl.innerText = 'تم الأرشفة — العد بدأ من الآن';
                 await loadDbStats();
             } catch(e) {
                 resultEl.style.display = 'block';

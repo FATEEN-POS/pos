@@ -309,7 +309,7 @@
         </div>
         <!-- GRID -->
         <div class="product-grid" id="product-list">
-            <div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:30px;">جاري التحميل...</div>
+            <div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:20px;font-size:13px;">⚡ جاري التحميل...</div>
         </div>
     </div>
 
@@ -481,7 +481,18 @@
             const{data}=await _supabase.from('system_settings').select('value').eq('key','sys_version').single();
             if(data) document.getElementById('version-chip').innerText=data.value;
         }catch(e){}
-        await loadProducts();
+        // تحميل فوري من الـ cache ثم تحديث في الخلفية
+        const _ck='fateen_products_'+storeKey;
+        const _cached=sessionStorage.getItem(_ck);
+        if(_cached){
+            allProducts=JSON.parse(_cached);
+            buildCatTabs();
+            renderProducts();
+            // تحديث في الخلفية بدون انتظار
+            loadProducts(true).catch(()=>{});
+        } else {
+            await loadProducts();
+        }
         updateTargetDisplay();
         document.getElementById('p-search').focus();
         document.addEventListener('keydown',e=>{if(e.key==='F2'){e.preventDefault();checkout();}});
@@ -685,7 +696,7 @@
         const discount=getDiscount(subtotal);
         const total=subtotal-discount;
         try{
-            const slimItems=cart.map(i=>({id:i.id,product_name:i.product_name,price:i.price,qty:i.qty}));
+            const slimItems=cart.map(i=>({i:i.id,n:i.product_name,p:i.price,q:i.qty}));
             const{data:saleData,error}=await _supabase.from('sales').insert([{
                 store_key:storeKey,items:slimItems,total_amount:total,
                 payment_method:paymentMethod,seller_name:currentUser,type:'sale'
@@ -755,9 +766,9 @@
                     <th style="padding:6px 4px;text-align:center;">إجمالي</th>
                 </tr></thead>
                 <tbody>${items.map(i=>`<tr>
-                    <td style="padding:6px 4px;font-weight:700;text-align:right;">${i.product_name}</td>
-                    <td style="padding:6px 4px;text-align:center;">${i.qty}</td>
-                    ${showUnitPrice?`<td style="padding:6px 4px;text-align:center;">${i.price}</td>`:''}
+                    <td style="padding:6px 4px;font-weight:700;text-align:right;">${i.n||i.product_name}</td>
+                    <td style="padding:6px 4px;text-align:center;">${i.q||i.qty}</td>
+                    ${showUnitPrice?`<td style="padding:6px 4px;text-align:center;">${i.p||i.price}</td>`:''}
                     <td style="padding:6px 4px;text-align:center;font-weight:800;">${(i.price*i.qty).toFixed(0)}</td>
                 </tr>`).join('')}</tbody>
             </table>
@@ -863,8 +874,10 @@
             }]);
             // إعادة المخزون
             for(let item of sale.items){
-                const{data:p}=await _supabase.from('products').select('stock').eq('id',item.id).single();
-                if(p) await _supabase.from('products').update({stock:p.stock+item.qty}).eq('id',item.id);
+                const itemId=item.i||item.id;
+                const itemQty=item.q||item.qty;
+                const{data:p}=await _supabase.from('products').select('stock').eq('id',itemId).single();
+                if(p) await _supabase.from('products').update({stock:p.stock+itemQty}).eq('id',itemId);
             }
             showToast('تم إرجاع الفاتورة بنجاح','success');
             closeModal('returnModal');
@@ -880,7 +893,7 @@
                 <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px;font-weight:700;">اختر المنتج المراد إرجاعه:</p>
                 ${sale.items.map((item,idx)=>`
                     <div class="return-item">
-                        <div><div class="return-item-name">${item.product_name}</div><div class="return-item-qty">الكمية: ${item.qty} | ${item.price} ج.م</div></div>
+                        <div><div class="return-item-name">${item.n||item.product_name}</div><div class="return-item-qty">الكمية: ${item.q||item.qty} | ${item.p||item.price} ج.م</div></div>
                         <button class="btn btn-red" style="padding:6px 12px;font-size:12px;" onclick="processSingleReturn('${sale.id}',${idx})">↩️ إرجاع</button>
                     </div>`).join('')}
             </div>`;

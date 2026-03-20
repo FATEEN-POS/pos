@@ -394,6 +394,12 @@
                     role: 'manager'
                 }]);
             }
+            // إضافة الربح لإجمالي الإيرادات (يظهر للمطور)
+            if(price > 0) {
+                const {data:devData} = await _supabase.from('system_settings').select('value').eq('key','total_revenue').single();
+                const currentRev = parseFloat(devData?.value||0);
+                await _supabase.from('system_settings').upsert([{key:'total_revenue', value: String(currentRev+price)}]);
+            }
             showToast(`تم إضافة المتجر — الكود: ${key} | السعر: ${price.toLocaleString()} ج.م`, 'success');
             closeModal('addStoreModal');
             loadStores();
