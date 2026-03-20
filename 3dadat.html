@@ -165,15 +165,14 @@
         <span class="sidebar-close" onclick="closeSidebar()">✕</span>
     </div>
     <nav class="sidebar-nav">
-        <a class="sb-item" onclick="location.href='manager.html'"><span class="sb-icon">📊</span>لوحة المدير</a>
-        <a class="sb-item" onclick="location.href='pos.html'"><span class="sb-icon">🖥️</span>الكاشير</a>
-        <a class="sb-item" onclick="location.href='inventory.html'"><span class="sb-icon">🏪</span>المخزن</a>
-        <a class="sb-item" onclick="location.href='accounting.html'"><span class="sb-icon">📒</span>المحاسبة</a>
-        <a class="sb-item" onclick="location.href='reports.html'"><span class="sb-icon">📋</span>التقارير</a>
-        <a class="sb-item" onclick="location.href='3dadat.html'" style="border-color:var(--accent);background:var(--accent-dim);color:var(--accent);"><span class="sb-icon">⚙️</span>الإعدادات</a>
-        <a class="sb-item" onclick="location.href='about.html'"><span class="sb-icon">📞</span>تواصل معنا</a>
+        <a class="sb-item" onclick="showSection('identity',null);closeSidebar()"><span class="sb-icon">🆔</span>هوية المتجر</a>
+        <a class="sb-item" onclick="showSection('security',null);closeSidebar()"><span class="sb-icon">🔐</span>الأمان والنسخ</a>
+        <a class="sb-item" onclick="showSection('permissions',null);closeSidebar()"><span class="sb-icon">👥</span>الصلاحيات</a>
+        <a class="sb-item" onclick="showSection('invoice',null);closeSidebar()"><span class="sb-icon">🧾</span>إعدادات الفاتورة</a>
+        <a class="sb-item" onclick="showSection('shift',null);closeSidebar()"><span class="sb-icon">🕐</span>إعدادات الوردية</a>
+        <div style="border-top:1px solid var(--border);margin:8px 0;"></div>
         <a class="sb-item" onclick="toggleTheme();closeSidebar()"><span class="sb-icon">🌙</span>تغيير الثيم</a>
-        <a class="sb-item" onclick="sessionStorage.clear();location.href='index.html'" style="color:var(--red);"><span class="sb-icon">🚪</span>تسجيل الخروج</a>
+        <a class="sb-item" onclick="location.href='manager.html'" style="color:var(--red);"><span class="sb-icon">⬅️</span>خروج للإدارة</a>
     </nav>
     <div class="sidebar-footer"><span class="copy">Fateen OS © 2026</span></div>
 </div>

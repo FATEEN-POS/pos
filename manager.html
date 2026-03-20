@@ -1274,11 +1274,11 @@
             const {data} = await _supabase.from('stores').select('*').eq('store_key',storeKey).single();
             if(data) s = data;
         } catch(e) {}
-        const paperW = s.invoice_size==='58mm'?'58mm':s.invoice_size==='A4'?'210mm':'90mm';
+        const paperW = s.invoice_size==='58mm'?'58mm':s.invoice_size==='A4'?'210mm':'80mm';
         const storeName2 = s.store_name||'المتجر';
         const footer = s.invoice_footer||'Fateen OS';
         const showTax = s.invoice_show_tax===true && s.tax_id;
-        const w = window.open('','_blank',`width=${paperW==='210mm'?700:500},height=720`);
+        const w = window.open('','_blank',`width=${paperW==='210mm'?700:420},height=720`);
         w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
         <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
         <style>

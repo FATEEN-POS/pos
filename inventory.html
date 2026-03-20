@@ -162,13 +162,17 @@
         <span class="sidebar-close" onclick="closeSidebar()">✕</span>
     </div>
     <nav class="sidebar-nav">
-        <a class="sb-item" onclick="location.href='manager.html'"><span class="sb-icon">📊</span>لوحة المدير</a>
-        <a class="sb-item" onclick="location.href='pos.html'"><span class="sb-icon">🖥️</span>الكاشير</a>
-        <a class="sb-item" onclick="location.href='inventory.html'" style="border-color:var(--accent);background:var(--accent-dim);color:var(--accent);"><span class="sb-icon">🏪</span>المخزن</a>
-        <a class="sb-item" onclick="location.href='accounting.html'"><span class="sb-icon">📒</span>المحاسبة</a>
-        <a class="sb-item" onclick="location.href='reports.html'"><span class="sb-icon">📋</span>التقارير</a>
-        <a class="sb-item" onclick="location.href='3dadat.html'"><span class="sb-icon">⚙️</span>الإعدادات</a>
-        <a class="sb-item" onclick="location.href='about.html'"><span class="sb-icon">📞</span>تواصل معنا</a>
+        <a class="sb-item" onclick="openModal('productModal');resetProductForm();closeSidebar()"><span class="sb-icon">✨</span>صنف جديد</a>
+        <a class="sb-item" onclick="openModal('orderModal');closeSidebar()"><span class="sb-icon">📦</span>توريد فاتورة</a>
+        <a class="sb-item" onclick="showSection('sec-inventory');closeSidebar()"><span class="sb-icon">📊</span>جرد مفصل</a>
+        <a class="sb-item" onclick="exportBackup();closeSidebar()"><span class="sb-icon">💾</span>Back-Up</a>
+        <a class="sb-item" onclick="showSection('sec-favorites');closeSidebar()"><span class="sb-icon">⭐️</span>المفضلة</a>
+        <a class="sb-item" onclick="showSection('sec-deficit');closeSidebar()"><span class="sb-icon">📥</span>Back-In</a>
+        <a class="sb-item" onclick="showSection('sec-waste');closeSidebar()"><span class="sb-icon">⚠️</span>عجز</a>
+        <a class="sb-item" onclick="showSection('sec-settlement');closeSidebar()"><span class="sb-icon">🔧</span>تسوية</a>
+        <a class="sb-item" onclick="showSection('sec-discounts');closeSidebar()"><span class="sb-icon">🏷</span>خصومات</a>
+        <a class="sb-item" onclick="showSection('sec-transfer');closeSidebar()"><span class="sb-icon">🔄</span>تحويل</a>
+        <div style="border-top:1px solid var(--border);margin:8px 0;"></div>
         <a class="sb-item" onclick="toggleTheme();closeSidebar()"><span class="sb-icon">🌙</span>تغيير الثيم</a>
         <a class="sb-item" onclick="sessionStorage.clear();location.href='index.html'" style="color:var(--red);"><span class="sb-icon">🚪</span>تسجيل الخروج</a>
     </nav>
@@ -347,6 +351,28 @@
         <div style="display:flex;gap:10px;margin-top:6px;">
             <button class="btn btn-accent" style="flex:1;justify-content:center;" onclick="saveProduct()">💾 حفظ</button>
             <button class="btn btn-ghost"  style="flex:1;justify-content:center;" onclick="closeModal('productModal')">إلغاء</button>
+        </div>
+    </div>
+</div>
+
+<!-- Product Actions Modal -->
+<div id="productActionsModal" class="modal">
+    <div class="modal-box" style="width:360px;">
+        <div class="modal-title">
+            <span id="pa-title">خيارات المنتج</span>
+            <span class="modal-close" onclick="closeModal('productActionsModal')">✕</span>
+        </div>
+        <div id="pa-info" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:14px;">
+            <div style="font-weight:800;font-size:14px;" id="pa-name">—</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;" id="pa-meta">—</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <button onclick="pa_edit()" class="btn btn-accent" style="justify-content:center;">✏️ تعديل</button>
+            <button onclick="pa_supply()" class="btn btn-ghost" style="justify-content:center;">📦 توريد</button>
+            <button onclick="pa_wasted()" class="btn btn-ghost" style="justify-content:center;color:var(--orange);">🗑️ هالك</button>
+            <button onclick="pa_discount()" class="btn btn-ghost" style="justify-content:center;color:var(--purple);">🏷️ خصم</button>
+            <button onclick="pa_print()" class="btn btn-ghost" style="justify-content:center;">🖨️ طباعة</button>
+            <button onclick="pa_delete()" class="btn btn-ghost" style="justify-content:center;color:var(--red);">🗑️ حذف</button>
         </div>
     </div>
 </div>
@@ -625,6 +651,37 @@
     function closeSidebar(){document.getElementById('main-sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open');}
     document.addEventListener('keydown',e=>{if(e.key==='Escape') closeSidebar();});
 
+    function showSection(sec) {
+        const map = {
+            'sec-inventory': ()=>openExportChoice(),
+            'sec-favorites': ()=>toggleFavFilter(),
+            'sec-deficit':   ()=>openDeficitModal(),
+            'sec-waste':     ()=>openWastedModal('','',0),
+            'sec-settlement':()=>openSettlementModal(),
+            'sec-discounts': ()=>openDiscountModal(),
+            'sec-transfer':  ()=>openTransferModal(),
+        };
+        if(map[sec]) map[sec]();
+    }
+
+    function resetProductForm(){
+        document.getElementById('edit-id').value='';
+        document.getElementById('p-barcode').value='';
+        document.getElementById('p-name').value='';
+        document.getElementById('p-stock').value='0';
+        document.getElementById('p-cost').value='0';
+        document.getElementById('p-price').value='0';
+        document.getElementById('p-expiry').value='';
+        const unitEl=document.getElementById('p-unit');if(unitEl)unitEl.value='قطعة';
+        document.getElementById('p-new-category').value='';
+        document.getElementById('new-cat-wrap').style.display='none';
+        document.getElementById('modal-title').innerText='إضافة صنف جديد';
+        buildProductCategorySelect();
+        document.getElementById('productModal').classList.add('open');
+    }
+
+    function exportBackup(){openExportChoice();}
+
     function toggleTheme(){
         const html=document.documentElement;
         const isLight=html.getAttribute('data-theme')==='light';
@@ -709,7 +766,7 @@
             const lastSupply=p.last_supply_date?`<span style="font-size:10px;color:var(--text-muted);">${p.last_supply_date}</span>`:`<span style="color:var(--text-muted);font-size:10px;">---</span>`;
             const lastUpdate=p.updated_at?`<span style="font-size:10px;color:var(--text-muted);">${new Date(p.updated_at).toLocaleDateString('ar-EG')}</span>`:`<span style="color:var(--text-muted);font-size:10px;">---</span>`;
             const isFav=favIds.includes(String(p.id));
-            return`<tr>
+            return`<tr onclick='openProductActions(${JSON.stringify(p).replace(/'/g,"&#39;")})' style="cursor:pointer;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
                 <td class="col-barcode" style="font-family:monospace;font-size:11px;color:var(--accent);">${p.barcode||'---'}</td>
                 <td style="font-weight:700;">${p.product_name}</td>
                 <td>${catBadge}</td>
@@ -780,10 +837,13 @@
         const selCat=document.getElementById('p-category-select').value;
         const category=newCat||selCat||null;
         const pName=document.getElementById('p-name').value.trim();
+        const price=parseFloat(document.getElementById('p-price').value)||0;
+        const barcode=document.getElementById('p-barcode').value.trim();
         if(!pName){showToast('اسم المنتج مطلوب','error');return;}
-        const data={store_key:storeKey,barcode:document.getElementById('p-barcode').value,product_name:pName,category,stock:parseInt(document.getElementById('p-stock').value)||0,cost_price:parseFloat(document.getElementById('p-cost').value)||0,price:parseFloat(document.getElementById('p-price').value)||0,expiry_date:document.getElementById('p-expiry').value||null,unit:document.getElementById('p-unit')?.value||'قطعة'};
+        if(!barcode){showToast('الباركود مطلوب','error');return;}
+        if(price<=0){showToast('سعر البيع مطلوب','error');return;}
+        const data={store_key:storeKey,barcode:barcode,product_name:pName,category,stock:parseInt(document.getElementById('p-stock').value)||0,cost_price:parseFloat(document.getElementById('p-cost').value)||0,price:price,expiry_date:document.getElementById('p-expiry').value||null,unit:document.getElementById('p-unit')?.value||'قطعة'};
         try{
-            // تحقق من تكرار الاسم عند الإضافة فقط
             if(!id){
                 const{data:existing}=await _supabase.from('products').select('id').eq('store_key',storeKey).eq('product_name',pName);
                 if(existing&&existing.length>0){showToast('اسم المنتج موجود بالفعل — اختار اسماً مختلفاً','error');return;}
@@ -792,6 +852,32 @@
             else{const{error}=await _supabase.from('products').insert([data]);if(error)throw error;showToast('تم إضافة الصنف بنجاح','success');}
             closeModal('productModal');loadInventory();
         }catch(e){showToast('خطأ في الحفظ: '+e.message,'error');}
+    }
+
+    // ===== PRODUCT ACTIONS POPUP =====
+    let _paProduct = null;
+
+    function openProductActions(p) {
+        _paProduct = p;
+        document.getElementById('pa-title').innerText = 'خيارات المنتج';
+        document.getElementById('pa-name').innerText = p.product_name;
+        document.getElementById('pa-meta').innerText =
+            `سعر: ${p.price} ج.م | مخزون: ${p.stock} ${p.unit||'قطعة'} | ${p.category||'بدون قسم'}`;
+        document.getElementById('productActionsModal').classList.add('open');
+    }
+    function pa_edit()   { closeModal('productActionsModal'); editProduct(_paProduct); }
+    function pa_supply() { closeModal('productActionsModal'); addToOrderFromPA(_paProduct); }
+    function pa_wasted() { closeModal('productActionsModal'); openWastedModal(_paProduct.id, _paProduct.product_name, _paProduct.stock); }
+    function pa_discount(){ closeModal('productActionsModal'); openDiscountModal(_paProduct.id); }
+    function pa_print()  { closeModal('productActionsModal'); printLabel(_paProduct.barcode||'', _paProduct.product_name, _paProduct.price); }
+    function pa_delete() { closeModal('productActionsModal'); deleteProduct(_paProduct.id); }
+
+    function addToOrderFromPA(p) {
+        const exists = orderItems.find(i=>i.id===p.id);
+        if(exists){ exists.qty++; showToast(`${p.product_name} — تم زيادة الكمية`,'info'); }
+        else { orderItems.push({id:p.id,name:p.product_name,stock:p.stock,qty:1}); showToast(`تم إضافة ${p.product_name} للتوريد`,'success'); }
+        document.getElementById('orderModal').classList.add('open');
+        renderOrderItems();
     }
 
     async function deleteProduct(id){

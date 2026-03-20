@@ -295,6 +295,49 @@
             <div style="height:200px;"><canvas id="m-revenue-chart"></canvas></div>
         </div>
 
+        <!-- موبايل: الداتابيز -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:15px;margin-top:15px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <h3 style="margin:0;color:var(--accent);font-size:14px;">🗄️ حالة الداتابيز</h3>
+                <button onclick="loadDbStats()" style="background:var(--accent);color:#000;border:none;padding:6px 12px;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px;">🔄</button>
+            </div>
+            <div style="margin-bottom:10px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                    <span style="font-size:12px;color:var(--text-muted);">التخزين</span>
+                    <span style="font-size:12px;font-weight:800;" id="m-db-size-text">جاري...</span>
+                </div>
+                <div style="background:var(--card2);border-radius:20px;height:10px;overflow:hidden;">
+                    <div id="m-db-size-bar" style="height:100%;width:0%;border-radius:20px;background:var(--green);transition:width 0.6s;"></div>
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+                <div style="background:var(--card2);border-radius:8px;padding:8px;text-align:center;">
+                    <div style="font-size:10px;color:var(--text-muted);">مبيعات نشطة</div>
+                    <div style="font-size:16px;font-weight:800;color:var(--accent);" id="m-db-sales">—</div>
+                </div>
+                <div style="background:var(--card2);border-radius:8px;padding:8px;text-align:center;">
+                    <div style="font-size:10px;color:var(--text-muted);">مؤرشفة</div>
+                    <div style="font-size:16px;font-weight:800;color:var(--orange);" id="m-db-archive">—</div>
+                </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;background:var(--card2);border-radius:8px;padding:10px;">
+                <div>
+                    <div style="font-size:12px;font-weight:700;">الأرشفة</div>
+                    <div style="font-size:11px;color:var(--text-muted);" id="m-db-days">—</div>
+                </div>
+                <button onclick="runArchive()" style="background:var(--orange);color:#000;border:none;padding:8px 14px;border-radius:8px;font-weight:800;cursor:pointer;font-size:12px;font-family:'Cairo',sans-serif;">⚡ الآن</button>
+            </div>
+        </div>
+
+        <!-- موبايل: الماركترز -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:15px;margin-top:15px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <h3 style="margin:0;color:var(--accent);font-size:14px;">📢 الماركترز</h3>
+                <button onclick="openModal('addMarketerModal')" style="background:var(--accent);color:#000;border:none;padding:6px 12px;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px;">+ جديد</button>
+            </div>
+            <div id="m-marketers-list" style="font-size:13px;color:var(--text-muted);text-align:center;padding:10px;">جاري التحميل...</div>
+        </div>
+
         <div class="footer-bar" style="border-radius:12px; margin-top:15px;">
             <span>Fateen OS</span>
             <span class="v" id="m-footer-v">...</span>
@@ -594,8 +637,19 @@
             const m = document.getElementById('m-'+key); if(m) m.innerText = mVal || dVal;
         }
 
+        let storesDisplayCount = 5;
+        let lastFilteredStores = [];
+
         function renderStores(list) {
-            const html = list.map(st => {
+            storesDisplayCount = 5;
+            lastFilteredStores = list;
+            renderStoresPaginated();
+        }
+
+        function renderStoresPaginated() {
+            const visible = lastFilteredStores.slice(0, storesDisplayCount);
+            const remaining = lastFilteredStores.length - storesDisplayCount;
+            const html = visible.map(st => {
                 const diff = Math.ceil((new Date(st.expiry_date) - new Date()) / 86400000);
                 const daysText = diff > 0 ? `باقي ${diff} يوم` : 'منتهي';
                 const daysColor = diff > 5 ? 'var(--green)' : 'var(--red)';
@@ -610,10 +664,12 @@
                     </div>
                 </div>`;
             }).join('') || `<div style="color:var(--text-muted); text-align:center; padding:30px;">لا توجد متاجر</div>`;
-
-            const mg = document.getElementById('m-stores-grid'); if(mg) mg.innerHTML = html;
-            const dg = document.getElementById('d-stores-grid'); if(dg) dg.innerHTML = html;
+            const loadMore = remaining > 0 ? `<div style="text-align:center;margin-top:14px;"><button onclick="loadMoreStores()" style="background:var(--card2);border:1px solid var(--border);color:var(--text);padding:10px 24px;border-radius:10px;cursor:pointer;font-family:'Cairo',sans-serif;font-weight:700;font-size:13px;">عرض المزيد (${remaining} متجر)</button></div>` : '';
+            const mg = document.getElementById('m-stores-grid'); if(mg) mg.innerHTML = html + loadMore;
+            const dg = document.getElementById('d-stores-grid'); if(dg) dg.innerHTML = html + loadMore;
         }
+
+        function loadMoreStores() { storesDisplayCount += 5; renderStoresPaginated(); }
 
         function filterStores() {
             const term = (document.getElementById('d-search')?.value || document.getElementById('m-search')?.value || '').toLowerCase();
@@ -863,6 +919,18 @@
                     </tr>`;
                 }
                 tbody.innerHTML = rows;
+                // موبايل render
+                const mList2 = document.getElementById('m-marketers-list');
+                if(mList2) {
+                    mList2.innerHTML = mList.length ? mList.map(m => `
+                        <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+                            <div>
+                                <div style="font-weight:800;font-size:13px;">${m.username}</div>
+                                <div style="font-size:11px;color:var(--text-muted);">عمولة: ${m.commission_rate||0}%</div>
+                            </div>
+                            <button onclick="deleteMarketer('${m.username}')" style="background:var(--red-dim);color:var(--red);border:1px solid var(--red);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:'Cairo',sans-serif;font-weight:700;">حذف</button>
+                        </div>`).join('') : '<div style="text-align:center;color:var(--text-muted);padding:10px;">لا يوجد ماركترز</div>';
+                }
             } catch(e) { console.error('خطأ في تحميل الماركترز:', e); }
         }
 
@@ -926,10 +994,13 @@
                         _supabase.from('purchases').select('id', {count:'exact', head:true}),
                     ]);
                     document.getElementById('db-sales-count').innerText = (s.count||0).toLocaleString();
+                    const mds=document.getElementById('m-db-sales');if(mds)mds.innerText=(s.count||0).toLocaleString();
                     document.getElementById('db-archive-count').innerText = (sa.count||0).toLocaleString();
+                    const mda=document.getElementById('m-db-archive');if(mda)mda.innerText=(sa.count||0).toLocaleString();
                     document.getElementById('db-products-count').innerText = (p.count||0).toLocaleString();
                     document.getElementById('db-purchases-count').innerText = (pu.count||0).toLocaleString();
                     document.getElementById('db-size-text').innerText = 'لا يمكن حساب الحجم تلقائياً';
+                    const mst=document.getElementById('m-db-size-text');if(mst)mst.innerText='لا يمكن الحساب';
                     return;
                 }
 
@@ -940,13 +1011,16 @@
 
                 document.getElementById('db-size-bar').style.width = pct + '%';
                 document.getElementById('db-size-bar').style.background = barColor;
+                const msb=document.getElementById('m-db-size-bar');if(msb){msb.style.width=pct+'%';msb.style.background=barColor;}
                 document.getElementById('db-size-text').innerHTML =
                     `<span style="color:${barColor}; font-weight:900;">${sizeMB} MB</span>
                      <span style="color:var(--text-muted); font-size:11px;"> / 500 MB
                      (${(maxMB - sizeMB).toFixed(1)} MB متبقي)</span>`;
 
                 document.getElementById('db-sales-count').innerText = (data.sales_rows||0).toLocaleString();
+                const mds2=document.getElementById('m-db-sales');if(mds2)mds2.innerText=(data.sales_rows||0).toLocaleString();
                 document.getElementById('db-archive-count').innerText = (data.sales_archive_rows||0).toLocaleString();
+                const mda2=document.getElementById('m-db-archive');if(mda2)mda2.innerText=(data.sales_archive_rows||0).toLocaleString();
                 document.getElementById('db-products-count').innerText = (data.products_rows||0).toLocaleString();
                 document.getElementById('db-purchases-count').innerText = (data.purchases_rows||0).toLocaleString();
 
@@ -967,16 +1041,19 @@
                     if(daysLeft <= 0) {
                         daysEl.innerText = 'الآن!';
                         daysEl.style.color = 'var(--red)';
+                        const mdd=document.getElementById('m-db-days');if(mdd){mdd.innerText='جاهزة للأرشفة الآن!';mdd.style.color='var(--red)';}
                         document.getElementById('db-archive-status').innerText =
                             '⚠️ يوجد سجلات جاهزة للأرشفة';
                     } else {
                         daysEl.innerText = daysLeft + ' يوم';
                         daysEl.style.color = daysLeft < 15 ? 'var(--orange)' : 'var(--green)';
+                        const mdd2=document.getElementById('m-db-days');if(mdd2){mdd2.innerText='فاضل '+daysLeft+' يوم';}
                         document.getElementById('db-archive-status').innerText =
                             `تنقل السجلات الأقدم من 90 يوم — أقدم سجل: ${oldest.toLocaleDateString('ar-EG')}`;
                     }
                 } else {
                     document.getElementById('db-days-to-archive').innerText = 'لا يوجد';
+                    const mdd3=document.getElementById('m-db-days');if(mdd3)mdd3.innerText='لا يوجد سجلات';
                 }
 
             } catch(e) {

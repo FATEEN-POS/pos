@@ -180,13 +180,18 @@
         <span class="sidebar-close" onclick="closeSidebar()">✕</span>
     </div>
     <nav class="sidebar-nav">
-        <a class="sb-item" onclick="location.href='manager.html'"><span class="sb-icon">📊</span>لوحة المدير</a>
-        <a class="sb-item" onclick="location.href='pos.html'"><span class="sb-icon">🖥️</span>الكاشير</a>
-        <a class="sb-item" onclick="location.href='inventory.html'"><span class="sb-icon">🏪</span>المخزن</a>
-        <a class="sb-item" onclick="location.href='accounting.html'"><span class="sb-icon">📒</span>المحاسبة</a>
-        <a class="sb-item" onclick="location.href='reports.html'" style="border-color:var(--accent);background:var(--accent-dim);color:var(--accent);"><span class="sb-icon">📋</span>التقارير</a>
-        <a class="sb-item" onclick="location.href='3dadat.html'"><span class="sb-icon">⚙️</span>الإعدادات</a>
-        <a class="sb-item" onclick="location.href='about.html'"><span class="sb-icon">📞</span>تواصل معنا</a>
+        <a class="sb-item" onclick="showSection('sales',null);closeSidebar()"><span class="sb-icon">💰</span>ملخص مبيعات</a>
+        <a class="sb-item" onclick="showSection('returns',null);closeSidebar()"><span class="sb-icon">↩️</span>ملخص مرتجع</a>
+        <a class="sb-item" onclick="showSection('inventory',null);closeSidebar()"><span class="sb-icon">📦</span>مراقبة المخزن</a>
+        <a class="sb-item" onclick="showSection('items',null);closeSidebar()"><span class="sb-icon">🏷️</span>ملخص أصناف</a>
+        <a class="sb-item" onclick="showSection('waste',null);closeSidebar()"><span class="sb-icon">🗑️</span>ملخص الهالك</a>
+        <a class="sb-item" onclick="showSection('deficit',null);closeSidebar()"><span class="sb-icon">⚠️</span>ملخص العجز</a>
+        <a class="sb-item" onclick="showSection('employees',null);closeSidebar()"><span class="sb-icon">👥</span>أداء موظفين</a>
+        <a class="sb-item" onclick="showSection('suppliers',null);closeSidebar()"><span class="sb-icon">🚚</span>ملخص موردين</a>
+        <a class="sb-item" onclick="showSection('purchases',null);closeSidebar()"><span class="sb-icon">🛒</span>ملخص مشتريات</a>
+        <a class="sb-item" onclick="showSection('profit',null);closeSidebar()"><span class="sb-icon">📈</span>الأرباح والخسائر</a>
+        <a class="sb-item" onclick="showSection('eod',null);closeSidebar()"><span class="sb-icon">🌙</span>نهاية اليوم</a>
+        <div style="border-top:1px solid var(--border);margin:8px 0;"></div>
         <a class="sb-item" onclick="toggleTheme();closeSidebar()"><span class="sb-icon">🌙</span>تغيير الثيم</a>
         <a class="sb-item" onclick="sessionStorage.clear();location.href='index.html'" style="color:var(--red);"><span class="sb-icon">🚪</span>تسجيل الخروج</a>
     </nav>
