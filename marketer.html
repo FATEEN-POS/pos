@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة الماركتر - Fateen OS</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -110,32 +110,6 @@
             .store-title { font-size:14px; }
         }
     </style>
-
-    <!-- ===== FATEEN AUTH ===== -->
-    <script>
-    (function(){
-        const TIMEOUT_MS = 8 * 60 * 60 * 1000;
-        const PAGE = window.location.pathname.split('/').pop() || 'index.html';
-        const PUBLIC = ['index.html','guide.html','about.html',''];
-        function saveSession(data) { localStorage.setItem('fateen_session', JSON.stringify({...data, timestamp:Date.now()})); }
-        function getSession() {
-            try { const s=JSON.parse(localStorage.getItem('fateen_session')||'null');
-            if(!s) return null;
-            if(Date.now()-s.timestamp>TIMEOUT_MS){localStorage.removeItem('fateen_session');return null;}
-            return s; } catch(e){return null;}
-        }
-        function clearSession() { localStorage.removeItem('fateen_session'); sessionStorage.clear(); }
-        ['click','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,()=>{const s=getSession();if(s)saveSession(s);},{passive:true}));
-        if(!PUBLIC.includes(PAGE)){
-            const s=getSession();
-            if(!s||!s.store_key){window.location.replace('index.html');return;}
-            sessionStorage.setItem('store_key',s.store_key);
-            sessionStorage.setItem('username',s.username);
-            sessionStorage.setItem('userRole',s.userRole);
-        }
-        window._fateenAuth={saveSession,getSession,clearSession};
-    })();
-    </script>
 </head>
 <body>
 
@@ -185,8 +159,6 @@
                         <th>انتهاء</th>
                         <th>العمولة</th>
                         <th>الحالة</th>
-                        <th>إجراء</th>
-                        <th>إجراء</th>
                     </tr>
                 </thead>
                 <tbody id="stores-table"></tbody>
@@ -348,7 +320,6 @@
                     <td><span class="badge ${daysColor}">${daysText}</span></td>
                     <td style="color:var(--orange);">${st.commission_rate || 0}%</td>
                     <td><span class="badge ${st.is_active ? 'badge-green' : 'badge-orange'}">${st.is_active ? 'نشط' : 'موقوف'}</span></td>
-                    <td><button onclick="editStoreSubscription('${st.store_key}',${st.subscription_price||0})" style="background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:'Cairo',sans-serif;font-weight:700;">✏️ تعديل</button></td>
                 </tr>`;
             }).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;">لا يوجد متاجر مسجلة بعد</td></tr>';
 
@@ -423,88 +394,16 @@
                     role: 'manager'
                 }]);
             }
-            if(price>0){
-                try{
-                    const{data:rd}=await _supabase.from('system_settings').select('value').eq('key','total_revenue').single();
-                    const cur=parseFloat(rd?.value||0);
-                    await _supabase.from('system_settings').update({value:String(cur+price)}).eq('key','total_revenue');
-                }catch(e){}
+            // إضافة الربح لإجمالي الإيرادات (يظهر للمطور)
+            if(price > 0) {
+                const {data:devData} = await _supabase.from('system_settings').select('value').eq('key','total_revenue').single();
+                const currentRev = parseFloat(devData?.value||0);
+                await _supabase.from('system_settings').upsert([{key:'total_revenue', value: String(currentRev+price)}]);
             }
-            if(price>0) trackRevenue(price);
             showToast(`تم إضافة المتجر — الكود: ${key} | السعر: ${price.toLocaleString()} ج.م`, 'success');
             closeModal('addStoreModal');
             loadStores();
         } catch(e) { showToast('خطأ في إضافة المتجر: ' + e.message, 'error'); }
-    }
-
-    async function editSubscription(storeKey, currentPrice) {
-        const newPrice = prompt(`سعر الاشتراك الحالي: ${currentPrice} ج.م\nأدخل السعر الجديد:`, currentPrice);
-        if(newPrice===null||isNaN(newPrice)) return;
-        const price = parseFloat(newPrice);
-        const{error}=await _supabase.from('stores').update({subscription_price:price}).eq('store_key',storeKey);
-        if(!error){
-            showToast('تم تحديث سعر الاشتراك','success');
-            // تحديث الإيرادات عند المطور
-            if(price>0){
-                const{data:rd}=await _supabase.from('system_settings').select('value').eq('key','total_revenue').single();
-                const cur=parseFloat(rd?.value||0);
-                await _supabase.from('system_settings').update({value:String(cur+(price-currentPrice))}).eq('key','total_revenue');
-            }
-            loadStores();
-        } else showToast('خطأ: '+error.message,'error');
-    }
-
-    async function editStoreSubscription(storeKey, currentPrice) {
-        const newPrice = prompt(`سعر الاشتراك الحالي: ${currentPrice} ج.م\nأدخل السعر الجديد:`);
-        if(newPrice===null) return;
-        const plan = prompt('مدة الاشتراك الجديدة (بالشهور)، مثال: 12');
-        if(!plan) return;
-        const expiry = new Date();
-        expiry.setMonth(expiry.getMonth()+parseInt(plan)||12);
-        const {error} = await _supabase.from('stores').update({
-            subscription_price: parseFloat(newPrice)||0,
-            expiry_date: expiry.toISOString().split('T')[0]
-        }).eq('store_key',storeKey);
-        if(!error) { showToast('تم تحديث الاشتراك','success'); loadStores(); }
-        else showToast('خطأ: '+error.message,'error');
-    }
-
-    // revenue tracking
-    async function trackRevenue(price) {
-        if(!price || price<=0) return;
-        try {
-            const {data} = await _supabase.from('system_settings').select('value').eq('key','total_revenue').single();
-            const current = parseFloat(data?.value||0);
-            await _supabase.from('system_settings').update({value:String(current+price)}).eq('key','total_revenue');
-        } catch(e){}
-    }
-
-    async function editStoreSubscription(key, name, currentPrice) {
-        const plans = ['تجريبي (مجاني)','سنة — 7,000 ج.م','سنتان — 10,000 ج.م'];
-        const choice = prompt(`تعديل اشتراك: ${name}\nالسعر الحالي: ${currentPrice} ج.م\n\n0 = تجريبي\n1 = سنة (7000)\n2 = سنتان (10000)\n\nأدخل الرقم:`, '1');
-        if(choice===null) return;
-        const prices={0:0,1:7000,2:10000};
-        const newPrice=prices[parseInt(choice)];
-        if(newPrice===undefined){alert('اختيار غير صحيح');return;}
-        const expiry=new Date();
-        if(parseInt(choice)===1) expiry.setFullYear(expiry.getFullYear()+1);
-        else if(parseInt(choice)===2) expiry.setFullYear(expiry.getFullYear()+2);
-        else { const days=parseInt(prompt('عدد أيام التجربة:','30')||30); expiry.setDate(expiry.getDate()+days); }
-        const{error}=await _supabase.from('stores').update({
-            subscription_price:newPrice,
-            expiry_date:expiry.toISOString().split('T')[0],
-            is_active:true
-        }).eq('store_key',key);
-        if(!error){
-            // تحديث الإيراد للمطور
-            if(newPrice>0){
-                const{data:rd}=await _supabase.from('system_settings').select('value').eq('key','total_revenue').single();
-                const curr=parseFloat(rd?.value||0);
-                await _supabase.from('system_settings').update({value:String(curr+newPrice)}).eq('key','total_revenue');
-            }
-            showToast(`تم تحديث اشتراك ${name} — ${newPrice.toLocaleString()} ج.م`,'success');
-            loadStores();
-        } else showToast('خطأ: '+error.message,'error');
     }
 
     init();

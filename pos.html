@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>كاشير - Fateen OS</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -38,7 +38,6 @@
         header{
             background:var(--surface);border-bottom:1px solid var(--border);
             padding:0 18px;height:62px;flex-shrink:0;
-            transition:margin-top 0.3s;
             display:flex;align-items:center;gap:14px;
             box-shadow:var(--shadow);z-index:100;
         }
@@ -250,32 +249,6 @@
         .sidebar-footer{padding:14px 16px;border-top:1px solid var(--border);flex-shrink:0;}
         .sidebar-footer .copy{font-size:11px;color:var(--text-muted);text-align:center;display:block;}
     </style>
-
-    <!-- ===== FATEEN AUTH ===== -->
-    <script>
-    (function(){
-        const TIMEOUT_MS = 8 * 60 * 60 * 1000;
-        const PAGE = window.location.pathname.split('/').pop() || 'index.html';
-        const PUBLIC = ['index.html','guide.html','about.html',''];
-        function saveSession(data) { localStorage.setItem('fateen_session', JSON.stringify({...data, timestamp:Date.now()})); }
-        function getSession() {
-            try { const s=JSON.parse(localStorage.getItem('fateen_session')||'null');
-            if(!s) return null;
-            if(Date.now()-s.timestamp>TIMEOUT_MS){localStorage.removeItem('fateen_session');return null;}
-            return s; } catch(e){return null;}
-        }
-        function clearSession() { localStorage.removeItem('fateen_session'); sessionStorage.clear(); }
-        ['click','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,()=>{const s=getSession();if(s)saveSession(s);},{passive:true}));
-        if(!PUBLIC.includes(PAGE)){
-            const s=getSession();
-            if(!s||!s.store_key){window.location.replace('index.html');return;}
-            sessionStorage.setItem('store_key',s.store_key);
-            sessionStorage.setItem('username',s.username);
-            sessionStorage.setItem('userRole',s.userRole);
-        }
-        window._fateenAuth={saveSession,getSession,clearSession};
-    })();
-    </script>
 </head>
 <body>
 
@@ -295,17 +268,6 @@
         <a class="sb-item" onclick="endShift()" style="color:var(--red);"><span class="sb-icon">🚪</span>تسجيل الخروج</a>
     </nav>
     <div class="sidebar-footer"><span class="copy">Fateen OS © 2026</span></div>
-</div>
-
-<!-- OFFLINE BAR -->
-<div id="offline-bar" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#ff4d4d;color:#fff;text-align:center;padding:8px;font-size:13px;font-weight:800;">
-    ⚠️ لا يوجد اتصال بالإنترنت — المبيعات لن تُحفظ حتى يعود النت
-</div>
-
-<!-- STATUS BOX -->
-<div id="status-box" style="position:fixed;bottom:12px;right:12px;z-index:9000;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 12px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:6px;box-shadow:var(--shadow);">
-    <span id="status-dot" style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;"></span>
-    <span id="status-text">النظام يعمل بشكل جيد</span>
 </div>
 
 <!-- HEADER -->
@@ -347,7 +309,7 @@
         </div>
         <!-- GRID -->
         <div class="product-grid" id="product-list">
-            <div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:30px;">جاري التحميل...</div>
+            <div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:20px;font-size:13px;">⚡ جاري التحميل...</div>
         </div>
     </div>
 
@@ -383,12 +345,6 @@
             <div class="print-check-row" onclick="document.getElementById('print-check').click()">
                 <input type="checkbox" id="print-check" checked onclick="event.stopPropagation()">
                 <label for="print-check">🖨️ طباعة الفاتورة</label>
-            </div>
-            <!-- ملاحظة على الفاتورة -->
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;background:var(--surface2);border-radius:var(--radius-sm);padding:7px 10px;border:1px solid var(--border);">
-                <span style="font-size:12px;font-weight:700;color:var(--text-muted);white-space:nowrap;">📝 ملاحظة</span>
-                <input type="text" id="sale-notes" placeholder="ملاحظة تظهر على الفاتورة (اختياري)"
-                    style="flex:1;background:var(--input-bg);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:6px;font-family:'Cairo',sans-serif;font-size:12px;outline:none;">
             </div>
             <button class="btn-checkout" onclick="checkout()">✅ إتمام البيع (F2)</button>
         </div>
@@ -525,7 +481,18 @@
             const{data}=await _supabase.from('system_settings').select('value').eq('key','sys_version').single();
             if(data) document.getElementById('version-chip').innerText=data.value;
         }catch(e){}
-        await loadProducts();
+        // تحميل فوري من الـ cache ثم تحديث في الخلفية
+        const _ck='fateen_products_'+storeKey;
+        const _cached=sessionStorage.getItem(_ck);
+        if(_cached){
+            allProducts=JSON.parse(_cached);
+            buildCatTabs();
+            renderProducts();
+            // تحديث في الخلفية بدون انتظار
+            loadProducts(true).catch(()=>{});
+        } else {
+            await loadProducts();
+        }
         updateTargetDisplay();
         document.getElementById('p-search').focus();
         document.addEventListener('keydown',e=>{if(e.key==='F2'){e.preventDefault();checkout();}});
@@ -729,11 +696,10 @@
         const discount=getDiscount(subtotal);
         const total=subtotal-discount;
         try{
-            const noteVal=document.getElementById('sale-notes')?.value?.trim()||'';
             const slimItems=cart.map(i=>({i:i.id,n:i.product_name,p:i.price,q:i.qty}));
             const{data:saleData,error}=await _supabase.from('sales').insert([{
                 store_key:storeKey,items:slimItems,total_amount:total,
-                payment_method:paymentMethod,seller_name:currentUser,type:'sale',notes:noteVal
+                payment_method:paymentMethod,seller_name:currentUser,type:'sale'
             }]).select().single();
             if(error) throw error;
             // تحديث المخزون بـ Promise.all بدل sequential loop
@@ -751,23 +717,7 @@
             if(dv) dv.value='';
             renderCart();
             updateTargetDisplay();
-        }catch(e){
-            // لو النت مقطوع، احفظ في الـ queue
-            if(!navigator.onLine) {
-                const noteVal2=document.getElementById('sale-notes')?.value?.trim()||'';
-                const offlineSale={store_key:storeKey,items:cart.map(i=>({i:i.id,n:i.product_name,p:i.price,q:i.qty})),total_amount:total,payment_method:paymentMethod,seller_name:currentUser,type:'sale',notes:noteVal2,created_at:new Date().toISOString()};
-                _offlineQueue.push(offlineSale);
-                localStorage.setItem('fateen_offline_queue',JSON.stringify(_offlineQueue));
-                showToast('💾 تم الحفظ محلياً — سيُرفع عند عودة النت','info');
-                if(document.getElementById('print-check').checked) printReceipt({id:'offline-'+Date.now()},cart,total,discount,subtotal);
-                cart=[];
-                const dv=document.getElementById('discount-val');if(dv)dv.value='';
-                const sn=document.getElementById('sale-notes');if(sn)sn.value='';
-                renderCart();
-            } else {
-                showToast('خطأ في الشبكة: '+e.message,'error');
-            }
-        }
+        }catch(e){showToast('خطأ في الشبكة: '+e.message,'error');}
         finally{
             checkoutInProgress=false;
             if(btn){btn.disabled=false;btn.innerText='✅ إتمام البيع (F2)';}
@@ -800,7 +750,6 @@
                 ${phone?`<span style="font-size:11px;">${phone}</span><br>`:''}
             </div>
             <hr style="border:none;border-top:2px dashed #000;margin:8px 0;">
-            ${noteVal?`<div style="background:#f5f5f5;border-radius:4px;padding:6px 8px;margin-bottom:6px;font-size:11px;color:#555;"><b>📝 ملاحظة:</b> ${noteVal}</div>`:''}
             <div style="font-size:12px;display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:6px;">
                 <span>التاريخ: <b>${now.toLocaleDateString('ar-EG')}</b></span>
                 <span>رقم: <b>#${String(saleData.id).slice(-6)}</b></span>
@@ -817,9 +766,9 @@
                     <th style="padding:6px 4px;text-align:center;">إجمالي</th>
                 </tr></thead>
                 <tbody>${items.map(i=>`<tr>
-                    <td style="padding:6px 4px;font-weight:700;text-align:right;">${i.product_name}</td>
-                    <td style="padding:6px 4px;text-align:center;">${i.qty}</td>
-                    ${showUnitPrice?`<td style="padding:6px 4px;text-align:center;">${i.price}</td>`:''}
+                    <td style="padding:6px 4px;font-weight:700;text-align:right;">${i.n||i.product_name}</td>
+                    <td style="padding:6px 4px;text-align:center;">${i.q||i.qty}</td>
+                    ${showUnitPrice?`<td style="padding:6px 4px;text-align:center;">${i.p||i.price}</td>`:''}
                     <td style="padding:6px 4px;text-align:center;font-weight:800;">${(i.price*i.qty).toFixed(0)}</td>
                 </tr>`).join('')}</tbody>
             </table>
@@ -925,8 +874,10 @@
             }]);
             // إعادة المخزون
             for(let item of sale.items){
-                const{data:p}=await _supabase.from('products').select('stock').eq('id',item.id).single();
-                if(p) await _supabase.from('products').update({stock:p.stock+item.qty}).eq('id',item.id);
+                const itemId=item.i||item.id;
+                const itemQty=item.q||item.qty;
+                const{data:p}=await _supabase.from('products').select('stock').eq('id',itemId).single();
+                if(p) await _supabase.from('products').update({stock:p.stock+itemQty}).eq('id',itemId);
             }
             showToast('تم إرجاع الفاتورة بنجاح','success');
             closeModal('returnModal');
@@ -942,7 +893,7 @@
                 <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px;font-weight:700;">اختر المنتج المراد إرجاعه:</p>
                 ${sale.items.map((item,idx)=>`
                     <div class="return-item">
-                        <div><div class="return-item-name">${item.product_name}</div><div class="return-item-qty">الكمية: ${item.qty} | ${item.price} ج.م</div></div>
+                        <div><div class="return-item-name">${item.n||item.product_name}</div><div class="return-item-qty">الكمية: ${item.q||item.qty} | ${item.p||item.price} ج.م</div></div>
                         <button class="btn btn-red" style="padding:6px 12px;font-size:12px;" onclick="processSingleReturn('${sale.id}',${idx})">↩️ إرجاع</button>
                     </div>`).join('')}
             </div>`;
@@ -1093,43 +1044,6 @@
     function closeModal(id){const el=document.getElementById(id);if(el) el.classList.remove('open');}
 
     init();
-
-    // ===== OFFLINE DETECTION =====
-    let _offlineQueue = JSON.parse(localStorage.getItem('fateen_offline_queue')||'[]');
-
-    function updateOnlineStatus() {
-        const isOnline = navigator.onLine;
-        const bar = document.getElementById('offline-bar');
-        const dot = document.getElementById('status-dot');
-        const txt = document.getElementById('status-text');
-        if(bar) bar.style.display = isOnline ? 'none' : 'block';
-        if(dot) dot.style.background = isOnline ? 'var(--green)' : 'var(--red)';
-        if(txt) txt.innerText = isOnline ? 'النظام يعمل بشكل جيد' : 'لا يوجد إنترنت';
-        // لما النت يرجع، ابعت الـ queue
-        if(isOnline && _offlineQueue.length > 0) syncOfflineQueue();
-    }
-
-    async function syncOfflineQueue() {
-        if(!_offlineQueue.length) return;
-        showToast(`جاري رفع ${_offlineQueue.length} عملية محفوظة...`,'info');
-        const queue = [..._offlineQueue];
-        _offlineQueue = [];
-        localStorage.removeItem('fateen_offline_queue');
-        let success = 0;
-        for(const sale of queue) {
-            try {
-                await _supabase.from('sales').insert([sale]);
-                success++;
-            } catch(e) { _offlineQueue.push(sale); }
-        }
-        if(_offlineQueue.length) localStorage.setItem('fateen_offline_queue',JSON.stringify(_offlineQueue));
-        showToast(`✅ تم رفع ${success} عملية بنجاح`,'success');
-        updateTargetDisplay();
-    }
-
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
-    updateOnlineStatus();
 </script>
 </body>
 </html>

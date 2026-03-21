@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة المطور - Fateen OS</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -246,32 +246,6 @@
         .toggle-active { background: var(--green); color: #000; }
         .toggle-inactive { background: var(--red); color: #fff; }
     </style>
-
-    <!-- ===== FATEEN AUTH ===== -->
-    <script>
-    (function(){
-        const TIMEOUT_MS = 8 * 60 * 60 * 1000;
-        const PAGE = window.location.pathname.split('/').pop() || 'index.html';
-        const PUBLIC = ['index.html','guide.html','about.html',''];
-        function saveSession(data) { localStorage.setItem('fateen_session', JSON.stringify({...data, timestamp:Date.now()})); }
-        function getSession() {
-            try { const s=JSON.parse(localStorage.getItem('fateen_session')||'null');
-            if(!s) return null;
-            if(Date.now()-s.timestamp>TIMEOUT_MS){localStorage.removeItem('fateen_session');return null;}
-            return s; } catch(e){return null;}
-        }
-        function clearSession() { localStorage.removeItem('fateen_session'); sessionStorage.clear(); }
-        ['click','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,()=>{const s=getSession();if(s)saveSession(s);},{passive:true}));
-        if(!PUBLIC.includes(PAGE)){
-            const s=getSession();
-            if(!s||!s.store_key){window.location.replace('index.html');return;}
-            sessionStorage.setItem('store_key',s.store_key);
-            sessionStorage.setItem('username',s.username);
-            sessionStorage.setItem('userRole',s.userRole);
-        }
-        window._fateenAuth={saveSession,getSession,clearSession};
-    })();
-    </script>
 </head>
 <body>
 
@@ -291,7 +265,6 @@
                     <span id="m-theme-icon">🌙</span>
                     <span id="m-theme-label">فاتح</span>
                 </button>
-                <button onclick="openModal('devPassModal')" style="background:var(--card2);border:1px solid var(--border);color:var(--text);padding:7px 14px;border-radius:10px;cursor:pointer;font-family:'Cairo',sans-serif;font-weight:700;font-size:13px;">🔑 باسوردي</button>
                 <button class="btn btn-red" onclick="logout()">خروج</button>
             </div>
         </div>
@@ -320,6 +293,57 @@
                 <span id="m-profit-status" style="font-size:12px; font-weight:800;"></span>
             </div>
             <div style="height:200px;"><canvas id="m-revenue-chart"></canvas></div>
+        </div>
+
+        <!-- موبايل: الداتابيز -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:15px;margin-top:15px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <span style="font-weight:800;font-size:14px;color:var(--accent);">🗄️ حالة الداتابيز</span>
+                <button onclick="loadDbStats()" style="background:var(--accent);color:#000;border:none;padding:5px 12px;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px;font-family:'Cairo',sans-serif;">🔄</button>
+            </div>
+            <div style="margin-bottom:10px;">
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+                    <span style="color:var(--text-muted);">التخزين</span>
+                    <span id="m-db-size-text" style="font-weight:800;">جاري...</span>
+                </div>
+                <div style="background:var(--card2);border-radius:20px;height:10px;overflow:hidden;">
+                    <div id="m-db-size-bar" style="height:100%;width:0%;background:var(--green);border-radius:20px;transition:width 0.6s;"></div>
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+                <div style="background:var(--card2);border-radius:8px;padding:8px;text-align:center;">
+                    <div style="font-size:10px;color:var(--text-muted);">مبيعات نشطة</div>
+                    <div style="font-size:16px;font-weight:800;color:var(--accent);" id="m-db-sales">—</div>
+                </div>
+                <div style="background:var(--card2);border-radius:8px;padding:8px;text-align:center;">
+                    <div style="font-size:10px;color:var(--text-muted);">إجمالي الفواتير</div>
+                    <div style="font-size:16px;font-weight:800;color:var(--orange);" id="m-db-invoices">—</div>
+                </div>
+                <div style="background:var(--card2);border-radius:8px;padding:8px;text-align:center;">
+                    <div style="font-size:10px;color:var(--text-muted);">المنتجات</div>
+                    <div style="font-size:16px;font-weight:800;color:var(--green);" id="m-db-products">—</div>
+                </div>
+                <div style="background:var(--card2);border-radius:8px;padding:8px;text-align:center;">
+                    <div style="font-size:10px;color:var(--text-muted);">مؤرشفة</div>
+                    <div style="font-size:16px;font-weight:800;color:var(--text-muted);" id="m-db-archive">—</div>
+                </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;background:var(--card2);border-radius:8px;padding:10px;">
+                <div>
+                    <div style="font-size:12px;font-weight:700;">الأرشفة التلقائية</div>
+                    <div style="font-size:11px;color:var(--text-muted);" id="m-db-days">فاضل 80 يوم</div>
+                </div>
+                <button onclick="runArchive()" style="background:var(--orange);color:#000;border:none;padding:8px 14px;border-radius:8px;font-weight:800;cursor:pointer;font-size:12px;font-family:'Cairo',sans-serif;">⚡ الآن</button>
+            </div>
+        </div>
+
+        <!-- موبايل: الماركترز -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:15px;margin-top:15px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <span style="font-weight:800;font-size:14px;color:var(--accent);">📢 الماركترز</span>
+                <button onclick="openModal('addMarketerModal')" style="background:var(--accent);color:#000;border:none;padding:5px 12px;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px;font-family:'Cairo',sans-serif;">+ جديد</button>
+            </div>
+            <div id="m-marketers-list" style="color:var(--text-muted);font-size:13px;text-align:center;padding:10px;">جاري التحميل...</div>
         </div>
 
         <div class="footer-bar" style="border-radius:12px; margin-top:15px;">
@@ -351,9 +375,9 @@
 
         <div class="stats-grid stats-grid-desktop" style="margin-bottom:20px;">
             <div class="stat-card" style="border-bottom:3px solid var(--accent);"><h4>إجمالي الأرباح المتوقعة</h4><p id="d-revenue">0 ج.م</p></div>
-            <div class="stat-card" style="border-bottom:3px solid var(--green);"><h4>المتاجر المشتركة</h4><p id="d-stores">0</p></div>
-            <div class="stat-card" style="border-bottom:3px solid var(--orange);"><h4>إجمالي الموظفين</h4><p id="d-emps">0</p></div>
-            <div class="stat-card" style="border-bottom:3px solid var(--red);"><h4>إجمالي المديرين</h4><p id="d-mgrs">0</p></div>
+            <div class="stat-card" style="border-bottom:3px solid var(--green);"><h4>✅ إيرادات مؤكدة</h4><p id="d-confirmed-revenue" style="color:var(--green);">0 ج.م</p></div>
+            <div class="stat-card" style="border-bottom:3px solid var(--orange);"><h4>المتاجر المشتركة</h4><p id="d-stores">0</p></div>
+            <div class="stat-card" style="border-bottom:3px solid var(--red);"><h4>إجمالي الموظفين</h4><p id="d-emps">0</p></div>
         </div>
 
         <div style="display:flex; gap:12px; margin-bottom:18px; align-items:center;">
@@ -372,7 +396,7 @@
                 <h3 style="margin:0; color:var(--accent); font-size:16px;">📈 تحليل الأرباح الشهري</h3>
                 <div style="display:flex; gap:10px; align-items:center;">
                     <span id="d-profit-status" style="font-size:13px; font-weight:800;"></span>
-                    <span style="font-size:12px;color:var(--text-muted);">آخر 12 شهر</span>
+                    <select id="d-chart-year" onchange="renderChart()" style="background:var(--input-bg); border:1px solid var(--border); color:var(--text); padding:5px 10px; border-radius:8px; outline:none; font-family:'Cairo',sans-serif;"></select>
                 </div>
             </div>
             <div style="height:280px;"><canvas id="d-revenue-chart"></canvas></div>
@@ -446,6 +470,10 @@
                     <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">المشتريات</div>
                     <div style="font-size:20px; font-weight:800; color:var(--text);" id="db-purchases-count">—</div>
                 </div>
+                <div style="background:var(--card2); border:1px solid var(--border); border-radius:10px; padding:12px; text-align:center;">
+                    <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">إجمالي الفواتير</div>
+                    <div style="font-size:20px; font-weight:800; color:var(--accent);" id="db-invoices-count">—</div>
+                </div>
             </div>
 
             <!-- الأرشفة -->
@@ -472,17 +500,6 @@
         <div class="footer-bar">
             <span>Fateen OS</span>
             <span class="v" id="d-footer-v">...</span>
-        </div>
-    </div>
-
-    <!-- ======= MODAL: تغيير باسورد المطور ======= -->
-    <div id="devPassModal" class="modal">
-        <div class="modal-box">
-            <h3>🔑 تغيير باسورد المطور</h3>
-            <input type="password" id="dev-pass-new" placeholder="الباسورد الجديد (8 أحرف على الأقل)">
-            <input type="password" id="dev-pass-confirm" placeholder="تأكيد الباسورد">
-            <button class="btn-full btn-save" onclick="changeDevPassword()">✅ تغيير الباسورد</button>
-            <button class="btn-full btn-cancel-modal" onclick="closeModal('devPassModal')">إلغاء</button>
         </div>
     </div>
 
@@ -561,8 +578,6 @@
                 <select id="q-role">
                     <option value="employee">موظف كاشير</option>
                     <option value="manager">مدير فرع</option>
-                    <option value="inventory_manager">مدير مخزن</option>
-                    <option value="accounts_manager">مدير حسابات</option>
                 </select>
                 <button class="btn-full btn-save" onclick="quickAddUser()">تأكيد الإضافة</button>
             </div>
@@ -612,11 +627,12 @@
                 ['m-v-input','d-v-input'].forEach(id => { const el=document.getElementById(id); if(el && !el.value) el.value=vData.value; });
             }
 
-            // جلب المتاجر باستثناء المطور والماركتر
-            const { data: allUsersData } = await _supabase.from('users').select('store_key,role');
-            const excludeKeys = new Set((allUsersData||[]).filter(u=>u.role==='developer'||u.role==='marketer').map(u=>u.store_key).filter(Boolean));
-            const { data: stores } = await _supabase.from('stores').select('*');
-            const filteredStores = (stores||[]).filter(st=>!excludeKeys.has(st.store_key));
+            // جلب المتاجر باستثناء حسابات المطور والماركتر
+            const { data: allUsers } = await _supabase.from('users').select('store_key,role');
+            const excludeKeys = (allUsers||[]).filter(u=>u.role==='developer'||u.role==='marketer').map(u=>u.store_key).filter(Boolean);
+            let storesQuery = _supabase.from('stores').select('*');
+            const { data: stores } = await storesQuery;
+            const filteredStores = (stores||[]).filter(st => !excludeKeys.includes(st.store_key) || st.store_key === 'DEVELOPER');
             const { data: users } = await _supabase.from('users').select('*');
             allStores = filteredStores || [];
 
@@ -631,6 +647,13 @@
             setStats('mgrs', mgrsCount);
 
             renderStores(allStores);
+            // إيرادات مؤكدة من الماركترز
+            try {
+                const {data:revData} = await _supabase.from('system_settings').select('value').eq('key','total_revenue').single();
+                const rev = parseFloat(revData?.value||0);
+                const el = document.getElementById('d-confirmed-revenue');
+                if(el) el.innerText = rev.toLocaleString() + ' ج.م';
+            } catch(e) {}
         }
 
         function setStats(key, dVal, mVal) {
@@ -638,8 +661,19 @@
             const m = document.getElementById('m-'+key); if(m) m.innerText = mVal || dVal;
         }
 
+        let _displayCount = 5;
+        let _filteredList = [];
+
         function renderStores(list) {
-            const html = list.map(st => {
+            _displayCount = 5;
+            _filteredList = list || [];
+            _renderPaged();
+        }
+
+        function _renderPaged() {
+            const visible = _filteredList.slice(0, _displayCount);
+            const rem = _filteredList.length - _displayCount;
+            const cards = visible.map(st => {
                 const diff = Math.ceil((new Date(st.expiry_date) - new Date()) / 86400000);
                 const daysText = diff > 0 ? `باقي ${diff} يوم` : 'منتهي';
                 const daysColor = diff > 5 ? 'var(--green)' : 'var(--red)';
@@ -654,7 +688,8 @@
                     </div>
                 </div>`;
             }).join('') || `<div style="color:var(--text-muted); text-align:center; padding:30px;">لا توجد متاجر</div>`;
-
+            const more = rem > 0 ? `<div style="text-align:center;margin-top:14px;"><button onclick="_displayCount+=5;_renderPaged()" style="background:var(--card2);border:1px solid var(--border);color:var(--text);padding:10px 24px;border-radius:10px;cursor:pointer;font-family:'Cairo',sans-serif;font-weight:700;font-size:13px;">عرض المزيد (${rem} متجر)</button></div>` : '';
+            const html = cards + more;
             const mg = document.getElementById('m-stores-grid'); if(mg) mg.innerHTML = html;
             const dg = document.getElementById('d-stores-grid'); if(dg) dg.innerHTML = html;
         }
@@ -704,7 +739,7 @@
             const p = document.getElementById('q-pass').value;
             const r = document.getElementById('q-role').value;
             if(!u || !p) return alert("أدخل البيانات");
-            if(p.length < 8) return alert("كلمة المرور لازم تكون 8 حروف على الأقل");
+            if(p.length < 8) return alert("كلمة المرور أقل من 8 أحرف");
             await _supabase.from('users').insert([{ username:u, password:p, store_key:activeStoreKey, role:r }]);
             document.getElementById('q-name').value='';
             document.getElementById('q-pass').value='';
@@ -771,26 +806,7 @@
 
         function openModal(id) { document.getElementById(id).style.display='flex'; }
         function closeModal(id) { document.getElementById(id).style.display='none'; }
-        async function changeDevPassword() {
-            const np=document.getElementById('dev-pass-new').value;
-            const cp=document.getElementById('dev-pass-confirm').value;
-            if(!np||np.length<8){alert('الباسورد أقل من 8 أحرف');return;}
-            if(np!==cp){alert('الباسوردين مش متطابقين');return;}
-            const devUser=sessionStorage.getItem('username');
-            const{error}=await _supabase.from('users').update({password:np}).eq('username',devUser).eq('role','developer');
-            if(!error){
-                alert('✅ تم تغيير الباسورد — هتحتاج تسجيل دخول تاني');
-                if(window._fateenAuth) window._fateenAuth.clearSession();
-                else sessionStorage.clear();
-                location.href='index.html';
-            } else alert('خطأ: '+error.message);
-        }
-
-        function logout() {
-            if(window._fateenAuth) window._fateenAuth.clearSession();
-            else sessionStorage.clear();
-            location.href='index.html';
-        }
+        function logout() { sessionStorage.clear(); location.href='index.html'; }
 
         // ======= CHART =======
         let chartD = null, chartM = null;
@@ -802,27 +818,35 @@
             const { data: stores } = await _supabase.from('stores').select('subscription_price, created_at');
             storesHistory = stores || [];
 
+            const yearEl = document.getElementById('d-chart-year');
+            if(yearEl && yearEl.options.length === 0) {
+                const years = [...new Set(stores?.map(s => new Date(s.created_at).getFullYear()) || [])];
+                const currentYear = new Date().getFullYear();
+                if(!years.includes(currentYear)) years.push(currentYear);
+                years.sort((a,b) => b-a);
+                years.forEach(y => { const o = document.createElement('option'); o.value=y; o.text=y; yearEl.appendChild(o); });
+            }
+
             renderChart();
         }
 
         function renderChart() {
-            // آخر 12 شهر
-            const now = new Date();
-            const labels = [];
-            const monthlyRevenue = [];
-            for(let i=11;i>=0;i--){
-                const d=new Date(now.getFullYear(),now.getMonth()-i,1);
-                labels.push(d.toLocaleDateString('ar-EG',{month:'short',year:'2-digit'}));
-                const y=d.getFullYear(), m=d.getMonth();
-                const rev=(storesHistory||[]).filter(st=>{const sd=new Date(st.created_at);return sd.getFullYear()===y&&sd.getMonth()===m;}).reduce((s,st)=>s+Number(st.subscription_price||0),0);
-                monthlyRevenue.push(rev);
-            }
-            const months=labels;
+            const year = parseInt(document.getElementById('d-chart-year')?.value || new Date().getFullYear());
+            const months = ['يناير','فبراير','مارس','إبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 
-            // مقارنة آخر شهرين
-            const prev = monthlyRevenue[monthlyRevenue.length-2] || 0;
-            const curr = monthlyRevenue[monthlyRevenue.length-1] || 0;
-            const currentMonth = monthlyRevenue.length-1;
+            // حساب الأرباح التراكمية لكل شهر
+            const monthlyRevenue = Array(12).fill(0);
+            storesHistory.forEach(st => {
+                const d = new Date(st.created_at);
+                if(d.getFullYear() === year) {
+                    monthlyRevenue[d.getMonth()] += Number(st.subscription_price || 0);
+                }
+            });
+
+            // تحديد الحالة: ربح أو خسارة (مقارنة بآخر شهرين)
+            const currentMonth = new Date().getMonth();
+            const prev = monthlyRevenue[currentMonth - 1] || 0;
+            const curr = monthlyRevenue[currentMonth] || 0;
             const diff = curr - prev;
             const statusText = diff >= 0 ? `▲ +${diff.toLocaleString()} ج.م ربح` : `▼ ${diff.toLocaleString()} ج.م خسارة`;
             const statusColor = diff >= 0 ? 'var(--green)' : 'var(--red)';
@@ -913,11 +937,27 @@
                         <td style="color:var(--green); font-weight:800;">${commAmt.toLocaleString()} ج.م</td>
                         <td>
                             <button onclick="editMarketerCommission('${m.username}', ${commRate})" style="background:var(--accent-dim); color:var(--accent); border:1px solid var(--accent); padding:4px 10px; border-radius:6px; font-size:12px; cursor:pointer; font-weight:700;">تعديل العمولة</button>
+                            <button onclick="changeMarketerPassword('${m.username}')" style="background:var(--card2); color:var(--text); border:1px solid var(--border); padding:4px 10px; border-radius:6px; font-size:12px; cursor:pointer; font-weight:700; margin-right:4px;">🔑 باسورد</button>
                             <button onclick="deleteMarketer('${m.username}')" style="background:var(--red-dim); color:var(--red); border:1px solid var(--red); padding:4px 10px; border-radius:6px; font-size:12px; cursor:pointer; font-weight:700; margin-right:4px;">حذف</button>
                         </td>
                     </tr>`;
                 }
                 tbody.innerHTML = rows;
+                // موبايل
+                const _ml=document.getElementById('m-marketers-list');
+                if(_ml){
+                    _ml.innerHTML=mList.length?mList.map(m=>`
+                        <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+                            <div>
+                                <div style="font-weight:800;font-size:13px;">${m.username}</div>
+                                <div style="font-size:11px;color:var(--text-muted);">عمولة: ${m.commission_rate||0}%</div>
+                            </div>
+                            <div style="display:flex;gap:6px;">
+                                <button onclick="changeMarketerPassword('${m.username}')" style="background:var(--card);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-size:11px;cursor:pointer;font-family:'Cairo',sans-serif;">🔑</button>
+                                <button onclick="deleteMarketer('${m.username}')" style="background:var(--red-dim);color:var(--red);border:1px solid var(--red);padding:4px 8px;border-radius:6px;font-size:11px;cursor:pointer;font-family:'Cairo',sans-serif;">حذف</button>
+                            </div>
+                        </div>`).join(''):'<div style="text-align:center;color:var(--text-muted);padding:10px;">لا يوجد ماركترز</div>';
+                }
             } catch(e) { console.error('خطأ في تحميل الماركترز:', e); }
         }
 
@@ -927,7 +967,7 @@
             const ph = document.getElementById('mkt-phone').value.trim();
             const comm = parseFloat(document.getElementById('mkt-commission').value) || 10;
             if(!u || !p) return alert('اسم المستخدم وكلمة المرور مطلوبين');
-            if(p.length < 8) return alert('كلمة المرور لازم تكون 8 حروف على الأقل');
+            if(p.length < 8) return alert('كلمة المرور أقل من 8 أحرف');
             const { error } = await _supabase.from('users').insert([{
                 username: u, password: p, phone: ph,
                 role: 'marketer', commission_rate: comm,
@@ -942,6 +982,15 @@
             if(newRate === null) return;
             const { error } = await _supabase.from('users').update({ commission_rate: parseFloat(newRate) }).eq('username', username);
             if(!error) { alert('تم تحديث العمولة'); loadMarketers(); }
+        }
+
+        async function changeMarketerPassword(username) {
+            const newPass = prompt(`تغيير باسورد الماركتر: ${username}\nأدخل الباسورد الجديد (8 أحرف على الأقل):`);
+            if(!newPass) return;
+            if(newPass.length < 8) { alert('الباسورد أقل من 8 أحرف'); return; }
+            const { error } = await _supabase.from('users').update({ password: newPass }).eq('username', username);
+            if(!error) alert('✅ تم تغيير الباسورد');
+            else alert('خطأ: ' + error.message);
         }
 
         async function deleteMarketer(username) {
@@ -984,7 +1033,13 @@
                     document.getElementById('db-archive-count').innerText = (sa.count||0).toLocaleString();
                     document.getElementById('db-products-count').innerText = (p.count||0).toLocaleString();
                     document.getElementById('db-purchases-count').innerText = (pu.count||0).toLocaleString();
+                    document.getElementById('db-invoices-count').innerText = ((s.count||0)+(sa.count||0)).toLocaleString();
                     document.getElementById('db-size-text').innerText = 'لا يمكن حساب الحجم تلقائياً';
+                    const mst=document.getElementById('m-db-size-text');if(mst)mst.innerText='غير متاح';
+                    const mds=document.getElementById('m-db-sales');if(mds)mds.innerText=(s.count||0).toLocaleString();
+                    const mdi=document.getElementById('m-db-invoices');if(mdi)mdi.innerText=((s.count||0)+(sa.count||0)).toLocaleString();
+                    const mdp=document.getElementById('m-db-products');if(mdp)mdp.innerText=(p.count||0).toLocaleString();
+                    const mda=document.getElementById('m-db-archive');if(mda)mda.innerText=(sa.count||0).toLocaleString();
                     return;
                 }
 
@@ -995,6 +1050,7 @@
 
                 document.getElementById('db-size-bar').style.width = pct + '%';
                 document.getElementById('db-size-bar').style.background = barColor;
+                const msb=document.getElementById('m-db-size-bar');if(msb){msb.style.width=pct+'%';msb.style.background=barColor;}
                 document.getElementById('db-size-text').innerHTML =
                     `<span style="color:${barColor}; font-weight:900;">${sizeMB} MB</span>
                      <span style="color:var(--text-muted); font-size:11px;"> / 500 MB
@@ -1004,6 +1060,12 @@
                 document.getElementById('db-archive-count').innerText = (data.sales_archive_rows||0).toLocaleString();
                 document.getElementById('db-products-count').innerText = (data.products_rows||0).toLocaleString();
                 document.getElementById('db-purchases-count').innerText = (data.purchases_rows||0).toLocaleString();
+                // موبايل sync
+                const _mds=document.getElementById('m-db-sales');if(_mds)_mds.innerText=(data.sales_rows||0).toLocaleString();
+                const _mdi=document.getElementById('m-db-invoices');if(_mdi)_mdi.innerText=((data.sales_rows||0)+(data.sales_archive_rows||0)).toLocaleString();
+                const _mdp=document.getElementById('m-db-products');if(_mdp)_mdp.innerText=(data.products_rows||0).toLocaleString();
+                const _mda=document.getElementById('m-db-archive');if(_mda)_mda.innerText=(data.sales_archive_rows||0).toLocaleString();
+                const _mst=document.getElementById('m-db-size-text');if(_mst)_mst.innerText=(data.total_size_mb||0)+' MB / 500 MB';
 
                 // حساب فاضل على الأرشفة (آخر أرشفة)
                 const { data: lastSale } = await _supabase
@@ -1022,11 +1084,13 @@
                     if(daysLeft <= 0) {
                         daysEl.innerText = 'الآن!';
                         daysEl.style.color = 'var(--red)';
+                        const _mdd=document.getElementById('m-db-days');if(_mdd){_mdd.innerText='جاهزة للأرشفة!';_mdd.style.color='var(--red)';}
                         document.getElementById('db-archive-status').innerText =
                             '⚠️ يوجد سجلات جاهزة للأرشفة';
                     } else {
                         daysEl.innerText = daysLeft + ' يوم';
                         daysEl.style.color = daysLeft < 15 ? 'var(--orange)' : 'var(--green)';
+                        const _mdd2=document.getElementById('m-db-days');if(_mdd2)_mdd2.innerText='فاضل '+daysLeft+' يوم';
                         document.getElementById('db-archive-status').innerText =
                             `تنقل السجلات الأقدم من 90 يوم — أقدم سجل: ${oldest.toLocaleDateString('ar-EG')}`;
                     }
@@ -1051,10 +1115,12 @@
                 if(error) throw error;
                 const r = data;
                 resultEl.style.display = 'block';
-                resultEl.innerHTML = `✅ تمت الأرشفة بنجاح —
-                    مبيعات: ${r.sales_archived || 0} سجل |
-                    مشتريات: ${r.purchases_archived || 0} سجل |
-                    مصروفات: ${r.expenses_archived || 0} سجل`;
+                resultEl.innerHTML = `✅ تمت الأرشفة بنجاح — مبيعات: ${r.sales_archived||0} | مشتريات: ${r.purchases_archived||0} | مصروفات: ${r.expenses_archived||0}`;
+                // إعادة العد من 80 يوم من الآن
+                const daysEl = document.getElementById('db-days-to-archive');
+                if(daysEl) { daysEl.innerText = '80 يوم'; daysEl.style.color = 'var(--green)'; }
+                const statusEl = document.getElementById('db-archive-status');
+                if(statusEl) statusEl.innerText = 'تم الأرشفة — العد بدأ من الآن';
                 await loadDbStats();
             } catch(e) {
                 resultEl.style.display = 'block';
@@ -1070,10 +1136,9 @@
         loadData();
         loadChartData();
         loadMarketers();
-        setTimeout(loadDbStats, 800);
+        loadDbStats();
         setInterval(() => { if(!document.hidden) loadData(); }, 60000);
         setInterval(() => { if(!document.hidden) loadMarketers(); }, 60000);
-        setInterval(() => { if(!document.hidden) loadDbStats(); }, 300000);
     </script>
 </body>
 </html>
