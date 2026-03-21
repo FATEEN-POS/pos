@@ -1,1 +1,418 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>إدارة الموظفين - Fateen OS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root{--bg:#080808;--surface:#111;--surface2:#181818;--accent:#00f2fe;--accent-dim:rgba(0,242,254,0.08);--border:#252525;--text:#f0f0f0;--text-muted:#777;--green:#00e676;--green-dim:rgba(0,230,118,0.1);--orange:#ffa040;--orange-dim:rgba(255,160,64,0.1);--purple:#a78bfa;--purple-dim:rgba(167,139,250,0.1);--red:#ff4d4d;--red-dim:rgba(255,77,77,0.1);--btn-color:#000;--input-bg:#0a0a0a;--shadow:0 4px 24px rgba(0,0,0,0.5);--radius:14px;--radius-sm:9px;}
+        [data-theme="light"]{--bg:#f0ede5;--surface:#fff;--surface2:#f5f2eb;--accent:#004643;--accent-dim:rgba(0,70,67,0.07);--border:#ddd8cf;--text:#1a1a1a;--text-muted:#777;--green:#00875a;--green-dim:rgba(0,135,90,0.08);--orange:#d35400;--orange-dim:rgba(211,84,0,0.08);--purple:#7c3aed;--purple-dim:rgba(124,58,237,0.08);--red:#c0392b;--red-dim:rgba(192,57,43,0.08);--btn-color:#f0ede5;--input-bg:#f5f2eb;--shadow:0 4px 24px rgba(0,0,0,0.08);}
+        *,*::before,*::after{box-sizing:border-box;font-family:'Cairo',sans-serif;transition:background .25s,color .25s,border-color .25s;}
+        body{margin:0;padding:0;background:var(--bg);color:var(--text);min-height:100vh;}
+        .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
+        .topbar-left{display:flex;align-items:center;gap:12px;}
+        .topbar-right{display:flex;align-items:center;gap:8px;}
+        .store-title{font-size:15px;font-weight:800;}
+        .version-chip{background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:800;}
+        .topbar-btn{display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:7px 14px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;}
+        .topbar-btn:hover{border-color:var(--accent);color:var(--accent);}
+        .page{max-width:1100px;margin:0 auto;padding:24px 20px;}
+        .tabs-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;}
+        .tabs-bar::-webkit-scrollbar{display:none;}
+        .tab-btn{padding:14px 18px;border:none;background:transparent;color:var(--text-muted);font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:all .2s;}
+        .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+        .section{display:none;}.section.active{display:block;}
+        .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px;}
+        .kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;text-align:center;}
+        .kpi h4{margin:0 0 8px;font-size:12px;color:var(--text-muted);}
+        .kpi p{margin:0;font-size:24px;font-weight:800;color:var(--accent);}
+        .kpi.green p{color:var(--green);}
+        .kpi.orange p{color:var(--orange);}
+        .kpi.purple p{color:var(--purple);}
+        .kpi.red p{color:var(--red);}
+        .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px;}
+        .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+        .card-title{font-size:15px;font-weight:800;color:var(--accent);}
+        .table-wrap{overflow-x:auto;border-radius:var(--radius-sm);border:1px solid var(--border);}
+        table{width:100%;border-collapse:collapse;}
+        th{background:var(--surface2);padding:11px 14px;text-align:right;font-size:12px;color:var(--text-muted);border-bottom:1px solid var(--border);}
+        td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px;}
+        tr:last-child td{border-bottom:none;}
+        .badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+        .badge-green{background:var(--green-dim);color:var(--green);}
+        .badge-accent{background:var(--accent-dim);color:var(--accent);}
+        .badge-orange{background:var(--orange-dim);color:var(--orange);}
+        .badge-purple{background:var(--purple-dim);color:var(--purple);}
+        .badge-red{background:var(--red-dim);color:var(--red);}
+        .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius-sm);border:none;cursor:pointer;font-family:'Cairo',sans-serif;font-weight:700;font-size:13px;transition:opacity .2s;}
+        .btn:hover{opacity:.85;}
+        .btn-accent{background:var(--accent);color:var(--btn-color);}
+        .btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+        .btn-red{background:var(--red-dim);color:var(--red);border:1px solid var(--red);}
+        .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;justify-content:center;align-items:center;padding:16px;}
+        .modal.open{display:flex;}
+        .modal-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;width:480px;max-width:100%;max-height:90vh;overflow-y:auto;padding:24px;}
+        .modal-title{font-size:16px;font-weight:800;color:var(--accent);margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+        .modal-close{cursor:pointer;color:var(--text-muted);font-size:18px;}
+        .modal-close:hover{color:var(--red);}
+        .field-group{margin-bottom:12px;}
+        .field-group label{display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;font-weight:600;}
+        .field-group input,.field-group select{width:100%;background:var(--input-bg);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:var(--radius-sm);font-family:'Cairo',sans-serif;font-size:13px;outline:none;}
+        .field-group input:focus,.field-group select:focus{border-color:var(--accent);}
+        .progress-bar{background:var(--surface2);border-radius:20px;height:8px;overflow:hidden;margin-top:4px;}
+        .progress-fill{height:100%;border-radius:20px;background:var(--accent);transition:width .4s;}
+        #toast-container{position:fixed;bottom:20px;left:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:320px;}
+        .toast{padding:11px 15px;border-radius:var(--radius-sm);font-size:13px;font-weight:700;border:1px solid;animation:toastIn .3s ease;cursor:pointer;display:flex;align-items:center;gap:8px;}
+        .toast-success{background:var(--green-dim);border-color:var(--green);color:var(--green);}
+        .toast-error{background:var(--red-dim);border-color:var(--red);color:var(--red);}
+        .toast-info{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);}
+        @keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        @media(max-width:600px){.page{padding:14px 12px;}.kpi-grid{grid-template-columns:repeat(2,1fr);}}
+    </style>
+    <!-- ===== FATEEN AUTH ===== -->
+    <script>
+    (function(){
+        const TIMEOUT_MS=8*60*60*1000;
+        const PAGE=window.location.pathname.split('/').pop()||'index.html';
+        const PUBLIC=['index.html','guide.html','about.html',''];
+        function saveSession(data){localStorage.setItem('fateen_session',JSON.stringify({...data,timestamp:Date.now()}));}
+        function getSession(){try{const s=JSON.parse(localStorage.getItem('fateen_session')||'null');if(!s)return null;if(Date.now()-s.timestamp>TIMEOUT_MS){localStorage.removeItem('fateen_session');return null;}return s;}catch(e){return null;}}
+        function clearSession(){localStorage.removeItem('fateen_session');sessionStorage.clear();}
+        ['click','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,()=>{const s=getSession();if(s)saveSession(s);},{passive:true}));
+        if(!PUBLIC.includes(PAGE)){const s=getSession();if(!s||!s.store_key){window.location.replace('index.html');return;}sessionStorage.setItem('store_key',s.store_key);sessionStorage.setItem('username',s.username);sessionStorage.setItem('userRole',s.userRole);}
+        window._fateenAuth={saveSession,getSession,clearSession};
+    })();
+    </script>
+</head>
+<body>
 
+<div class="topbar">
+    <div class="topbar-left">
+        <a class="topbar-btn" href="manager.html">⬅️ رجوع</a>
+        <div class="store-title" id="store-name">Fateen OS</div>
+        <span class="version-chip" id="ver">V1.0</span>
+    </div>
+    <div class="topbar-right">
+        <button class="topbar-btn" onclick="openModal('addEmpModal')">+ موظف جديد</button>
+        <button class="topbar-btn" onclick="toggleTheme()"><span id="theme-icon">🌙</span></button>
+    </div>
+</div>
+
+<div class="tabs-bar">
+    <button class="tab-btn active" onclick="showTab('employees',this)">👥 الموظفين</button>
+    <button class="tab-btn" onclick="showTab('performance',this)">📊 الأداء</button>
+    <button class="tab-btn" onclick="showTab('salaries',this)">💰 المرتبات</button>
+</div>
+
+<!-- EMPLOYEES TAB -->
+<div class="section active" id="tab-employees">
+<div class="page">
+    <div class="kpi-grid">
+        <div class="kpi"><h4>إجمالي الموظفين</h4><p id="kpi-total">0</p></div>
+        <div class="kpi green"><h4>كاشير</h4><p id="kpi-cashier">0</p></div>
+        <div class="kpi orange"><h4>مدراء</h4><p id="kpi-managers">0</p></div>
+        <div class="kpi purple"><h4>مدير مخزن</h4><p id="kpi-inv">0</p></div>
+        <div class="kpi" style="border-bottom:3px solid var(--accent);"><h4>مدير حسابات</h4><p id="kpi-acc">0</p></div>
+    </div>
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">👥 قائمة الموظفين</span>
+            <input type="text" id="emp-search" placeholder="بحث..." oninput="filterEmps()" style="background:var(--input-bg);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:var(--radius-sm);font-family:'Cairo',sans-serif;font-size:13px;outline:none;width:200px;">
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead><tr>
+                    <th>الموظف</th><th>الدور</th><th>مبيعات الشهر</th><th>التارجت</th><th>الإنجاز</th><th>إجراءات</th>
+                </tr></thead>
+                <tbody id="emp-table"><tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;">جاري التحميل...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- PERFORMANCE TAB -->
+<div class="section" id="tab-performance">
+<div class="page">
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">📊 أداء الموظفين — الشهر الحالي</span>
+        </div>
+        <div id="performance-list" style="display:grid;gap:14px;">
+            <div style="text-align:center;color:var(--text-muted);padding:20px;">جاري التحميل...</div>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- SALARIES TAB -->
+<div class="section" id="tab-salaries">
+<div class="page">
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">💰 المرتبات والعمولات</span>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead><tr>
+                    <th>الموظف</th><th>الدور</th><th>المرتب الأساسي</th><th>مبيعات الشهر</th><th>التارجت</th><th>% الإنجاز</th><th>إجراء</th>
+                </tr></thead>
+                <tbody id="salary-table"><tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px;">جاري التحميل...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- MODAL: إضافة موظف -->
+<div id="addEmpModal" class="modal">
+    <div class="modal-box">
+        <div class="modal-title">
+            <span>➕ إضافة موظف جديد</span>
+            <span class="modal-close" onclick="closeModal('addEmpModal')">✕</span>
+        </div>
+        <div class="field-group"><label>اسم المستخدم</label><input type="text" id="emp-username" placeholder="اسم المستخدم"></div>
+        <div class="field-group"><label>كلمة المرور (8 أحرف على الأقل)</label><input type="password" id="emp-pass" placeholder="••••••••"></div>
+        <div class="field-group">
+            <label>الدور</label>
+            <select id="emp-role">
+                <option value="employee">موظف كاشير</option>
+                <option value="manager">مدير فرع</option>
+                <option value="inventory_manager">مدير مخزن</option>
+                <option value="accounts_manager">مدير حسابات</option>
+            </select>
+        </div>
+        <div class="field-group"><label>الاسم الكامل (اختياري)</label><input type="text" id="emp-fullname" placeholder="الاسم الكامل"></div>
+        <div class="field-group"><label>رقم الهاتف (اختياري)</label><input type="text" id="emp-phone" placeholder="010xxxxxxxx"></div>
+        <div class="field-group"><label>المرتب الأساسي (ج.م)</label><input type="number" id="emp-salary" placeholder="0" value="0"></div>
+        <div class="field-group"><label>التارجت الشهري (ج.م)</label><input type="number" id="emp-target" placeholder="0" value="0"></div>
+        <div style="display:flex;gap:8px;margin-top:16px;">
+            <button class="btn btn-accent" style="flex:1;justify-content:center;" onclick="addEmployee()">✅ حفظ</button>
+            <button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="closeModal('addEmpModal')">إلغاء</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: تعديل موظف -->
+<div id="editEmpModal" class="modal">
+    <div class="modal-box">
+        <div class="modal-title">
+            <span>✏️ تعديل موظف</span>
+            <span class="modal-close" onclick="closeModal('editEmpModal')">✕</span>
+        </div>
+        <input type="hidden" id="edit-emp-username">
+        <div class="field-group"><label>كلمة المرور الجديدة (اتركها فارغة للإبقاء)</label><input type="password" id="edit-emp-pass" placeholder="••••••••"></div>
+        <div class="field-group"><label>الدور</label>
+            <select id="edit-emp-role">
+                <option value="employee">موظف كاشير</option>
+                <option value="manager">مدير فرع</option>
+                <option value="inventory_manager">مدير مخزن</option>
+                <option value="accounts_manager">مدير حسابات</option>
+            </select>
+        </div>
+        <div class="field-group"><label>الاسم الكامل</label><input type="text" id="edit-emp-fullname"></div>
+        <div class="field-group"><label>رقم الهاتف</label><input type="text" id="edit-emp-phone"></div>
+        <div class="field-group"><label>المرتب الأساسي (ج.م)</label><input type="number" id="edit-emp-salary" value="0"></div>
+        <div class="field-group"><label>التارجت الشهري (ج.م)</label><input type="number" id="edit-emp-target" value="0"></div>
+        <div style="display:flex;gap:8px;margin-top:16px;">
+            <button class="btn btn-accent" style="flex:1;justify-content:center;" onclick="saveEditEmployee()">💾 حفظ</button>
+            <button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="closeModal('editEmpModal')">إلغاء</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+    const SUPABASE_URL='https://xyvxowlbvuqbggkslwqr.supabase.co';
+    const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dnhvd2xidnVxYmdna3Nsd3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDY3NzksImV4cCI6MjA4NjY4Mjc3OX0.h48-mCH2jR5Edsi2zZogbTDE-HNNfhAlQpKp9oJB_Bo';
+    const _sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    const storeKey=sessionStorage.getItem('store_key');
+    let allEmps=[], salesMap={};
+
+    function showToast(msg,type='info'){
+        const c=document.getElementById('toast-container');
+        const t=document.createElement('div');
+        t.className=`toast toast-${type}`;
+        t.innerHTML=`<span>${{success:'✅',error:'❌',info:'ℹ️'}[type]}</span><span>${msg}</span>`;
+        t.onclick=()=>t.remove(); c.appendChild(t);
+        setTimeout(()=>t.remove(),4000);
+    }
+    function openModal(id){document.getElementById(id).classList.add('open');}
+    function closeModal(id){document.getElementById(id).classList.remove('open');}
+    function showTab(id,btn){
+        document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        document.getElementById('tab-'+id).classList.add('active');
+        if(btn)btn.classList.add('active');
+    }
+    function toggleTheme(){
+        const h=document.documentElement;const l=h.getAttribute('data-theme')==='light';
+        h.setAttribute('data-theme',l?'':'light');localStorage.setItem('fateen_theme',l?'dark':'light');
+        document.getElementById('theme-icon').innerText=l?'🌙':'☀️';
+    }
+    (function(){const s=localStorage.getItem('fateen_theme');if(s==='light'){document.documentElement.setAttribute('data-theme','light');document.getElementById('theme-icon').innerText='☀️';}})();
+
+    const roleLabel=r=>({employee:'موظف كاشير',manager:'مدير فرع',inventory_manager:'مدير مخزن',accounts_manager:'مدير حسابات'}[r]||r);
+    const roleBadge=r=>({employee:'badge-accent',manager:'badge-orange',inventory_manager:'badge-purple',accounts_manager:'badge-green'}[r]||'badge-accent');
+
+    async function init(){
+        if(!storeKey) return location.href='index.html';
+        try{
+            const{data:store}=await _sb.from('stores').select('store_name').eq('store_key',storeKey).single();
+            if(store) document.getElementById('store-name').innerText=store.store_name;
+            const{data:ver}=await _sb.from('system_settings').select('value').eq('key','sys_version').single();
+            if(ver) document.getElementById('ver').innerText=ver.value;
+        }catch(e){}
+        await loadEmployees();
+    }
+
+    async function loadEmployees(){
+        try{
+            const{data:emps}=await _sb.from('users').select('*').eq('store_key',storeKey).neq('role','developer');
+            allEmps=emps||[];
+            // Sales this month
+            const monthStart=new Date();monthStart.setDate(1);monthStart.setHours(0,0,0,0);
+            const{data:sales}=await _sb.from('sales').select('seller_name,total_amount,type').eq('store_key',storeKey).eq('type','sale').gte('created_at',monthStart.toISOString());
+            salesMap={};
+            (sales||[]).forEach(s=>{salesMap[s.seller_name]=(salesMap[s.seller_name]||0)+(parseFloat(s.total_amount)||0);});
+            renderEmployees(allEmps);
+            renderPerformance(allEmps);
+            renderSalaries(allEmps);
+            // KPIs
+            document.getElementById('kpi-total').innerText=allEmps.length;
+            document.getElementById('kpi-cashier').innerText=allEmps.filter(e=>e.role==='employee').length;
+            document.getElementById('kpi-managers').innerText=allEmps.filter(e=>e.role==='manager').length;
+            document.getElementById('kpi-inv').innerText=allEmps.filter(e=>e.role==='inventory_manager').length;
+            document.getElementById('kpi-acc').innerText=allEmps.filter(e=>e.role==='accounts_manager').length;
+        }catch(e){showToast('خطأ في تحميل الموظفين: '+e.message,'error');}
+    }
+
+    function renderEmployees(list){
+        const tb=document.getElementById('emp-table');
+        tb.innerHTML=list.length?list.map(e=>{
+            const sales=salesMap[e.username]||0;
+            const target=parseFloat(e.monthly_target||0);
+            const pct=target>0?Math.min(Math.round((sales/target)*100),100):0;
+            return`<tr>
+                <td><b>${e.username}</b>${e.full_name?`<br><span style="font-size:11px;color:var(--text-muted);">${e.full_name}</span>`:''}</td>
+                <td><span class="badge ${roleBadge(e.role)}">${roleLabel(e.role)}</span></td>
+                <td style="color:var(--green);font-weight:700;">${sales.toLocaleString()} ج.م</td>
+                <td style="color:var(--text-muted);">${target.toLocaleString()} ج.م</td>
+                <td>
+                    <div style="font-size:11px;margin-bottom:3px;">${pct}%</div>
+                    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${pct>=100?'var(--green)':pct>=80?'var(--orange)':'var(--accent)'};"></div></div>
+                </td>
+                <td>
+                    <button onclick='openEditModal(${JSON.stringify(e)})' class="btn btn-ghost" style="padding:4px 10px;font-size:11px;margin-left:4px;">✏️</button>
+                    <button onclick="deleteEmployee('${e.username}')" class="btn btn-red" style="padding:4px 10px;font-size:11px;">🗑️</button>
+                </td>
+            </tr>`;
+        }).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;">لا يوجد موظفين</td></tr>';
+    }
+
+    function renderPerformance(list){
+        const el=document.getElementById('performance-list');
+        if(!list.length){el.innerHTML='<div style="text-align:center;color:var(--text-muted);padding:20px;">لا يوجد موظفين</div>';return;}
+        el.innerHTML=list.map(e=>{
+            const sales=salesMap[e.username]||0;
+            const target=parseFloat(e.monthly_target||0);
+            const pct=target>0?Math.min(Math.round((sales/target)*100),100):0;
+            const color=pct>=100?'var(--green)':pct>=80?'var(--orange)':'var(--accent)';
+            return`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                    <div>
+                        <span style="font-weight:800;font-size:14px;">${e.username}</span>
+                        <span class="badge ${roleBadge(e.role)}" style="margin-right:8px;">${roleLabel(e.role)}</span>
+                    </div>
+                    <span style="font-size:18px;font-weight:900;color:${color};">${pct}%</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:6px;">
+                    <span>مبيعات: <b style="color:var(--green);">${sales.toLocaleString()} ج.م</b></span>
+                    <span>تارجت: <b>${target.toLocaleString()} ج.م</b></span>
+                </div>
+                <div class="progress-bar" style="height:10px;"><div class="progress-fill" style="width:${pct}%;background:${color};"></div></div>
+            </div>`;
+        }).join('');
+    }
+
+    function renderSalaries(list){
+        const tb=document.getElementById('salary-table');
+        tb.innerHTML=list.length?list.map(e=>{
+            const sales=salesMap[e.username]||0;
+            const target=parseFloat(e.monthly_target||0);
+            const salary=parseFloat(e.salary||0);
+            const pct=target>0?Math.min(Math.round((sales/target)*100),100):0;
+            return`<tr>
+                <td><b>${e.username}</b></td>
+                <td><span class="badge ${roleBadge(e.role)}">${roleLabel(e.role)}</span></td>
+                <td style="color:var(--accent);font-weight:700;">${salary.toLocaleString()} ج.م</td>
+                <td style="color:var(--green);font-weight:700;">${sales.toLocaleString()} ج.م</td>
+                <td>${target.toLocaleString()} ج.م</td>
+                <td><span style="color:${pct>=100?'var(--green)':pct>=80?'var(--orange)':'var(--red)'};font-weight:800;">${pct}%</span></td>
+                <td><button onclick='openEditModal(${JSON.stringify(e)})' class="btn btn-ghost" style="padding:4px 10px;font-size:11px;">✏️ تعديل</button></td>
+            </tr>`;
+        }).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px;">لا يوجد موظفين</td></tr>';
+    }
+
+    function filterEmps(){
+        const q=document.getElementById('emp-search').value.toLowerCase();
+        renderEmployees(allEmps.filter(e=>e.username.toLowerCase().includes(q)||(e.full_name||'').toLowerCase().includes(q)));
+    }
+
+    async function addEmployee(){
+        const u=document.getElementById('emp-username').value.trim();
+        const p=document.getElementById('emp-pass').value;
+        const r=document.getElementById('emp-role').value;
+        const fn=document.getElementById('emp-fullname').value.trim();
+        const ph=document.getElementById('emp-phone').value.trim();
+        const sal=parseFloat(document.getElementById('emp-salary').value)||0;
+        const tgt=parseFloat(document.getElementById('emp-target').value)||0;
+        if(!u)return showToast('اسم المستخدم مطلوب','error');
+        if(!p||p.length<8)return showToast('كلمة المرور أقل من 8 أحرف','error');
+        const{error}=await _sb.from('users').insert([{username:u,password:p,role:r,store_key:storeKey,full_name:fn||null,phone:ph||null,salary:sal,monthly_target:tgt}]);
+        if(!error){showToast('تم إضافة الموظف بنجاح','success');closeModal('addEmpModal');loadEmployees();}
+        else if(error.message.includes('duplicate')) showToast('اسم المستخدم موجود بالفعل','error');
+        else showToast('خطأ: '+error.message,'error');
+    }
+
+    function openEditModal(e){
+        document.getElementById('edit-emp-username').value=e.username;
+        document.getElementById('edit-emp-role').value=e.role;
+        document.getElementById('edit-emp-fullname').value=e.full_name||'';
+        document.getElementById('edit-emp-phone').value=e.phone||'';
+        document.getElementById('edit-emp-salary').value=e.salary||0;
+        document.getElementById('edit-emp-target').value=e.monthly_target||0;
+        document.getElementById('edit-emp-pass').value='';
+        openModal('editEmpModal');
+    }
+
+    async function saveEditEmployee(){
+        const u=document.getElementById('edit-emp-username').value;
+        const p=document.getElementById('edit-emp-pass').value;
+        const r=document.getElementById('edit-emp-role').value;
+        const fn=document.getElementById('edit-emp-fullname').value.trim();
+        const ph=document.getElementById('edit-emp-phone').value.trim();
+        const sal=parseFloat(document.getElementById('edit-emp-salary').value)||0;
+        const tgt=parseFloat(document.getElementById('edit-emp-target').value)||0;
+        if(p&&p.length<8)return showToast('كلمة المرور أقل من 8 أحرف','error');
+        const updates={role:r,full_name:fn||null,phone:ph||null,salary:sal,monthly_target:tgt};
+        if(p) updates.password=p;
+        const{error}=await _sb.from('users').update(updates).eq('username',u).eq('store_key',storeKey);
+        if(!error){showToast('تم تحديث بيانات الموظف','success');closeModal('editEmpModal');loadEmployees();}
+        else showToast('خطأ: '+error.message,'error');
+    }
+
+    async function deleteEmployee(username){
+        if(!confirm(`حذف الموظف ${username}؟`))return;
+        await _sb.from('users').delete().eq('username',username).eq('store_key',storeKey);
+        showToast('تم حذف الموظف','success');
+        loadEmployees();
+    }
+
+    init();
+</script>
+</body>
+</html>
